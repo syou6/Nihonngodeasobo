@@ -10,32 +10,26 @@ export interface TranscriptionResult {
 
 /**
  * テキストを分析する（音声文字起こしは行わない）
- * APIキーがあればGemini 2.0 Flash、なければ無料分析を使用
+ * API Route経由でGemini 2.0 Flashを使用、失敗時は無料分析にフォールバック
  */
 export async function analyzeText(text: string): Promise<TranscriptionResult> {
   if (!text) {
     return { text: '' };
   }
 
-  // Gemini APIキーがあるか確認
-  const useGemini = !!import.meta.env.VITE_GEMINI_API_KEY;
-  
-  if (useGemini) {
-    // Gemini 2.0 Flash を使用
-    try {
-      const result = await analyzeWithGemini(text);
-      return {
-        text,
-        summary: result.summary,
-        keywords: result.keywords,
-        emotion: result.emotion
-      };
-    } catch (error) {
-      console.error('Gemini API失敗、無料版にフォールバック:', error);
-    }
+  try {
+    const result = await analyzeWithGemini(text);
+    return {
+      text,
+      summary: result.summary,
+      keywords: result.keywords,
+      emotion: result.emotion
+    };
+  } catch (error) {
+    console.error('Gemini API失敗、無料版にフォールバック:', error);
   }
-  
-  // 無料分析を使用（APIキーなし or エラー時）
+
+  // 無料分析を使用（エラー時）
   const result = analyzeFree(text);
   return {
     text,
@@ -56,39 +50,31 @@ export function transcribeAudioFile(audioBlob: Blob): Promise<string> {
 
 /**
  * 長い日記を家族向けに要約
- * APIキーがあればGemini 2.0 Flash、なければ無料分析を使用
+ * API Route経由でGemini 2.0 Flashを使用、失敗時は無料分析にフォールバック
  */
 export async function generateFamilySummary(content: string): Promise<string> {
-  const useGemini = !!import.meta.env.VITE_GEMINI_API_KEY;
-  
-  if (useGemini) {
-    try {
-      const { generateFamilySummaryWithGemini } = await import('./gemini-api');
-      return await generateFamilySummaryWithGemini(content);
-    } catch (error) {
-      console.error('Gemini API失敗、無料版にフォールバック:', error);
-    }
+  try {
+    const { generateFamilySummaryWithGemini } = await import('./gemini-api');
+    return await generateFamilySummaryWithGemini(content);
+  } catch (error) {
+    console.error('Gemini API失敗、無料版にフォールバック:', error);
   }
-  
+
   return generateFamilySummaryFree(content);
 }
 
 /**
  * 健康状態をスコアリング
- * APIキーがあればGemini 2.0 Flash、なければ無料分析を使用
+ * API Route経由でGemini 2.0 Flashを使用、失敗時は無料分析にフォールバック
  */
 export async function analyzeHealthScore(content: string, voiceData?: any): Promise<number> {
-  const useGemini = !!import.meta.env.VITE_GEMINI_API_KEY;
-  
-  if (useGemini) {
-    try {
-      const result = await analyzeWithGemini(content);
-      return result.health_score;
-    } catch (error) {
-      console.error('Gemini API失敗、無料版にフォールバック:', error);
-    }
+  try {
+    const result = await analyzeWithGemini(content);
+    return result.health_score;
+  } catch (error) {
+    console.error('Gemini API失敗、無料版にフォールバック:', error);
   }
-  
+
   const result = analyzeFree(content);
   return result.health_score;
 }

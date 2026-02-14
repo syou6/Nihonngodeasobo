@@ -68,7 +68,7 @@ export const useGuestStore = create<GuestStore>()(
         let aiSummary = '';
 
         // ゲストモードは1回だけAI分析を使用可能
-        if (get().canUseAI() && content && import.meta.env.VITE_GEMINI_API_KEY) {
+        if (get().canUseAI() && content) {
           try {
             const { analyzeText, generateFamilySummary, analyzeHealthScore } = await import('../lib/gemini');
             console.log('ゲストモード: AI分析を実行（1回限定）');
