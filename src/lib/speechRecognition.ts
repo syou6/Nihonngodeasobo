@@ -50,6 +50,7 @@ declare global {
 export class VoiceTranscriber {
   private recognition: SpeechRecognition | null = null;
   private isListening: boolean = false;
+  private shouldBeListening: boolean = false;
   private finalTranscript: string = '';
   private onResultCallback: ((text: string, isFinal: boolean) => void) | null = null;
   private onErrorCallback: ((error: string) => void) | null = null;
@@ -96,7 +97,14 @@ export class VoiceTranscriber {
 
       this.recognition.onend = () => {
         this.isListening = false;
-        console.log('Speech recognition ended');
+        // iOS Safari stops recognition unexpectedly - auto-restart if still needed
+        if (this.shouldBeListening && this.recognition) {
+          try {
+            this.recognition.start();
+          } catch (e) {
+            // Already started or other error - ignore
+          }
+        }
       };
 
       this.recognition.onstart = () => {
@@ -115,6 +123,7 @@ export class VoiceTranscriber {
     }
 
     this.finalTranscript = '';
+    this.shouldBeListening = true;
     this.onResultCallback = onResult || null;
     this.onErrorCallback = onError || null;
 
@@ -128,6 +137,7 @@ export class VoiceTranscriber {
 
   // Stop speech recognition
   stop(): string {
+    this.shouldBeListening = false;
     if (this.recognition && this.isListening) {
       this.recognition.stop();
     }
@@ -136,6 +146,7 @@ export class VoiceTranscriber {
 
   // Cancel speech recognition
   abort(): void {
+    this.shouldBeListening = false;
     if (this.recognition && this.isListening) {
       this.recognition.abort();
     }
