@@ -4,7 +4,8 @@ import { ArrowLeft, Play, Mic, MicOff, Volume2, RotateCcw, ChevronDown, ChevronU
 import { Button } from '../ui/Button';
 import { ResultDisplay } from './ResultDisplay';
 import { useVersantStore } from '../../stores/versantStore';
-import { getRandomQuestion, getQuestionsByPart } from '../../lib/versant-questions';
+import { getRandomQuestion, getQuestionsByPart, type CEFRLevel } from '../../lib/versant-questions';
+import { supabase } from '../../lib/supabase';
 import { tts } from '../../lib/tts';
 import { VoiceTranscriber } from '../../lib/speechRecognition';
 import { EN } from '../../i18n/en';
@@ -32,9 +33,26 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
   const { currentQuestion, setCurrentQuestion, saveAnswer, loading } = useVersantStore();
 
   useEffect(() => {
-    // Select a random Part E question
-    const question = getRandomQuestion('E');
-    setCurrentQuestion(question);
+    // Get user's CEFR level and select a matching Part E question
+    const loadQuestion = async () => {
+      let cefrLevel: CEFRLevel = 'B1';
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from('users')
+            .select('cefr_level')
+            .eq('id', user.id)
+            .single();
+          cefrLevel = profile?.cefr_level || 'B1';
+        }
+      } catch (e) {
+        // Use default B1
+      }
+      const question = getRandomQuestion('E', cefrLevel);
+      setCurrentQuestion(question);
+    };
+    loadQuestion();
 
     return () => {
       tts.stop();
@@ -161,8 +179,22 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
     }
   };
 
-  const tryAnother = () => {
-    const question = getRandomQuestion('E');
+  const tryAnother = async () => {
+    let cefrLevel: CEFRLevel = 'B1';
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('cefr_level')
+          .eq('id', user.id)
+          .single();
+        cefrLevel = profile?.cefr_level || 'B1';
+      }
+    } catch (e) {
+      // Use default B1
+    }
+    const question = getRandomQuestion('E', cefrLevel);
     setCurrentQuestion(question);
     setCurrentAnswer(null);
     setTranscribedText('');
