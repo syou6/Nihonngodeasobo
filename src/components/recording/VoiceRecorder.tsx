@@ -244,12 +244,12 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onViewChange, isGu
       // Show loading toast
       const loadingToast = toast.loading(EN.recording.saving);
 
-      // Timeout setting (30 seconds)
+      // Timeout setting (120 seconds - mobile uploads can be slow)
       const timeoutId = setTimeout(() => {
         toast.dismiss(loadingToast);
         toast.error(EN.recording.saveTimeout);
         setIsSaving(false);
-      }, 30000);
+      }, 120000);
 
       // Save as guest or normal mode
       let saveResult;
