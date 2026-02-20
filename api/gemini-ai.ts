@@ -23,11 +23,12 @@ const VERSANT_CONFIG = {
 } as const
 
 interface GeminiRequest {
-  type: 'analyze' | 'summary' | 'feedback' | 'versant-feedback' | 'versant-sample'
+  type: 'analyze' | 'summary' | 'feedback' | 'versant-feedback' | 'versant-sample' | 'versant-question'
   content?: string
   cefrLevel?: string
   question?: string
   part?: 'E' | 'F'
+  category?: string
 }
 
 async function callGemini(apiKey: string, prompt: string): Promise<string> {
@@ -196,6 +197,47 @@ ${scoringFocus}
 (Write a personalized encouraging message in Japanese. Focus on praising specific good points in their RESPONSE and suggest concrete next steps to improve their SPEAKING score. Do NOT mention diaries or diary writing.)`
 }
 
+const QUESTION_CATEGORIES = [
+  'Daily Life', 'Work', 'Education', 'Technology', 'Health',
+  'Environment', 'Travel', 'Food', 'Entertainment', 'Relationships',
+  'Shopping', 'Sports', 'Culture', 'Finance', 'Science'
+]
+
+function buildVersantQuestionPrompt(part: 'E' | 'F', cefrLevel: string, category?: string): string {
+  const chosenCategory = category || QUESTION_CATEGORIES[Math.floor(Math.random() * QUESTION_CATEGORIES.length)]
+
+  if (part === 'E') {
+    return `You are a Versant speaking test question generator.
+
+**Task:** Generate a short passage for a Story Retelling exercise.
+
+**Requirements:**
+- CEFR Level: ${cefrLevel}
+- Category: ${chosenCategory}
+- Length: 3-5 sentences (appropriate for a 30-second summary response)
+- The passage should tell a short story or describe a situation with clear main points
+- Use vocabulary and grammar appropriate for ${cefrLevel} level
+- Make it interesting and relatable
+- Do NOT include any instructions, labels, or metadata
+
+**Output:** Only the passage text, nothing else.`
+  }
+
+  return `You are a Versant speaking test question generator.
+
+**Task:** Generate an opinion question for a speaking test.
+
+**Requirements:**
+- Category: ${chosenCategory}
+- The question should ask for the user's opinion on a topic
+- It should be open-ended, allowing for multiple perspectives
+- Keep it to 1-2 sentences
+- Use clear, natural English
+- Do NOT include any instructions, labels, or metadata
+
+**Output:** Only the question text, nothing else.`
+}
+
 function buildVersantSamplePrompt(question: string, part: 'E' | 'F', cefrLevel: string): string {
   const targetLevel = getNextCefrLevel(cefrLevel)
   const config = part === 'E' ? VERSANT_CONFIG.PART_E : VERSANT_CONFIG.PART_F
@@ -318,6 +360,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           cefrLevel,
           targetLevel: getNextCefrLevel(cefrLevel),
           markdownContent: responseText
+        }
+        break
+      }
+
+      case 'versant-question': {
+        if (!body.part) {
+          throw new Error('part is required for versant-question')
+        }
+        const cefrLevel = body.cefrLevel || DEFAULT_CEFR_LEVEL
+        const prompt = buildVersantQuestionPrompt(body.part, cefrLevel, body.category)
+        const responseText = await callGemini(apiKey, prompt)
+        const config = body.part === 'E' ? VERSANT_CONFIG.PART_E : VERSANT_CONFIG.PART_F
+        result = {
+          text: responseText.trim(),
+          part: body.part,
+          timeLimit: config.TIME_LIMIT
         }
         break
       }

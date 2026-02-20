@@ -5,6 +5,7 @@ import { Button } from '../ui/Button';
 import { ResultDisplay } from './ResultDisplay';
 import { useVersantStore } from '../../stores/versantStore';
 import { getRandomQuestion } from '../../lib/versant-questions';
+import { generateVersantQuestion } from '../../lib/gemini-feedback';
 import { supabase } from '../../lib/supabase';
 import { tts } from '../../lib/tts';
 import { VoiceTranscriber } from '../../lib/speechRecognition';
@@ -51,13 +52,30 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
     return DEFAULT_CEFR_LEVEL;
   };
 
+  const loadNewQuestion = async (excludeId?: string) => {
+    const cefrLevel = await getUserCefrLevel();
+
+    // Try AI generation first
+    const aiQuestion = await generateVersantQuestion('E', cefrLevel);
+    if (aiQuestion) {
+      setCurrentQuestion({
+        id: `e-ai-${Date.now()}`,
+        part: 'E',
+        text: aiQuestion.text,
+        timeLimit: aiQuestion.timeLimit,
+        category: 'AI Generated',
+        cefrLevel
+      });
+      return;
+    }
+
+    // Fallback to hardcoded questions
+    const question = getRandomQuestion('E', cefrLevel, excludeId);
+    setCurrentQuestion(question);
+  };
+
   useEffect(() => {
-    const loadQuestion = async () => {
-      const cefrLevel = await getUserCefrLevel();
-      const question = getRandomQuestion('E', cefrLevel);
-      setCurrentQuestion(question);
-    };
-    loadQuestion();
+    loadNewQuestion();
 
     return () => {
       tts.stop();
@@ -177,13 +195,12 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
   };
 
   const tryAnother = async () => {
-    const cefrLevel = await getUserCefrLevel();
-    const question = getRandomQuestion('E', cefrLevel, currentQuestion?.id);
-    setCurrentQuestion(question);
     setCurrentAnswer(null);
     setTranscribedText('');
     setShowPassage(false);
+    setCurrentQuestion(null);
     setState('ready');
+    await loadNewQuestion(currentQuestion?.id);
   };
 
   if (!currentQuestion) {

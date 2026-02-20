@@ -5,10 +5,13 @@ import { Button } from '../ui/Button';
 import { ResultDisplay } from './ResultDisplay';
 import { useVersantStore } from '../../stores/versantStore';
 import { getRandomQuestion } from '../../lib/versant-questions';
+import { generateVersantQuestion } from '../../lib/gemini-feedback';
+import { supabase } from '../../lib/supabase';
 import { tts } from '../../lib/tts';
 import { VoiceTranscriber } from '../../lib/speechRecognition';
 import { EN } from '../../i18n/en';
-import { VERSANT } from '../../lib/constants';
+import { VERSANT, DEFAULT_CEFR_LEVEL } from '../../lib/constants';
+import type { CEFRLevel } from '../../lib/constants';
 import toast from 'react-hot-toast';
 
 interface PartFPracticeProps {
@@ -31,9 +34,46 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
 
   const { currentQuestion, setCurrentQuestion, saveAnswer, loading } = useVersantStore();
 
-  useEffect(() => {
-    const question = getRandomQuestion('F');
+  const getUserCefrLevel = async (): Promise<CEFRLevel> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('cefr_level')
+          .eq('id', user.id)
+          .single();
+        return profile?.cefr_level || DEFAULT_CEFR_LEVEL;
+      }
+    } catch {
+      // Use default
+    }
+    return DEFAULT_CEFR_LEVEL;
+  };
+
+  const loadNewQuestion = async (excludeId?: string) => {
+    const cefrLevel = await getUserCefrLevel();
+
+    // Try AI generation first
+    const aiQuestion = await generateVersantQuestion('F', cefrLevel);
+    if (aiQuestion) {
+      setCurrentQuestion({
+        id: `f-ai-${Date.now()}`,
+        part: 'F',
+        text: aiQuestion.text,
+        timeLimit: aiQuestion.timeLimit,
+        category: 'AI Generated'
+      });
+      return;
+    }
+
+    // Fallback to hardcoded questions
+    const question = getRandomQuestion('F', undefined, excludeId);
     setCurrentQuestion(question);
+  };
+
+  useEffect(() => {
+    loadNewQuestion();
 
     return () => {
       tts.stop();
@@ -150,13 +190,13 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
     }
   };
 
-  const tryAnother = () => {
-    const question = getRandomQuestion('F', undefined, currentQuestion?.id);
-    setCurrentQuestion(question);
+  const tryAnother = async () => {
     setCurrentAnswer(null);
     setTranscribedText('');
     setShowQuestion(false);
+    setCurrentQuestion(null);
     setState('ready');
+    await loadNewQuestion(currentQuestion?.id);
   };
 
   if (!currentQuestion) {

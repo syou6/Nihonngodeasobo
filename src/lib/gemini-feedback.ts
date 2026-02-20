@@ -175,3 +175,42 @@ export async function generateVersantSampleAnswer(
     return defaultAnswer;
   }
 }
+
+/**
+ * Generate a Versant practice question using Gemini API
+ * Returns null if API is unavailable (caller should fall back to hardcoded questions)
+ */
+export async function generateVersantQuestion(
+  part: 'E' | 'F',
+  userCefrLevel: CEFRLevel = DEFAULT_CEFR_LEVEL
+): Promise<{ text: string; part: 'E' | 'F'; timeLimit: number } | null> {
+  const { allowed } = canCallApi();
+  if (!allowed) {
+    return null;
+  }
+
+  try {
+    const data = await callGeminiApi({
+      type: 'versant-question', part, cefrLevel: userCefrLevel
+    });
+
+    const estimatedTokens = API.TOKEN_BASE_SAMPLE;
+    recordApiUsage(estimatedTokens);
+    recordApiSuccess();
+
+    if (!data.text) {
+      return null;
+    }
+
+    return {
+      text: data.text,
+      part: data.part || part,
+      timeLimit: data.timeLimit || (part === 'E' ? 30 : 40)
+    };
+
+  } catch (error: any) {
+    console.error('Gemini question generation error:', error.message);
+    recordApiError();
+    return null;
+  }
+}
