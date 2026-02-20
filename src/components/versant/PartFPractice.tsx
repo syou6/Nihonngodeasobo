@@ -151,7 +151,7 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
   };
 
   const tryAnother = () => {
-    const question = getRandomQuestion('F');
+    const question = getRandomQuestion('F', undefined, currentQuestion?.id);
     setCurrentQuestion(question);
     setCurrentAnswer(null);
     setTranscribedText('');

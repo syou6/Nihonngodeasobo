@@ -178,7 +178,7 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
 
   const tryAnother = async () => {
     const cefrLevel = await getUserCefrLevel();
-    const question = getRandomQuestion('E', cefrLevel);
+    const question = getRandomQuestion('E', cefrLevel, currentQuestion?.id);
     setCurrentQuestion(question);
     setCurrentAnswer(null);
     setTranscribedText('');

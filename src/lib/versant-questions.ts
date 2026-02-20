@@ -373,11 +373,23 @@ function getLevelGroup(level: CEFRLevel): CEFRLevel[] {
   return groups[level] || ['B1'];
 }
 
+// Pick a random item from array, excluding a specific ID
+function pickRandom(questions: VersantQuestion[], excludeId?: string): VersantQuestion {
+  const candidates = excludeId
+    ? questions.filter(q => q.id !== excludeId)
+    : questions;
+
+  // If all were excluded (only 1 question available), fall back to full list
+  const pool = candidates.length > 0 ? candidates : questions;
+  const randomIndex = Math.floor(Math.random() * pool.length);
+  return pool[randomIndex];
+}
+
 // Get random question by part, optionally filtered by CEFR level (Part E only)
-export function getRandomQuestion(part: 'E' | 'F', cefrLevel?: CEFRLevel): VersantQuestion {
+// Pass excludeId to avoid getting the same question twice in a row
+export function getRandomQuestion(part: 'E' | 'F', cefrLevel?: CEFRLevel, excludeId?: string): VersantQuestion {
   if (part === 'F') {
-    const randomIndex = Math.floor(Math.random() * partFQuestions.length);
-    return partFQuestions[randomIndex];
+    return pickRandom(partFQuestions, excludeId);
   }
 
   // Part E: filter by CEFR level
@@ -385,14 +397,12 @@ export function getRandomQuestion(part: 'E' | 'F', cefrLevel?: CEFRLevel): Versa
     const levelGroup = getLevelGroup(cefrLevel);
     const filtered = partEQuestions.filter(q => q.cefrLevel && levelGroup.includes(q.cefrLevel));
     if (filtered.length > 0) {
-      const randomIndex = Math.floor(Math.random() * filtered.length);
-      return filtered[randomIndex];
+      return pickRandom(filtered, excludeId);
     }
   }
 
   // Fallback: return any Part E question
-  const randomIndex = Math.floor(Math.random() * partEQuestions.length);
-  return partEQuestions[randomIndex];
+  return pickRandom(partEQuestions, excludeId);
 }
 
 // Get all questions by part
