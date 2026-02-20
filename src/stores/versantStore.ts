@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
-import { generateEnglishFeedback, generateVersantSampleAnswer, type CEFRLevel } from '../lib/gemini-feedback';
+import { generateVersantFeedback, generateVersantSampleAnswer } from '../lib/gemini-feedback';
+import { DEFAULT_CEFR_LEVEL, VERSANT, API, DATA_LIMITS } from '../lib/constants';
+import type { CEFRLevel } from '../lib/constants';
 import type { VersantQuestion } from '../lib/versant-questions';
 
 export interface VersantFeedback {
@@ -90,16 +92,16 @@ export const useVersantStore = create<VersantStore>((set, get) => ({
       let feedback: VersantFeedback | undefined;
 
       if (transcribedText.trim()) {
+        let userCefrLevel: CEFRLevel = DEFAULT_CEFR_LEVEL;
         try {
           // Get user's CEFR level
-          let userCefrLevel: CEFRLevel = 'B1';
           if (user) {
             const { data: profile } = await supabase
               .from('users')
               .select('cefr_level')
               .eq('id', user.id)
               .single();
-            userCefrLevel = profile?.cefr_level || 'B1';
+            userCefrLevel = profile?.cefr_level || DEFAULT_CEFR_LEVEL;
           }
 
           // Generate feedback based on the question type
@@ -107,7 +109,7 @@ export const useVersantStore = create<VersantStore>((set, get) => ({
             ? `The user was asked to summarize the following passage:\n"${currentQuestion.text}"\n\nTheir summary was:\n"${transcribedText}"`
             : `The user was asked: "${currentQuestion.text}"\n\nTheir response was:\n"${transcribedText}"`;
 
-          // Timeout wrapper for API calls (30 seconds)
+          // Timeout wrapper for API calls
           const withTimeout = <T>(promise: Promise<T>, timeoutMs: number, fallback: T): Promise<T> => {
             return Promise.race([
               promise,
@@ -129,12 +131,11 @@ export const useVersantStore = create<VersantStore>((set, get) => ({
 
           // Generate feedback and sample answer in parallel with timeout
           const [aiFeedback, sampleAnswer] = await Promise.all([
-            withTimeout(generateEnglishFeedback(feedbackPrompt, userCefrLevel), 30000, defaultFeedback),
-            withTimeout(generateVersantSampleAnswer(currentQuestion.text, currentQuestion.part, userCefrLevel), 30000, defaultSampleAnswer)
+            withTimeout(generateVersantFeedback(feedbackPrompt, currentQuestion.part, userCefrLevel), API.TIMEOUT_MS, defaultFeedback),
+            withTimeout(generateVersantSampleAnswer(currentQuestion.text, currentQuestion.part, userCefrLevel), API.TIMEOUT_MS, defaultSampleAnswer)
           ]);
 
           // Parse markdown content for Versant-specific feedback
-          // Extract encouragement section if present
           const encouragementMatch = aiFeedback.markdownContent.match(/## 💪 Encouragement\n([\s\S]*?)(?=##|$)/);
           const advice = encouragementMatch
             ? encouragementMatch[1].trim()
@@ -142,7 +143,7 @@ export const useVersantStore = create<VersantStore>((set, get) => ({
 
           feedback = {
             cefrLevel: aiFeedback.cefrLevel,
-            score: 70, // Default score - Versant scoring is handled separately
+            score: VERSANT.DEFAULT_SCORE,
             advice,
             sampleAnswer,
             grammarNotes: [],
@@ -150,10 +151,9 @@ export const useVersantStore = create<VersantStore>((set, get) => ({
           };
         } catch (feedbackError) {
           console.error('Failed to generate feedback:', feedbackError);
-          // Provide default feedback even on error
           feedback = {
             cefrLevel: userCefrLevel,
-            score: 70,
+            score: VERSANT.DEFAULT_SCORE,
             advice: 'Great effort! Keep practicing your English speaking skills.',
             sampleAnswer: currentQuestion.part === 'E'
               ? 'The passage discusses the main topic and provides key information.'
@@ -215,7 +215,6 @@ export const useVersantStore = create<VersantStore>((set, get) => ({
             });
         } catch (dbError) {
           console.error('Failed to save to database:', dbError);
-          // Continue anyway - answer is still in memory
         }
       }
 
@@ -248,7 +247,7 @@ export const useVersantStore = create<VersantStore>((set, get) => ({
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(DATA_LIMITS.VERSANT_HISTORY_FETCH);
 
       if (error) throw error;
 
@@ -259,8 +258,8 @@ export const useVersantStore = create<VersantStore>((set, get) => ({
         question: {
           id: row.question_id,
           part: row.part as 'E' | 'F',
-          text: '', // Will need to be fetched from questions
-          timeLimit: row.part === 'E' ? 30 : 40
+          text: '',
+          timeLimit: row.part === 'E' ? VERSANT.PART_E.TIME_LIMIT : VERSANT.PART_F.TIME_LIMIT
         },
         transcribedText: row.transcribed_text,
         audioUrl: row.audio_url,

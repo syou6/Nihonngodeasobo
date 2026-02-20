@@ -13,6 +13,8 @@ import {
   BookOpen
 } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { EN } from '../../i18n/en';
+import { getScoreColor, getCefrColor } from '../../lib/constants';
 import type { VersantAnswer } from '../../stores/versantStore';
 
 interface ResultDisplayProps {
@@ -50,28 +52,6 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
     }
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600 bg-green-100';
-    if (score >= 60) return 'text-yellow-600 bg-yellow-100';
-    return 'text-red-600 bg-red-100';
-  };
-
-  const getCefrColor = (level: string) => {
-    const colors: Record<string, string> = {
-      'A1': 'bg-gray-100 text-gray-700',
-      'A1+': 'bg-gray-200 text-gray-800',
-      'A2': 'bg-blue-100 text-blue-700',
-      'A2+': 'bg-blue-200 text-blue-800',
-      'B1': 'bg-green-100 text-green-700',
-      'B1+': 'bg-green-200 text-green-800',
-      'B2': 'bg-yellow-100 text-yellow-700',
-      'B2+': 'bg-yellow-200 text-yellow-800',
-      'C1': 'bg-orange-100 text-orange-700',
-      'C1+': 'bg-purple-100 text-purple-700'
-    };
-    return colors[level] || 'bg-gray-100 text-gray-700';
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -82,7 +62,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
       <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 text-center">
         <div className="flex items-center justify-center gap-4 mb-4">
           <Award className="w-8 h-8 text-indigo-600" />
-          <h2 className="text-2xl font-bold text-gray-900">Your Result</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{EN.versant.result}</h2>
         </div>
 
         {answer.feedback && (
@@ -91,7 +71,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
               <span className="text-3xl font-bold">{answer.feedback.score}</span>
             </div>
             <div className="text-left">
-              <p className="text-gray-600 text-sm">CEFR Level</p>
+              <p className="text-gray-600 text-sm">{EN.versant.cefrLevel}</p>
               <span className={`inline-block px-3 py-1 rounded-full text-lg font-bold ${getCefrColor(answer.feedback.cefrLevel)}`}>
                 {answer.feedback.cefrLevel}
               </span>
@@ -102,7 +82,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
 
       {/* Your Response */}
       <div className="bg-white rounded-2xl border border-gray-200 p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-3">Your Response</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-3">{EN.versant.yourResponse}</h3>
 
         {answer.audioUrl && (
           <Button
@@ -114,12 +94,12 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
             {isPlaying ? (
               <>
                 <Pause className="w-4 h-4 mr-2" />
-                Pause
+                {EN.versant.pause}
               </>
             ) : (
               <>
                 <Play className="w-4 h-4 mr-2" />
-                Play Recording
+                {EN.versant.playRecording}
               </>
             )}
           </Button>
@@ -127,7 +107,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
 
         <div className="bg-gray-50 rounded-lg p-4">
           <p className="text-gray-800">
-            {answer.transcribedText || '(No speech detected)'}
+            {answer.transcribedText || EN.versant.noSpeechDetected}
           </p>
         </div>
       </div>
@@ -149,7 +129,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
               >
                 <div className="flex items-center gap-3">
                   <CheckCircle className="w-5 h-5 text-blue-500" />
-                  <span className="font-semibold text-gray-900">Grammar Notes</span>
+                  <span className="font-semibold text-gray-900">{EN.versant.grammarNotes}</span>
                   <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">
                     {answer.feedback.grammarNotes.length}
                   </span>
@@ -181,7 +161,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
               >
                 <div className="flex items-center gap-3">
                   <Lightbulb className="w-5 h-5 text-yellow-500" />
-                  <span className="font-semibold text-gray-900">Vocabulary Tips</span>
+                  <span className="font-semibold text-gray-900">{EN.versant.vocabularyTips}</span>
                   <span className="bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5 rounded-full">
                     {answer.feedback.vocabularyTips.length}
                   </span>
@@ -213,7 +193,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
               >
                 <div className="flex items-center gap-3">
                   <BookOpen className="w-5 h-5 text-green-500" />
-                  <span className="font-semibold text-gray-900">Sample Answer</span>
+                  <span className="font-semibold text-gray-900">{EN.versant.sampleAnswer}</span>
                 </div>
                 {showSample ? (
                   <ChevronUp className="w-5 h-5 text-gray-400" />
@@ -240,7 +220,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
           className="flex-1"
         >
           <RotateCcw className="w-5 h-5 mr-2" />
-          Try Another Question
+          {EN.versant.tryAnother}
         </Button>
         <Button
           onClick={onBack}
@@ -249,7 +229,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
           className="flex-1"
         >
           <Home className="w-5 h-5 mr-2" />
-          Back to Practice
+          {EN.versant.backToPractice}
         </Button>
       </div>
     </motion.div>

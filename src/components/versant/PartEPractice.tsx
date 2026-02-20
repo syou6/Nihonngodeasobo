@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Play, Mic, MicOff, Volume2, RotateCcw, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Play, Mic, MicOff, Volume2, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { ResultDisplay } from './ResultDisplay';
 import { useVersantStore } from '../../stores/versantStore';
-import { getRandomQuestion, getQuestionsByPart, type CEFRLevel } from '../../lib/versant-questions';
+import { getRandomQuestion } from '../../lib/versant-questions';
 import { supabase } from '../../lib/supabase';
 import { tts } from '../../lib/tts';
 import { VoiceTranscriber } from '../../lib/speechRecognition';
 import { EN } from '../../i18n/en';
+import { VERSANT, DEFAULT_CEFR_LEVEL } from '../../lib/constants';
+import type { CEFRLevel } from '../../lib/constants';
 import toast from 'react-hot-toast';
 
 interface PartEPracticeProps {
@@ -19,7 +21,7 @@ type PracticeState = 'ready' | 'listening' | 'recording' | 'processing' | 'resul
 
 export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
   const [state, setState] = useState<PracticeState>('ready');
-  const [timeRemaining, setTimeRemaining] = useState(30);
+  const [timeRemaining, setTimeRemaining] = useState(VERSANT.PART_E.TIME_LIMIT);
   const [transcribedText, setTranscribedText] = useState('');
   const [currentAnswer, setCurrentAnswer] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -32,23 +34,26 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
 
   const { currentQuestion, setCurrentQuestion, saveAnswer, loading } = useVersantStore();
 
-  useEffect(() => {
-    // Get user's CEFR level and select a matching Part E question
-    const loadQuestion = async () => {
-      let cefrLevel: CEFRLevel = 'B1';
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: profile } = await supabase
-            .from('users')
-            .select('cefr_level')
-            .eq('id', user.id)
-            .single();
-          cefrLevel = profile?.cefr_level || 'B1';
-        }
-      } catch (e) {
-        // Use default B1
+  const getUserCefrLevel = async (): Promise<CEFRLevel> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('cefr_level')
+          .eq('id', user.id)
+          .single();
+        return profile?.cefr_level || DEFAULT_CEFR_LEVEL;
       }
+    } catch {
+      // Use default
+    }
+    return DEFAULT_CEFR_LEVEL;
+  };
+
+  useEffect(() => {
+    const loadQuestion = async () => {
+      const cefrLevel = await getUserCefrLevel();
       const question = getRandomQuestion('E', cefrLevel);
       setCurrentQuestion(question);
     };
@@ -68,16 +73,15 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
     setState('listening');
 
     try {
-      await tts.speak(currentQuestion.text, { rate: 0.85 });
+      await tts.speak(currentQuestion.text, { rate: VERSANT.PART_E.TTS_RATE });
       setIsPlaying(false);
-      // Small delay before recording starts
       setTimeout(() => {
         startRecording();
-      }, 1000);
+      }, VERSANT.PART_E.RECORDING_DELAY_MS);
     } catch (error) {
       console.error('TTS error:', error);
       setIsPlaying(false);
-      toast.error('Failed to play audio. Please try again.');
+      toast.error(EN.versant.ttsErrorRetry);
       setState('ready');
     }
   };
@@ -90,7 +94,6 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
     setTranscribedText('');
     audioChunksRef.current = [];
 
-    // Start audio recording
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -107,7 +110,6 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
       console.error('Failed to start audio recording:', error);
     }
 
-    // Start speech recognition
     if (VoiceTranscriber.isSupported()) {
       transcriberRef.current = new VoiceTranscriber();
       transcriberRef.current.start(
@@ -120,7 +122,6 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
       );
     }
 
-    // Start countdown timer
     timerRef.current = setInterval(() => {
       setTimeRemaining(prev => {
         if (prev <= 1) {
@@ -133,20 +134,17 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
   };
 
   const stopRecording = async () => {
-    // Clear timer
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
 
-    // Stop speech recognition
     let finalText = transcribedText;
     if (transcriberRef.current) {
       finalText = transcriberRef.current.stop();
       setTranscribedText(finalText);
     }
 
-    // Stop audio recording
     let audioBlob: Blob | undefined;
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       await new Promise<void>(resolve => {
@@ -165,7 +163,6 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
 
     setState('processing');
 
-    // Save and get feedback
     if (currentQuestion) {
       try {
         const answer = await saveAnswer(currentQuestion.id, finalText, audioBlob);
@@ -173,27 +170,14 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
         setState('result');
       } catch (error) {
         console.error('Failed to save answer:', error);
-        toast.error('Failed to process your answer');
+        toast.error(EN.versant.processError);
         setState('ready');
       }
     }
   };
 
   const tryAnother = async () => {
-    let cefrLevel: CEFRLevel = 'B1';
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from('users')
-          .select('cefr_level')
-          .eq('id', user.id)
-          .single();
-        cefrLevel = profile?.cefr_level || 'B1';
-      }
-    } catch (e) {
-      // Use default B1
-    }
+    const cefrLevel = await getUserCefrLevel();
     const question = getRandomQuestion('E', cefrLevel);
     setCurrentQuestion(question);
     setCurrentAnswer(null);
@@ -210,6 +194,8 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
     );
   }
 
+  const timeLimit = currentQuestion.timeLimit;
+
   return (
     <div className="max-w-3xl mx-auto p-4 sm:p-6">
       {/* Header */}
@@ -219,7 +205,7 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
         </Button>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{EN.versant.partE.title}</h1>
-          <p className="text-gray-600">{EN.versant.partE.subtitle}</p>
+          <p className="text-gray-600">{EN.versant.partE.description}</p>
         </div>
       </div>
 
@@ -242,8 +228,7 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
             {/* Instructions */}
             <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
               <p className="text-blue-800">
-                <strong>Instructions:</strong> Listen to the passage, then summarize
-                the main points in your own words. You have 30 seconds.
+                <strong>Instructions:</strong> {EN.versant.partE.instructions}
               </p>
             </div>
 
@@ -260,7 +245,7 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
                     <Eye className="w-5 h-5 text-gray-500" />
                   )}
                   <span className="font-medium text-gray-700">
-                    {showPassage ? 'Hide Passage Text' : 'Show Passage Text'}
+                    {showPassage ? EN.versant.partE.hidePassage : EN.versant.partE.showPassage}
                   </span>
                 </div>
                 {showPassage ? (
@@ -278,7 +263,7 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
                     className="border-t border-gray-200"
                   >
                     <div className="p-4 bg-blue-50">
-                      <p className="text-sm text-blue-600 font-medium mb-1">Passage:</p>
+                      <p className="text-sm text-blue-600 font-medium mb-1">{EN.versant.partE.passageLabel}</p>
                       <p className="text-lg text-gray-800 leading-relaxed">{currentQuestion.text}</p>
                     </div>
                   </motion.div>
@@ -291,7 +276,7 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
               {state === 'ready' && (
                 <div className="text-center">
                   <p className="text-gray-600 mb-6">
-                    Press play to listen to the passage
+                    {EN.versant.partE.pressPlay}
                   </p>
                   <Button
                     onClick={playQuestion}
@@ -300,7 +285,7 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
                     className="w-full sm:w-auto"
                   >
                     <Play className="w-6 h-6 mr-2" />
-                    Play Passage
+                    {EN.versant.partE.playButton}
                   </Button>
                 </div>
               )}
@@ -314,9 +299,9 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
                   >
                     <Volume2 className="w-10 h-10 text-indigo-600" />
                   </motion.div>
-                  <p className="text-xl font-medium text-gray-900">Listening...</p>
+                  <p className="text-xl font-medium text-gray-900">{EN.versant.partE.listening}</p>
                   <p className="text-gray-500 mt-2">
-                    Pay attention to the main points
+                    {EN.versant.partE.listenTip}
                   </p>
                 </div>
               )}
@@ -335,10 +320,10 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
 
                   {/* Timer */}
                   <div className="mb-6">
-                    <div className={`text-5xl font-bold ${timeRemaining <= 10 ? 'text-red-600' : 'text-gray-900'}`}>
+                    <div className={`text-5xl font-bold ${timeRemaining <= VERSANT.TIMER_WARNING_THRESHOLD ? 'text-red-600' : 'text-gray-900'}`}>
                       {timeRemaining}
                     </div>
-                    <p className="text-gray-500">seconds remaining</p>
+                    <p className="text-gray-500">{EN.versant.secondsRemaining}</p>
                   </div>
 
                   {/* Progress bar */}
@@ -346,7 +331,7 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
                     <motion.div
                       className="h-full bg-indigo-500"
                       initial={{ width: '100%' }}
-                      animate={{ width: `${(timeRemaining / 30) * 100}%` }}
+                      animate={{ width: `${(timeRemaining / timeLimit) * 100}%` }}
                       transition={{ duration: 0.5 }}
                     />
                   </div>
@@ -354,7 +339,7 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
                   {/* Live transcription */}
                   {transcribedText && (
                     <div className="text-left bg-gray-50 rounded-lg p-4 mb-6">
-                      <p className="text-sm text-gray-500 mb-1">Your response:</p>
+                      <p className="text-sm text-gray-500 mb-1">{EN.versant.yourResponseLabel}</p>
                       <p className="text-gray-800">{transcribedText}</p>
                     </div>
                   )}
@@ -366,7 +351,7 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
                     className="bg-red-500 hover:bg-red-600 text-white"
                   >
                     <MicOff className="w-5 h-5 mr-2" />
-                    Stop Recording
+                    {EN.versant.stopRecording}
                   </Button>
                 </div>
               )}
@@ -374,7 +359,7 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
               {state === 'processing' && (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-                  <p className="text-lg text-gray-600">Analyzing your response...</p>
+                  <p className="text-lg text-gray-600">{EN.versant.analyzing}</p>
                 </div>
               )}
             </div>

@@ -6,6 +6,7 @@ import { PartEPractice } from './PartEPractice';
 import { PartFPractice } from './PartFPractice';
 import { TestHistory } from './TestHistory';
 import { EN } from '../../i18n/en';
+import { VERSANT } from '../../lib/constants';
 
 type ViewMode = 'home' | 'partE' | 'partF' | 'history';
 
@@ -40,7 +41,7 @@ export const VersantHome: React.FC = () => {
             {EN.nav.practice}
           </h1>
           <p className="text-lg text-gray-600">
-            Practice speaking with Versant-style exercises
+            {EN.versant.subtitle}
           </p>
         </div>
 
@@ -67,10 +68,7 @@ export const VersantHome: React.FC = () => {
             </p>
             <div className="flex items-center gap-4 text-sm">
               <span className="px-3 py-1 bg-indigo-200 text-indigo-800 rounded-full font-medium">
-                30 seconds
-              </span>
-              <span className="text-gray-500">
-                6 questions
+                {VERSANT.PART_E.TIME_LIMIT} {EN.versant.seconds}
               </span>
             </div>
           </motion.div>
@@ -96,10 +94,7 @@ export const VersantHome: React.FC = () => {
             </p>
             <div className="flex items-center gap-4 text-sm">
               <span className="px-3 py-1 bg-purple-200 text-purple-800 rounded-full font-medium">
-                40 seconds
-              </span>
-              <span className="text-gray-500">
-                20 questions
+                {VERSANT.PART_F.TIME_LIMIT} {EN.versant.seconds}
               </span>
             </div>
           </motion.div>
@@ -114,7 +109,7 @@ export const VersantHome: React.FC = () => {
             className="w-full"
           >
             <History className="w-5 h-5 mr-2" />
-            View Practice History
+            {EN.versant.viewHistory}
           </Button>
         </div>
 
@@ -126,25 +121,15 @@ export const VersantHome: React.FC = () => {
           className="bg-yellow-50 rounded-2xl p-6 border border-yellow-200"
         >
           <h3 className="text-lg font-bold text-yellow-800 mb-3">
-            Tips for Success
+            {EN.versant.tipsTitle}
           </h3>
           <ul className="space-y-2 text-yellow-700">
-            <li className="flex items-start gap-2">
-              <span className="font-bold">1.</span>
-              <span>Listen carefully to the question before you start speaking</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="font-bold">2.</span>
-              <span>Speak clearly and at a natural pace - don't rush</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="font-bold">3.</span>
-              <span>Use the full time available - silence is okay while thinking</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="font-bold">4.</span>
-              <span>Practice daily to build confidence and fluency</span>
-            </li>
+            {EN.versant.tips.map((tip, index) => (
+              <li key={index} className="flex items-start gap-2">
+                <span className="font-bold">{index + 1}.</span>
+                <span>{tip}</span>
+              </li>
+            ))}
           </ul>
         </motion.div>
       </motion.div>

@@ -1,6 +1,9 @@
 import { canCallApi, recordApiUsage, recordApiSuccess, recordApiError, showApiUsageWarning } from './api-limiter';
+import { getNextCefrLevel, DEFAULT_CEFR_LEVEL, API } from './constants';
+import type { CEFRLevel } from './constants';
 
-export type CEFRLevel = 'A1' | 'A1+' | 'A2' | 'A2+' | 'B1' | 'B1+' | 'B2' | 'B2+' | 'C1' | 'C1+';
+// Re-export for backward compatibility
+export type { CEFRLevel } from './constants';
 
 // Markdown形式のフィードバック
 export interface EnglishFeedback {
@@ -29,17 +32,10 @@ async function callGeminiApi(body: Record<string, unknown>): Promise<any> {
  */
 export async function generateEnglishFeedback(
   content: string,
-  userCefrLevel: CEFRLevel = 'B1'
+  userCefrLevel: CEFRLevel = DEFAULT_CEFR_LEVEL
 ): Promise<EnglishFeedback> {
-  // Target level is i+1 (one level higher than current)
-  const levelProgression: Record<CEFRLevel, CEFRLevel> = {
-    'A1': 'A1+', 'A1+': 'A2', 'A2': 'A2+', 'A2+': 'B1',
-    'B1': 'B1+', 'B1+': 'B2', 'B2': 'B2+', 'B2+': 'C1',
-    'C1': 'C1+', 'C1+': 'C1+'
-  };
-  const targetLevel = levelProgression[userCefrLevel];
+  const targetLevel = getNextCefrLevel(userCefrLevel);
 
-  // Default fallback response
   const defaultFeedback: EnglishFeedback = {
     cefrLevel: userCefrLevel,
     targetLevel: targetLevel,
@@ -50,7 +46,6 @@ Your diary entry has been recorded. Keep practicing your English every day!
 頑張って英語の練習を続けてください！毎日少しずつ上達しています。`
   };
 
-  // Check API limits
   const { allowed, reason } = canCallApi();
   if (!allowed) {
     console.warn('API limit reached:', reason);
@@ -64,8 +59,7 @@ Your diary entry has been recorded. Keep practicing your English every day!
       type: 'feedback', content, cefrLevel: userCefrLevel
     });
 
-    // Record API usage
-    const estimatedTokens = Math.ceil(content.length / 3) + 200;
+    const estimatedTokens = Math.ceil(content.length / API.TOKEN_ESTIMATION_DIVISOR) + API.TOKEN_BASE_FEEDBACK;
     recordApiUsage(estimatedTokens);
     recordApiSuccess();
 
@@ -77,6 +71,52 @@ Your diary entry has been recorded. Keep practicing your English every day!
 
   } catch (error: any) {
     console.error('Gemini feedback error:', error.message);
+    recordApiError();
+    return defaultFeedback;
+  }
+}
+
+/**
+ * Generate feedback for Versant practice using Gemini API (via Vercel API Route)
+ */
+export async function generateVersantFeedback(
+  content: string,
+  part: 'E' | 'F',
+  userCefrLevel: CEFRLevel = DEFAULT_CEFR_LEVEL
+): Promise<EnglishFeedback> {
+  const targetLevel = getNextCefrLevel(userCefrLevel);
+
+  const defaultFeedback: EnglishFeedback = {
+    cefrLevel: userCefrLevel,
+    targetLevel: targetLevel,
+    markdownContent: `## 📊 Response Analysis\nYour response has been recorded. Keep practicing your speaking skills!\n\n## 💪 Encouragement\n頑張って英語のスピーキング練習を続けてください！`
+  };
+
+  const { allowed, reason } = canCallApi();
+  if (!allowed) {
+    console.warn('API limit reached:', reason);
+    return defaultFeedback;
+  }
+
+  showApiUsageWarning();
+
+  try {
+    const data = await callGeminiApi({
+      type: 'versant-feedback', content, part, cefrLevel: userCefrLevel
+    });
+
+    const estimatedTokens = Math.ceil(content.length / API.TOKEN_ESTIMATION_DIVISOR) + API.TOKEN_BASE_FEEDBACK;
+    recordApiUsage(estimatedTokens);
+    recordApiSuccess();
+
+    return {
+      cefrLevel: (data.cefrLevel as CEFRLevel) || userCefrLevel,
+      targetLevel: (data.targetLevel as CEFRLevel) || targetLevel,
+      markdownContent: data.markdownContent || defaultFeedback.markdownContent
+    };
+
+  } catch (error: any) {
+    console.error('Gemini versant feedback error:', error.message);
     recordApiError();
     return defaultFeedback;
   }
@@ -107,14 +147,12 @@ export function getCefrDescription(level: CEFRLevel): string {
 export async function generateVersantSampleAnswer(
   question: string,
   part: 'E' | 'F',
-  userCefrLevel: CEFRLevel = 'B1'
+  userCefrLevel: CEFRLevel = DEFAULT_CEFR_LEVEL
 ): Promise<string> {
-  // Default fallback
   const defaultAnswer = part === 'E'
     ? 'The passage discusses the main topic and key points. It mentions important details that support the central idea. In conclusion, this information is valuable for understanding the subject.'
     : 'In my opinion, this is an important topic to consider. I believe that there are several factors we need to think about. First, we should consider the main aspects. Additionally, there are benefits and challenges to consider. Overall, I think this is something that affects many people in different ways.';
 
-  // Check API limits
   const { allowed } = canCallApi();
   if (!allowed) {
     return defaultAnswer;
@@ -125,8 +163,7 @@ export async function generateVersantSampleAnswer(
       type: 'versant-sample', question, part, cefrLevel: userCefrLevel
     });
 
-    // Record API usage
-    const estimatedTokens = Math.ceil(question.length / 3) + 100;
+    const estimatedTokens = Math.ceil(question.length / API.TOKEN_ESTIMATION_DIVISOR) + API.TOKEN_BASE_SAMPLE;
     recordApiUsage(estimatedTokens);
     recordApiSuccess();
 

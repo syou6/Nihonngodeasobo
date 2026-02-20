@@ -8,6 +8,7 @@ import { getRandomQuestion } from '../../lib/versant-questions';
 import { tts } from '../../lib/tts';
 import { VoiceTranscriber } from '../../lib/speechRecognition';
 import { EN } from '../../i18n/en';
+import { VERSANT } from '../../lib/constants';
 import toast from 'react-hot-toast';
 
 interface PartFPracticeProps {
@@ -18,7 +19,7 @@ type PracticeState = 'ready' | 'listening' | 'recording' | 'processing' | 'resul
 
 export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
   const [state, setState] = useState<PracticeState>('ready');
-  const [timeRemaining, setTimeRemaining] = useState(40);
+  const [timeRemaining, setTimeRemaining] = useState(VERSANT.PART_F.TIME_LIMIT);
   const [transcribedText, setTranscribedText] = useState('');
   const [currentAnswer, setCurrentAnswer] = useState<any>(null);
   const [showQuestion, setShowQuestion] = useState(false);
@@ -31,7 +32,6 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
   const { currentQuestion, setCurrentQuestion, saveAnswer, loading } = useVersantStore();
 
   useEffect(() => {
-    // Select a random Part F question
     const question = getRandomQuestion('F');
     setCurrentQuestion(question);
 
@@ -49,14 +49,13 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
     setState('listening');
 
     try {
-      await tts.speak(currentQuestion.text, { rate: 0.9 });
-      // Start recording after the question is read
+      await tts.speak(currentQuestion.text, { rate: VERSANT.PART_F.TTS_RATE });
       setTimeout(() => {
         startRecording();
-      }, 500);
+      }, VERSANT.PART_F.RECORDING_DELAY_MS);
     } catch (error) {
       console.error('TTS error:', error);
-      toast.error('Failed to play audio. Starting recording...');
+      toast.error(EN.versant.ttsError);
       startRecording();
     }
   };
@@ -69,7 +68,6 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
     setTranscribedText('');
     audioChunksRef.current = [];
 
-    // Start audio recording
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -86,7 +84,6 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
       console.error('Failed to start audio recording:', error);
     }
 
-    // Start speech recognition
     if (VoiceTranscriber.isSupported()) {
       transcriberRef.current = new VoiceTranscriber();
       transcriberRef.current.start(
@@ -99,7 +96,6 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
       );
     }
 
-    // Start countdown timer
     timerRef.current = setInterval(() => {
       setTimeRemaining(prev => {
         if (prev <= 1) {
@@ -112,20 +108,17 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
   };
 
   const stopRecording = async () => {
-    // Clear timer
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
 
-    // Stop speech recognition
     let finalText = transcribedText;
     if (transcriberRef.current) {
       finalText = transcriberRef.current.stop();
       setTranscribedText(finalText);
     }
 
-    // Stop audio recording
     let audioBlob: Blob | undefined;
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       await new Promise<void>(resolve => {
@@ -144,7 +137,6 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
 
     setState('processing');
 
-    // Save and get feedback
     if (currentQuestion) {
       try {
         const answer = await saveAnswer(currentQuestion.id, finalText, audioBlob);
@@ -152,7 +144,7 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
         setState('result');
       } catch (error) {
         console.error('Failed to save answer:', error);
-        toast.error('Failed to process your answer');
+        toast.error(EN.versant.processError);
         setState('ready');
       }
     }
@@ -175,6 +167,8 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
     );
   }
 
+  const timeLimit = currentQuestion.timeLimit;
+
   return (
     <div className="max-w-3xl mx-auto p-4 sm:p-6">
       {/* Header */}
@@ -184,7 +178,7 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
         </Button>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{EN.versant.partF.title}</h1>
-          <p className="text-gray-600">{EN.versant.partF.subtitle}</p>
+          <p className="text-gray-600">{EN.versant.partF.description}</p>
         </div>
       </div>
 
@@ -207,8 +201,7 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
             {/* Instructions */}
             <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
               <p className="text-purple-800">
-                <strong>Instructions:</strong> Listen to the question, then give your
-                opinion with reasons. You have 40 seconds to respond.
+                <strong>Instructions:</strong> {EN.versant.partF.instructions}
               </p>
             </div>
 
@@ -225,7 +218,7 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
                     <Eye className="w-5 h-5 text-gray-500" />
                   )}
                   <span className="font-medium text-gray-700">
-                    {showQuestion ? 'Hide Question Text' : 'Show Question Text'}
+                    {showQuestion ? EN.versant.partF.hideQuestion : EN.versant.partF.showQuestion}
                   </span>
                 </div>
                 {showQuestion ? (
@@ -243,7 +236,7 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
                     className="border-t border-gray-200"
                   >
                     <div className="p-4 bg-purple-50">
-                      <p className="text-sm text-purple-600 font-medium mb-1">Question:</p>
+                      <p className="text-sm text-purple-600 font-medium mb-1">{EN.versant.partF.questionLabel}</p>
                       <p className="text-lg text-gray-800">{currentQuestion.text}</p>
                     </div>
                   </motion.div>
@@ -259,7 +252,7 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
                     <HelpCircle className="w-8 h-8 text-purple-600" />
                   </div>
                   <p className="text-gray-600 mb-6">
-                    Press play to hear the question
+                    {EN.versant.partF.pressPlay}
                   </p>
                   <Button
                     onClick={playQuestion}
@@ -268,7 +261,7 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
                     className="w-full sm:w-auto bg-purple-500 hover:bg-purple-600"
                   >
                     <Play className="w-6 h-6 mr-2" />
-                    Play Question
+                    {EN.versant.partF.playButton}
                   </Button>
                 </div>
               )}
@@ -282,7 +275,7 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
                   >
                     <Volume2 className="w-10 h-10 text-purple-600" />
                   </motion.div>
-                  <p className="text-xl font-medium text-gray-900 mb-4">Listening...</p>
+                  <p className="text-xl font-medium text-gray-900 mb-4">{EN.versant.playing}</p>
                 </div>
               )}
 
@@ -301,10 +294,10 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
 
                   {/* Timer */}
                   <div className="mb-6">
-                    <div className={`text-5xl font-bold ${timeRemaining <= 10 ? 'text-red-600' : 'text-gray-900'}`}>
+                    <div className={`text-5xl font-bold ${timeRemaining <= VERSANT.TIMER_WARNING_THRESHOLD ? 'text-red-600' : 'text-gray-900'}`}>
                       {timeRemaining}
                     </div>
-                    <p className="text-gray-500">seconds remaining</p>
+                    <p className="text-gray-500">{EN.versant.secondsRemaining}</p>
                   </div>
 
                   {/* Progress bar */}
@@ -312,7 +305,7 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
                     <motion.div
                       className="h-full bg-purple-500"
                       initial={{ width: '100%' }}
-                      animate={{ width: `${(timeRemaining / 40) * 100}%` }}
+                      animate={{ width: `${(timeRemaining / timeLimit) * 100}%` }}
                       transition={{ duration: 0.5 }}
                     />
                   </div>
@@ -320,7 +313,7 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
                   {/* Live transcription */}
                   {transcribedText && (
                     <div className="text-left bg-gray-50 rounded-lg p-4 mb-6">
-                      <p className="text-sm text-gray-500 mb-1">Your response:</p>
+                      <p className="text-sm text-gray-500 mb-1">{EN.versant.yourResponseLabel}</p>
                       <p className="text-gray-800">{transcribedText}</p>
                     </div>
                   )}
@@ -332,7 +325,7 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
                     className="bg-red-500 hover:bg-red-600 text-white"
                   >
                     <MicOff className="w-5 h-5 mr-2" />
-                    Stop Recording
+                    {EN.versant.stopRecording}
                   </Button>
                 </div>
               )}
@@ -340,7 +333,7 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
               {state === 'processing' && (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                  <p className="text-lg text-gray-600">Analyzing your response...</p>
+                  <p className="text-lg text-gray-600">{EN.versant.analyzing}</p>
                 </div>
               )}
             </div>
