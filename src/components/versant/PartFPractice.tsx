@@ -85,7 +85,6 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
   const playQuestion = async () => {
     if (!currentQuestion) return;
 
-    setShowQuestion(true);
     setState('listening');
 
     try {
