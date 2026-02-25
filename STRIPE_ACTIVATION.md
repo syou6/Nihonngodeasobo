@@ -3,7 +3,7 @@
 ## サービス概要
 
 ### サービス名
-**AI Voice Journal（AI音声日記ジャーナル）**
+**English AI Diary（AI音声日記ジャーナル）**
 
 ### URL
 https://www.journal-ai.cloud/

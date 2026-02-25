@@ -2,7 +2,7 @@
 
 ## ✅ 作成された料金プラン
 
-### AI Voice Journal ベーシックプラン
+### English AI Diary ベーシックプラン
 - **商品ID**: prod_SxZO5IqYKZmN32
 - **説明**: 音声日記を無制限に記録。AI文字起こし・要約機能付き。家族と思い出を共有。
 

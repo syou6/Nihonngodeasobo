@@ -1,7 +1,7 @@
 {
-  "name": "AI Voice Journal",
-  "short_name": "AI Voice Journal",
-  "description": "高齢者向け音声日記アプリ - 話すだけで日記が完成",
+  "name": "English AI Diary",
+  "short_name": "English AI Diary",
+  "description": "AI-powered English diary app - Speak English Every Day",
   "theme_color": "#667eea",
   "background_color": "#ffffff",
   "display": "standalone",

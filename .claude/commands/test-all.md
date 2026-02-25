@@ -1,6 +1,6 @@
 # Full Test Suite
 
-Run all tests for the AI Voice Journal app. This includes unit tests (Vitest) and E2E tests (Playwright).
+Run all tests for the English AI Diary app. This includes unit tests (Vitest) and E2E tests (Playwright).
 
 ## Steps
 

@@ -1,5 +1,5 @@
 -- =====================================================
--- AI Voice Journal - Complete Database Setup
+-- English AI Diary - Complete Database Setup
 -- =====================================================
 -- このファイルを Supabase SQL Editor に貼り付けて実行してください
 -- 順番に実行されるので、1回のコピペでOKです

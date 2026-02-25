@@ -1,4 +1,4 @@
-# AI Voice Journal システムアーキテクチャ
+# English AI Diary システムアーキテクチャ
 
 ```mermaid
 graph TB

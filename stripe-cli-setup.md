@@ -23,7 +23,7 @@ stripe --api-key sk_live_xxx [command]
 ```bash
 # 商品を作成
 stripe products create \
-  --name="AI Voice Journal プレミアムプラン" \
+  --name="English AI Diary プレミアムプラン" \
   --description="月額980円のプレミアムプラン"
 
 # 価格を作成
