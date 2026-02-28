@@ -74,12 +74,17 @@ export const FamilyManager: React.FC = () => {
 
     setLoading(true);
     try {
-      const { data: targetUser } = await supabase
-        .from('users')
-        .select('id, name, email')
-        .eq('email', emailInput.trim())
-        .single();
+      // Use RPC function to bypass RLS (users can only see own profile)
+      const { data: searchResults, error: searchError } = await supabase
+        .rpc('search_user_by_email', { search_email: emailInput.trim() });
 
+      if (searchError) {
+        console.error('User search error:', searchError);
+        toast.error(EN.family.userNotFound);
+        return;
+      }
+
+      const targetUser = searchResults?.[0];
       if (!targetUser) {
         toast.error(EN.family.userNotFound);
         return;
