@@ -42,35 +42,46 @@ export const useDiaryStore = create<DiaryStore>((set, get) => ({
   fetchEntries: async () => {
     set({ loading: true });
     const startTime = performance.now();
-    
+
+    // Timeout to prevent infinite loading
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Diary fetch timeout (15s)')), 15000)
+    );
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await Promise.race([
+        supabase.auth.getUser(),
+        timeout.then(() => { throw new Error('Auth timeout'); })
+      ]);
       if (!user) {
         set({ entries: [], loading: false });
         return;
       }
 
       // 並列でクエリを実行
-      const [relationshipsResult, initialDiariesResult] = await Promise.all([
-        // 家族関係を取得
-        supabase
-          .from('family_relationships')
-          .select('parent_id, child_id')
-          .or(`parent_id.eq.${user.id},child_id.eq.${user.id}`)
-          .eq('status', 'accepted'),
-        
-        // まず自分の日記だけを取得（高速表示用）
-        supabase
-          .from('diaries')
-          .select(`
-            *,
-            user:users(*),
-            comments:comments(*, user:users(*))
-          `)
-          .eq('user_id', user.id)
-          .is('deleted_at', null)
-          .order('created_at', { ascending: false })
-          .limit(10)
+      const [relationshipsResult, initialDiariesResult] = await Promise.race([
+        Promise.all([
+          // 家族関係を取得
+          supabase
+            .from('family_relationships')
+            .select('parent_id, child_id')
+            .or(`parent_id.eq.${user.id},child_id.eq.${user.id}`)
+            .eq('status', 'accepted'),
+
+          // まず自分の日記だけを取得（高速表示用）
+          supabase
+            .from('diaries')
+            .select(`
+              *,
+              user:users(*),
+              comments:comments(*, user:users(*))
+            `)
+            .eq('user_id', user.id)
+            .is('deleted_at', null)
+            .order('created_at', { ascending: false })
+            .limit(10)
+        ]),
+        timeout.then(() => { throw new Error('Query timeout'); })
       ]);
 
       // 自分の日記を即座に表示
@@ -97,18 +108,21 @@ export const useDiaryStore = create<DiaryStore>((set, get) => ({
           .in('user_id', Array.from(familyIds))
           .is('deleted_at', null)
           .order('created_at', { ascending: false })
-          .limit(50); // 最新50件に制限
+          .limit(50);
 
-        if (!error && data) {
+        if (error) {
+          console.error('Failed to fetch family diaries:', error);
+        } else if (data) {
           set({ entries: data });
         }
       }
-      
+
       const endTime = performance.now();
       console.log(`日記取得時間: ${Math.round(endTime - startTime)}ms`);
-      
+
     } catch (error) {
       console.error('Failed to fetch entries:', error);
+      toast.error('Failed to load diary. Please try again.');
     } finally {
       set({ loading: false });
     }

@@ -30,7 +30,7 @@ export const DiaryList: React.FC<DiaryListProps> = ({ isGuest }) => {
     if (!isGuest) {
       fetchEntries();
     }
-  }, [isGuest]);
+  }, [isGuest, fetchEntries]);
 
   // Use guest diaries in guest mode, otherwise use normal entries
   const displayEntries = isGuest ? guestDiaries : entries;
@@ -187,8 +187,9 @@ export const DiaryList: React.FC<DiaryListProps> = ({ isGuest }) => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-64">
+      <div className="flex flex-col justify-center items-center min-h-64 gap-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <p className="text-gray-500">{EN.common.loading}</p>
       </div>
     );
   }
