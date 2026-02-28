@@ -28,6 +28,18 @@ import { EN } from '../i18n/en';
 export const AppPage: React.FC = () => {
   const [currentView, setCurrentView] = useState('home');
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const { user, loading, initialize } = useAuthStore();
@@ -267,6 +279,14 @@ export const AppPage: React.FC = () => {
         <Header currentView={currentView} onViewChange={setCurrentView} />
       )}
       
+      {isOffline && (
+        <div className="bg-yellow-500 text-white text-center py-2 px-4 text-sm font-medium">
+          Offline - Some features may not be available.
+          <button onClick={() => window.location.reload()} className="ml-2 underline font-bold">
+            Retry
+          </button>
+        </div>
+      )}
       <main className="container mx-auto px-4 py-8">
         <AnimatePresence mode="wait">
           {currentView === 'home' && (

@@ -190,6 +190,14 @@ export const DiaryList: React.FC<DiaryListProps> = ({ isGuest }) => {
       <div className="flex flex-col justify-center items-center min-h-64 gap-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         <p className="text-gray-500">{EN.common.loading}</p>
+        <button
+          onClick={() => {
+            fetchEntries();
+          }}
+          className="text-blue-600 underline text-sm mt-2"
+        >
+          Taking too long? Tap to retry
+        </button>
       </div>
     );
   }
