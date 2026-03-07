@@ -202,7 +202,6 @@ export const useDiaryStore = create<DiaryStore>((set, get) => ({
           voice_url: voiceUrl,
           duration: audioBlob ? Math.round(audioBlob.size / 1000) : null,
           emotion: 'neutral',
-          language_score: null,
           ai_summary: '',
           ai_keywords: [],
           ai_feedback: null,
