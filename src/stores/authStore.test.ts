@@ -391,7 +391,7 @@ describe('authStore', () => {
       await useAuthStore.getState().updateJlptLevel('N2');
 
       expect(mockFrom).toHaveBeenCalledWith('users');
-      expect(updateChain.update).toHaveBeenCalledWith({ cefr_level: 'N2' });
+      expect(updateChain.update).toHaveBeenCalledWith({ jlpt_level: 'N2', cefr_level: 'N2' });
 
       const state = useAuthStore.getState();
       expect(state.user?.jlpt_level).toBe('N2');

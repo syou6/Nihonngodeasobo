@@ -214,7 +214,7 @@ describe('versantStore', () => {
       mockGetUser.mockResolvedValue({ data: { user: fakeUser } });
 
       // Profile query for JLPT level
-      const profileChain = chainedQuery({ data: { cefr_level: 'N3' }, error: null });
+      const profileChain = chainedQuery({ data: { jlpt_level: 'N3' }, error: null });
       // Insert query for versant_answers
       const insertChain = chainedQuery({ data: null, error: null });
 

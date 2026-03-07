@@ -27,11 +27,6 @@ vi.mock('../lib/gemini', () => ({
   analyzeText: vi.fn().mockResolvedValue({
     summary: 'AI summary',
     keywords: ['test'],
-    emotion: 'neutral',
-    language_score: 80,
-    grammar_errors: 0,
-    jlpt_estimated_level: 'N4',
-    summary_en: 'AI summary EN',
   }),
   generateSummary: vi.fn().mockResolvedValue('Generated summary'),
 }));
@@ -266,8 +261,8 @@ describe('diaryStore', () => {
   describe('deleteEntry', () => {
     it('performs soft delete and removes entry from state', async () => {
       const entries = [
-        { id: 'd1', user_id: 'u1', content: 'Entry 1', created_at: '2026-01-01', tags: [], visibility: 'shared' as const },
-        { id: 'd2', user_id: 'u1', content: 'Entry 2', created_at: '2026-01-02', tags: [], visibility: 'shared' as const },
+        { id: 'd1', user_id: 'u1', content: 'Entry 1', created_at: '2026-01-01', tags: [], visibility: 'family' as const },
+        { id: 'd2', user_id: 'u1', content: 'Entry 2', created_at: '2026-01-02', tags: [], visibility: 'family' as const },
       ];
       useDiaryStore.setState({ entries });
 
@@ -291,7 +286,7 @@ describe('diaryStore', () => {
 
     it('throws when supabase update fails', async () => {
       useDiaryStore.setState({
-        entries: [{ id: 'd1', user_id: 'u1', content: 'X', created_at: '', tags: [], visibility: 'shared' as const }],
+        entries: [{ id: 'd1', user_id: 'u1', content: 'X', created_at: '', tags: [], visibility: 'family' as const }],
       });
 
       const updateChain = chainedQuery({ data: null, error: new Error('Permission denied') });
@@ -306,7 +301,7 @@ describe('diaryStore', () => {
 
     it('does not modify state when entry id does not exist in local state', async () => {
       const entries = [
-        { id: 'd1', user_id: 'u1', content: 'Entry', created_at: '', tags: [], visibility: 'shared' as const },
+        { id: 'd1', user_id: 'u1', content: 'Entry', created_at: '', tags: [], visibility: 'family' as const },
       ];
       useDiaryStore.setState({ entries });
 

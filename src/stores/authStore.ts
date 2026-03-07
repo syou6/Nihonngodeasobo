@@ -246,7 +246,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     try {
       const { error } = await supabase
         .from('users')
-        .update({ cefr_level: level })
+        .update({ jlpt_level: level, cefr_level: level })
         .eq('id', user.id);
 
       if (error) throw error;

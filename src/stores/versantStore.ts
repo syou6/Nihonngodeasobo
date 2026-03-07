@@ -94,14 +94,14 @@ export const useVersantStore = create<VersantStore>((set, get) => ({
       if (transcribedText.trim()) {
         let userJlptLevel: JLPTLevel = DEFAULT_JLPT_LEVEL;
         try {
-          // Get user's JLPT level (DB column is cefr_level for backward compatibility)
+          // Get user's JLPT level
           if (user) {
             const { data: profile } = await supabase
               .from('users')
-              .select('cefr_level')
+              .select('jlpt_level')
               .eq('id', user.id)
               .single();
-            userJlptLevel = (profile?.cefr_level as JLPTLevel) || DEFAULT_JLPT_LEVEL;
+            userJlptLevel = (profile?.jlpt_level as JLPTLevel) || DEFAULT_JLPT_LEVEL;
           }
 
           // Generate feedback based on the question type
