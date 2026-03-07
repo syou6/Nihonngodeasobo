@@ -166,14 +166,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         return Promise.resolve();
       }
 
-      // OAuth callback: URL hash contains access_token — let Supabase process it first
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      if (hashParams.get('access_token')) {
-        // Clear hash to avoid token leaking in browser history
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      // Clear OAuth tokens from URL hash after Supabase has processed them
+      if (window.location.hash.includes('access_token')) {
         window.history.replaceState(null, '', window.location.pathname + window.location.search);
       }
-
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
       if (sessionError) {
         set({ user: null, loading: false });
