@@ -166,24 +166,31 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         return Promise.resolve();
       }
 
+      // OAuth callback: URL hash contains access_token — let Supabase process it first
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      if (hashParams.get('access_token')) {
+        // Clear hash to avoid token leaking in browser history
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
       if (sessionError) {
         set({ user: null, loading: false });
         return;
       }
-      
+
       if (session?.user) {
         const { data: userProfile, error } = await supabase
           .from('users')
           .select('*')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
 
-        if (!error && userProfile) {
+        if (userProfile) {
           set({ user: userProfile, loading: false });
-        } else {
-          // ユーザープロファイルが存在しない場合は作成
+        } else if (!error || error.code === 'PGRST116') {
+          // Profile doesn't exist yet — create it
           const newUserProfile = {
             id: session.user.id,
             email: session.user.email!,
@@ -191,13 +198,17 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             role: session.user.user_metadata?.role || 'learner',
           };
 
-          const { data: createdProfile, error: createError } = await supabase
+          const { data: createdProfile } = await supabase
             .from('users')
             .insert(newUserProfile)
             .select()
             .single();
-          
+
           set({ user: createdProfile || newUserProfile, loading: false });
+        } else {
+          // RLS/auth not ready yet (e.g. 406 during OAuth callback)
+          // onAuthStateChange will handle it once the session is fully established
+          set({ user: null, loading: false });
         }
       } else {
         set({ user: null, loading: false });
@@ -215,12 +226,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             .from('users')
             .select('*')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle();
 
-          if (!error && userProfile) {
+          if (userProfile) {
             set({ user: userProfile });
-          } else {
-            // ユーザープロファイルが存在しない場合は作成
+          } else if (!error || error.code === 'PGRST116') {
+            // Profile doesn't exist yet — create it
             const newUserProfile = {
               id: session.user.id,
               email: session.user.email!,
