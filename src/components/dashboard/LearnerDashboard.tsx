@@ -73,7 +73,9 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
     });
 
     if (todayDiary) {
-      setTodayLanguageScore(todayDiary.language_score ?? null);
+      // Extract score from AI feedback markdown (## Score: X/100)
+      const scoreMatch = todayDiary.ai_feedback?.markdownContent?.match(/Score:\s*(\d+)\s*\/\s*100/);
+      setTodayLanguageScore(scoreMatch ? parseInt(scoreMatch[1], 10) : null);
       setTodayEmotion(todayDiary.emotion || null);
     } else {
       setTodayLanguageScore(null);

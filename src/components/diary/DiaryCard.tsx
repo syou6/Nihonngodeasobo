@@ -187,13 +187,6 @@ export const DiaryCard: React.FC<DiaryCardProps> = ({ entry }) => {
     return emotionMap[emotion] || '😌';
   };
 
-  const getLanguageScoreColor = (score?: number) => {
-    if (!score) return 'text-gray-500';
-    if (score >= 80) return 'text-green-500';
-    if (score >= 60) return 'text-yellow-500';
-    return 'text-red-500';
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -222,12 +215,6 @@ export const DiaryCard: React.FC<DiaryCardProps> = ({ entry }) => {
                   <div className="flex items-center gap-1">
                     <span className="text-lg sm:text-xl">{getEmotionEmoji(entry.emotion)}</span>
                     <span className="text-sm sm:text-lg hidden sm:inline">{entry.emotion}</span>
-                  </div>
-                )}
-                {entry.language_score != null && (
-                  <div className={`text-sm sm:text-lg font-medium ${getLanguageScoreColor(entry.language_score)}`}>
-                    <span className="hidden sm:inline">Score: </span>
-                    <span>{entry.language_score}/100</span>
                   </div>
                 )}
               </div>
