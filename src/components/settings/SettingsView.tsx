@@ -2,18 +2,16 @@ import React, { useState } from 'react';
 import { CEFRSettings } from './CEFRSettings';
 import { FamilyManager } from '../family/FamilyManager';
 import { PricingCards } from '../subscription/PricingCards';
-import { ApiUsageMonitor } from '../ApiUsageMonitor';
 import { useAuthStore } from '../../stores/authStore';
 import { useSubscription } from '../../hooks/useSubscription';
 import { EN } from '../../i18n/en';
 import type { JLPTLevel } from '../../types';
 import toast from 'react-hot-toast';
-import { ChevronDown, ChevronUp, Activity, Crown } from 'lucide-react';
+import { ChevronDown, ChevronUp, Crown } from 'lucide-react';
 
 export const SettingsView: React.FC = () => {
   const { user, updateJlptLevel } = useAuthStore();
   const { isPremium } = useSubscription();
-  const [showApiUsage, setShowApiUsage] = useState(false);
   const [showSubscription, setShowSubscription] = useState(false);
 
   const handleJlptChange = async (level: JLPTLevel) => {
@@ -70,30 +68,6 @@ export const SettingsView: React.FC = () => {
 
       {/* Teacher Connection */}
       <FamilyManager />
-
-
-      {/* API Usage Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div
-          onClick={() => setShowApiUsage(!showApiUsage)}
-          className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors cursor-pointer"
-        >
-          <div className="flex items-center gap-3">
-            <Activity className="w-5 h-5 text-gray-600" />
-            <span className="font-medium text-gray-900">{EN.settings.apiUsage || 'API Usage'}</span>
-          </div>
-          {showApiUsage ? (
-            <ChevronUp className="w-5 h-5 text-gray-400" />
-          ) : (
-            <ChevronDown className="w-5 h-5 text-gray-400" />
-          )}
-        </div>
-        {showApiUsage && (
-          <div className="px-6 pb-6">
-            <ApiUsageMonitor />
-          </div>
-        )}
-      </div>
     </div>
   );
 };
