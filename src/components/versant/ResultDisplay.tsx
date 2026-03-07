@@ -85,24 +85,17 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
         <h3 className="text-lg font-bold text-gray-900 mb-3">{EN.versant.yourResponse}</h3>
 
         {answer.audioUrl && (
-          <Button
+          <button
             onClick={handlePlayPause}
-            variant="outline"
-            size="sm"
-            className="mb-4"
+            className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 transition-colors mb-4"
           >
             {isPlaying ? (
-              <>
-                <Pause className="w-4 h-4 mr-2" />
-                {EN.versant.pause}
-              </>
+              <Pause className="w-4 h-4" />
             ) : (
-              <>
-                <Play className="w-4 h-4 mr-2" />
-                {EN.versant.playRecording}
-              </>
+              <Play className="w-4 h-4" />
             )}
-          </Button>
+            <span>{isPlaying ? EN.versant.pause : EN.versant.playRecording}</span>
+          </button>
         )}
 
         <div className="bg-gray-50 rounded-lg p-4">

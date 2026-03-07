@@ -44,19 +44,18 @@ export const DiaryList: React.FC<DiaryListProps> = ({ isGuest }) => {
     }
   }, [isGuest, fetchEntries]);
 
-  // Check if user is a teacher (has students as parent_id)
+  // Check if user is a teacher (has students as teacher_id)
   const fetchStudents = useCallback(async () => {
     if (!user || isGuest) return;
     setStudentsLoading(true);
     try {
       const { data, error } = await supabase
         .from('family_relationships')
-        .select('id, last_viewed_at, child:child_id(id, name, email)')
-        .eq('parent_id', user.id)
+        .select('id, last_viewed_at, learner:learner_id(id, name, email)')
+        .eq('teacher_id', user.id)
         .eq('status', 'accepted');
 
       if (error) {
-        console.error('Failed to fetch students:', error);
         return;
       }
 
@@ -66,14 +65,14 @@ export const DiaryList: React.FC<DiaryListProps> = ({ isGuest }) => {
         // Get unread counts for each student
         const studentInfos: StudentInfo[] = await Promise.all(
           data.map(async (rel: any) => {
-            const child = rel.child;
+            const learner = rel.learner;
             let unreadCount = 0;
 
             if (rel.last_viewed_at) {
               const { count } = await supabase
                 .from('diaries')
                 .select('id', { count: 'exact', head: true })
-                .eq('user_id', child.id)
+                .eq('user_id', learner.id)
                 .is('deleted_at', null)
                 .gt('created_at', rel.last_viewed_at);
               unreadCount = count || 0;
@@ -81,16 +80,16 @@ export const DiaryList: React.FC<DiaryListProps> = ({ isGuest }) => {
               const { count } = await supabase
                 .from('diaries')
                 .select('id', { count: 'exact', head: true })
-                .eq('user_id', child.id)
+                .eq('user_id', learner.id)
                 .is('deleted_at', null);
               unreadCount = count || 0;
             }
 
             return {
               relationshipId: rel.id,
-              id: child.id,
-              name: child.name,
-              email: child.email,
+              id: learner.id,
+              name: learner.name,
+              email: learner.email,
               unreadCount,
               lastViewedAt: rel.last_viewed_at,
             };
@@ -102,9 +101,7 @@ export const DiaryList: React.FC<DiaryListProps> = ({ isGuest }) => {
         setIsTeacher(false);
         setStudents([]);
       }
-    } catch (error) {
-      console.error('Failed to fetch students:', error);
-    } finally {
+    } catch { /* ignored */ } finally {
       setStudentsLoading(false);
     }
   }, [user, isGuest]);
@@ -130,7 +127,6 @@ export const DiaryList: React.FC<DiaryListProps> = ({ isGuest }) => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Failed to fetch student entries:', error);
       } else {
         setStudentEntries(data || []);
       }
@@ -146,9 +142,7 @@ export const DiaryList: React.FC<DiaryListProps> = ({ isGuest }) => {
           s.id === student.id ? { ...s, unreadCount: 0, lastViewedAt: new Date().toISOString() } : s
         )
       );
-    } catch (error) {
-      console.error('Failed to fetch student entries:', error);
-    } finally {
+    } catch { /* ignored */ } finally {
       setStudentEntriesLoading(false);
     }
   }, []);
@@ -415,7 +409,7 @@ export const DiaryList: React.FC<DiaryListProps> = ({ isGuest }) => {
             </button>
           </div>
 
-          {(user?.role === 'parent' || isGuest) && (
+          {(user?.role === 'learner' || isGuest) && (
             <Button
               onClick={() => setShowRecorder(true)}
               variant="primary"
@@ -454,7 +448,7 @@ export const DiaryList: React.FC<DiaryListProps> = ({ isGuest }) => {
               <p className="text-lg text-gray-600 mb-6">
                 {EN.diary.startFirst}
               </p>
-              {(user?.role === 'parent' || isGuest) && (
+              {(user?.role === 'learner' || isGuest) && (
                 <Button onClick={() => setShowRecorder(true)} size="lg">
                   <Plus className="w-6 h-6" />
                   {EN.dashboard.recordButton}

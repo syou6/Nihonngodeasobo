@@ -6,19 +6,20 @@ import { useAuthStore } from '../stores/authStore';
 import { useGuestStore } from '../stores/guestStore';
 import { AuthForm } from '../components/auth/AuthForm';
 import { Header } from '../components/navigation/Header';
-import { ParentDashboard } from '../components/dashboard/ParentDashboard';
+import { LearnerDashboard } from '../components/dashboard/LearnerDashboard';
 import { VoiceRecorder } from '../components/recording/VoiceRecorder';
 import { DiaryList } from '../components/diary/DiaryList';
 import { FamilyManager } from '../components/family/FamilyManager';
-import { NotificationSettings } from '../components/settings/NotificationSettings';
 import { SettingsView } from '../components/settings/SettingsView';
-import { SubscriptionManager } from '../components/subscription/SubscriptionManager';
+import { PricingCards } from '../components/subscription/PricingCards';
 import { VersantHome } from '../components/versant/VersantHome';
 import { PWAInstallPrompt } from '../components/PWAInstallPrompt';
 import { GuestBanner } from '../components/guest/GuestBanner';
 import { GuestDiaryList } from '../components/guest/GuestDiaryList';
 import { WelcomeGuide } from '../components/onboarding/WelcomeGuide';
 import { HelpButton } from '../components/help/HelpButton';
+import { SubscriptionSuccess } from './SubscriptionSuccess';
+import { SubscriptionCancel } from './SubscriptionCancel';
 import { supabase } from '../lib/supabase';
 import { EN } from '../i18n/en';
 
@@ -43,8 +44,6 @@ export const AppPage: React.FC = () => {
   const { isGuestMode, cleanExpiredDiaries, setGuestMode } = useGuestStore();
 
   useEffect(() => {
-    console.log('AppPage初期化開始');
-    
     // アプリを使用したことを記録
     localStorage.setItem('hasUsedApp', 'true');
 
@@ -56,10 +55,7 @@ export const AppPage: React.FC = () => {
       import.meta.env.VITE_SUPABASE_URL !== 'your_supabase_url' &&
       import.meta.env.VITE_SUPABASE_ANON_KEY !== 'your_supabase_anon_key';
 
-    console.log('hasValidConfig:', hasValidConfig);
-
     if (!hasValidConfig) {
-      console.log('環境変数が未設定のため、ゲストモードで開始します');
       setGuestMode(true);
       setShowOnboarding(true);
       setIsInitialized(true);
@@ -73,16 +69,6 @@ export const AppPage: React.FC = () => {
     const isLoginParam = urlParams.get('login') === 'true';
     const viewParam = urlParams.get('view');
     
-    // デバッグ情報
-    console.log('AppPage.tsx - URL params:', {
-      pathname: window.location.pathname,
-      search: window.location.search,
-      isGuestParam,
-      isSignupParam,
-      isLoginParam,
-      viewParam
-    });
-    
     // サインアップパラメータがある場合
     if (isSignupParam) {
       sessionStorage.setItem('showAuthForm', 'true');
@@ -92,7 +78,6 @@ export const AppPage: React.FC = () => {
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.delete('signup');
       window.history.replaceState({}, '', newUrl.toString());
-      console.log('AppPage.tsx - Signup param detected, showing signup form');
       return;
     }
     
@@ -105,7 +90,6 @@ export const AppPage: React.FC = () => {
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.delete('login');
       window.history.replaceState({}, '', newUrl.toString());
-      console.log('AppPage.tsx - Login param detected, showing login form');
       return;
     }
     
@@ -117,13 +101,16 @@ export const AppPage: React.FC = () => {
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.delete('guest');
       window.history.replaceState({}, '', newUrl.toString());
-      console.log('AppPage.tsx - Guest param detected, enabling guest mode');
       return;
     }
     
     // ビューパラメータがあれば設定
     if (viewParam) {
       setCurrentView(viewParam);
+      // URLからパラメータを削除
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('view');
+      window.history.replaceState({}, '', newUrl.toString());
     }
     
     // 認証フォーム表示フラグをチェック（最優先）
@@ -131,17 +118,13 @@ export const AppPage: React.FC = () => {
     if (showAuthForm) {
       setGuestMode(false);
       sessionStorage.removeItem('showAuthForm');
-      console.log('AppPage.tsx - Auth form flag detected, showing auth form');
       setIsInitialized(true);
       return;
     }
     
     // 環境変数が設定されている場合は認証を試行
     if (hasValidConfig) {
-      console.log('AppPage.tsx - Valid config found, initializing auth');
-      initialize().catch((error) => {
-        console.error('認証初期化エラー:', error);
-        console.log('AppPage.tsx - Auth init failed, falling back to guest mode');
+      initialize().catch(() => {
         setGuestMode(true);
         setShowOnboarding(true);
       }).finally(() => {
@@ -149,7 +132,6 @@ export const AppPage: React.FC = () => {
       });
     } else {
       // 環境変数が未設定の場合はゲストモードで開始
-      console.log('AppPage.tsx - No valid config, starting guest mode');
       setGuestMode(true);
       setShowOnboarding(true);
       setIsInitialized(true);
@@ -180,7 +162,7 @@ export const AppPage: React.FC = () => {
   // Maintenance mode
   if (isMaintenanceMode) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Under Maintenance
@@ -196,7 +178,7 @@ export const AppPage: React.FC = () => {
   // Loading state
   if (!isInitialized || loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
           <p className="text-gray-600">{EN.common.loading}</p>
@@ -210,7 +192,7 @@ export const AppPage: React.FC = () => {
   
   if (showAuthForm || (!user && !isGuestMode)) {
     return (
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen bg-gray-50">
         <AuthForm />
         <Toaster position="top-center" />
       </div>
@@ -220,7 +202,7 @@ export const AppPage: React.FC = () => {
   // ゲストモード
   if (isGuestMode && !user) {
     return (
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen bg-gray-50">
         <GuestBanner />
         <div className="container mx-auto px-4 py-8">
           <AnimatePresence mode="wait">
@@ -232,7 +214,9 @@ export const AppPage: React.FC = () => {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                <WelcomeGuide onComplete={() => setShowOnboarding(false)} />
+                <WelcomeGuide onComplete={() => {
+                  setShowOnboarding(false);
+                }} />
               </motion.div>
             ) : (
               <motion.div
@@ -244,9 +228,17 @@ export const AppPage: React.FC = () => {
               >
                 <div className="max-w-4xl mx-auto">
                   <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                      Record Your Diary
-                    </h2>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
+                        <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold text-gray-900">
+                          Record Your Diary
+                        </h2>
+                        <p className="text-sm text-gray-500">Speak in Japanese — AI will give you feedback</p>
+                      </div>
+                    </div>
                     <VoiceRecorder />
                   </div>
                   <GuestDiaryList />
@@ -260,9 +252,27 @@ export const AppPage: React.FC = () => {
     );
   }
 
+  // Check if first-time logged-in user needs onboarding
+  const needsOnboarding = user && !localStorage.getItem('onboardingCompleted');
+
+  if (needsOnboarding && showOnboarding !== false) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <WelcomeGuide onComplete={(level) => {
+          setShowOnboarding(false);
+          if (level) {
+            // Save JLPT level preference
+            localStorage.setItem('jlptLevel', level);
+          }
+        }} />
+        <Toaster position="top-center" />
+      </div>
+    );
+  }
+
   // メインアプリ
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
       <Header currentView={currentView} onViewChange={setCurrentView} />
       
       {isOffline && (
@@ -283,7 +293,7 @@ export const AppPage: React.FC = () => {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <ParentDashboard onViewChange={setCurrentView} />
+              <LearnerDashboard onViewChange={setCurrentView} />
             </motion.div>
           )}
           
@@ -323,19 +333,17 @@ export const AppPage: React.FC = () => {
             </motion.div>
           )}
           
-          {currentView === 'notifications' && (
+          {currentView === 'pricing' && (
             <motion.div
-              key="notifications"
+              key="pricing"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <NotificationSettings />
+              <PricingCards onClose={() => setCurrentView('home')} />
             </motion.div>
           )}
-          
-          {/* Subscription view hidden for now */}
 
           {currentView === 'practice' && (
             <motion.div
@@ -346,6 +354,30 @@ export const AppPage: React.FC = () => {
               transition={{ duration: 0.3 }}
             >
               <VersantHome />
+            </motion.div>
+          )}
+
+          {currentView === 'subscription-success' && (
+            <motion.div
+              key="subscription-success"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <SubscriptionSuccess />
+            </motion.div>
+          )}
+
+          {currentView === 'subscription-cancel' && (
+            <motion.div
+              key="subscription-cancel"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <SubscriptionCancel />
             </motion.div>
           )}
 

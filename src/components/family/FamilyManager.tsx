@@ -7,31 +7,31 @@ import { GraduationCap, UserPlus, X, Eye, BookOpen } from 'lucide-react';
 import { EN } from '../../i18n/en';
 import toast from 'react-hot-toast';
 
-interface FamilyMember {
+interface ConnectionMember {
   id: string;
-  parent_id: string;
-  child_id: string;
+  teacher_id: string;
+  learner_id: string;
   status: 'accepted';
-  parent?: any;
-  child?: any;
+  teacher?: any;
+  learner?: any;
   created_at: string;
 }
 
 export const FamilyManager: React.FC = () => {
   const { user } = useAuthStore();
   const [emailInput, setEmailInput] = useState('');
-  const [sharedWith, setSharedWith] = useState<FamilyMember[]>([]);
-  const [sharedFrom, setSharedFrom] = useState<FamilyMember[]>([]);
+  const [sharedWith, setSharedWith] = useState<ConnectionMember[]>([]);
+  const [sharedFrom, setSharedFrom] = useState<ConnectionMember[]>([]);
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
-      fetchFamilyMembers();
+      fetchConnectionMembers();
     }
   }, [user]);
 
-  const fetchFamilyMembers = async () => {
+  const fetchConnectionMembers = async () => {
     if (!user) return;
 
     try {
@@ -39,13 +39,12 @@ export const FamilyManager: React.FC = () => {
         .from('family_relationships')
         .select(`
           *,
-          child:child_id(id, name, email)
+          learner:learner_id(id, name, email)
         `)
-        .eq('parent_id', user.id)
+        .eq('teacher_id', user.id)
         .eq('status', 'accepted');
 
       if (sharedError) {
-        console.error('Error fetching shared:', sharedError);
       } else {
         setSharedWith(shared || []);
       }
@@ -54,22 +53,19 @@ export const FamilyManager: React.FC = () => {
         .from('family_relationships')
         .select(`
           *,
-          parent:parent_id(id, name, email)
+          teacher:teacher_id(id, name, email)
         `)
-        .eq('child_id', user.id)
+        .eq('learner_id', user.id)
         .eq('status', 'accepted');
 
       if (sharedToMeError) {
-        console.error('Error fetching shared to me:', sharedToMeError);
       } else {
         setSharedFrom(sharedToMe || []);
       }
-    } catch (error) {
-      console.error('Error fetching family members:', error);
-    }
+    } catch { /* ignored */ }
   };
 
-  const addFamilyMember = async () => {
+  const addConnectionMember = async () => {
     if (!user || !emailInput.trim()) return;
 
     setLoading(true);
@@ -79,7 +75,6 @@ export const FamilyManager: React.FC = () => {
         .rpc('search_user_by_email', { search_email: emailInput.trim() });
 
       if (searchError) {
-        console.error('User search error:', searchError);
         toast.error(EN.family.userNotFound);
         return;
       }
@@ -98,8 +93,8 @@ export const FamilyManager: React.FC = () => {
       const { data: existing } = await supabase
         .from('family_relationships')
         .select('id')
-        .eq('parent_id', user.id)
-        .eq('child_id', targetUser.id)
+        .eq('teacher_id', user.id)
+        .eq('learner_id', targetUser.id)
         .single();
 
       if (existing) {
@@ -110,15 +105,15 @@ export const FamilyManager: React.FC = () => {
       const { error } = await supabase
         .from('family_relationships')
         .insert({
-          parent_id: user.id,
-          child_id: targetUser.id,
+          teacher_id: user.id,
+          learner_id: targetUser.id,
           status: 'accepted'
         });
 
       if (!error) {
         toast.success(`${EN.family.shareSuccess} ${targetUser.name}`);
         setEmailInput('');
-        fetchFamilyMembers();
+        fetchConnectionMembers();
       }
     } catch (error) {
       toast.error(EN.family.addError);
@@ -127,7 +122,7 @@ export const FamilyManager: React.FC = () => {
     }
   };
 
-  const removeFamilyMember = async (relationshipId: string) => {
+  const removeConnectionMember = async (relationshipId: string) => {
     if (!window.confirm(EN.family.removeConfirm)) {
       return;
     }
@@ -141,19 +136,17 @@ export const FamilyManager: React.FC = () => {
         });
 
       if (error) {
-        console.error('Delete error:', error);
         toast.error(`${EN.family.addError}: ${error.message}`);
-        await fetchFamilyMembers();
+        await fetchConnectionMembers();
       } else {
         setSharedWith(prev => prev.filter(m => m.id !== relationshipId));
         setSharedFrom(prev => prev.filter(m => m.id !== relationshipId));
         toast.success(EN.family.removed);
-        await fetchFamilyMembers();
+        await fetchConnectionMembers();
       }
     } catch (error: any) {
-      console.error('Unexpected error:', error);
       toast.error(`${EN.family.addError}: ${error.message || 'Unknown error'}`);
-      await fetchFamilyMembers();
+      await fetchConnectionMembers();
     } finally {
       setDeletingId(null);
     }
@@ -189,7 +182,7 @@ export const FamilyManager: React.FC = () => {
               className="flex-1 p-3 sm:p-4 text-base sm:text-lg border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <Button
-              onClick={addFamilyMember}
+              onClick={addConnectionMember}
               variant="primary"
               disabled={loading || !emailInput.includes('@')}
               className="w-full sm:w-auto"
@@ -214,21 +207,21 @@ export const FamilyManager: React.FC = () => {
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-full flex items-center justify-center text-lg sm:text-xl font-bold flex-shrink-0">
-                    {member.child?.name?.[0] || '?'}
+                    {member.learner?.name?.[0] || '?'}
                   </div>
                   <div className="min-w-0">
                     <div className="font-medium text-base sm:text-lg truncate">
-                      {member.child?.name || EN.family.user}
+                      {member.learner?.name || EN.family.user}
                     </div>
                     <div className="text-sm sm:text-base text-gray-500 truncate">
-                      {member.child?.email}
+                      {member.learner?.email}
                     </div>
                   </div>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => removeFamilyMember(member.id)}
+                  onClick={() => removeConnectionMember(member.id)}
                   disabled={deletingId === member.id}
                   className="flex-shrink-0"
                 >
@@ -263,21 +256,21 @@ export const FamilyManager: React.FC = () => {
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-full flex items-center justify-center text-lg sm:text-xl font-bold flex-shrink-0">
-                    {member.parent?.name?.[0] || '?'}
+                    {member.teacher?.name?.[0] || '?'}
                   </div>
                   <div className="min-w-0">
                     <div className="font-medium text-base sm:text-lg truncate">
-                      {member.parent?.name || EN.family.user}
+                      {member.teacher?.name || EN.family.user}
                     </div>
                     <div className="text-sm sm:text-base text-gray-500 truncate">
-                      {member.parent?.email}
+                      {member.teacher?.email}
                     </div>
                   </div>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => removeFamilyMember(member.id)}
+                  onClick={() => removeConnectionMember(member.id)}
                   disabled={deletingId === member.id}
                   className="flex-shrink-0"
                 >

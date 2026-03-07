@@ -4,9 +4,8 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  role: 'parent' | 'child';
+  role: 'learner' | 'teacher';
   avatar_url?: string;
-  family_id?: string;
   jlpt_level?: JLPTLevel;
   created_at: string;
 }
@@ -15,7 +14,17 @@ export interface User {
 export interface JapaneseFeedback {
   jlptLevel: JLPTLevel;
   targetLevel: JLPTLevel;
-  markdownContent: string;  // 全フィードバックをMarkdownで保存
+  markdownContent: string;
+}
+
+export interface AnalyzeResult {
+  summary: string;
+  summary_en: string;
+  emotion: 'happy' | 'excited' | 'neutral' | 'tired' | 'sad' | 'anxious';
+  language_score: number;
+  grammar_errors: number;
+  jlpt_estimated_level: string;
+  keywords: string[];
 }
 
 export interface DiaryEntry {
@@ -26,11 +35,14 @@ export interface DiaryEntry {
   voice_url?: string;
   duration?: number;
   emotion?: string;
-  health_score?: number;
+  language_score?: number;
+  grammar_errors?: number;
+  jlpt_estimated_level?: string;
   weather?: string;
   tags: string[];
-  visibility: 'private' | 'family' | 'custom';
+  visibility: 'private' | 'shared' | 'custom';
   ai_summary?: string;
+  ai_summary_en?: string;
   ai_feedback?: JapaneseFeedback;
   created_at: string;
   user?: User;
@@ -47,17 +59,3 @@ export interface Comment {
   user?: User;
 }
 
-export interface Family {
-  id: string;
-  name: string;
-  created_at: string;
-  members?: User[];
-}
-
-export interface HealthAnalysis {
-  score: number;
-  mood: string;
-  energy_level: number;
-  concerns: string[];
-  recommendations: string[];
-}

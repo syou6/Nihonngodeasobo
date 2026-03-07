@@ -89,7 +89,6 @@ export class VoiceTranscriber {
       };
 
       this.recognition.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
         if (this.onErrorCallback) {
           this.onErrorCallback(event.error);
         }
@@ -109,7 +108,6 @@ export class VoiceTranscriber {
 
       this.recognition.onstart = () => {
         this.isListening = true;
-        console.log('Speech recognition started');
       };
     }
   }
@@ -117,7 +115,6 @@ export class VoiceTranscriber {
   // Start speech recognition
   start(onResult?: (text: string, isFinal: boolean) => void, onError?: (error: string) => void): void {
     if (!this.recognition) {
-      console.error('Speech recognition is not supported');
       if (onError) onError('Speech recognition is not supported');
       return;
     }
@@ -129,8 +126,7 @@ export class VoiceTranscriber {
 
     try {
       this.recognition.start();
-    } catch (error) {
-      console.error('Failed to start speech recognition:', error);
+    } catch {
       if (onError) onError('Failed to start speech recognition');
     }
   }

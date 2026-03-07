@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Button } from '../ui/Button';
 import { Logo } from '../ui/Logo';
 import { useAuthStore } from '../../stores/authStore';
 import { useGuestStore } from '../../stores/guestStore';
+import { useSubscription } from '../../hooks/useSubscription';
 import { EN } from '../../i18n/en';
 import {
   LogOut,
@@ -11,8 +11,8 @@ import {
   Calendar,
   Home,
   Mic,
-  Users,
-  BookOpen
+  BookOpen,
+  Crown
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -23,110 +23,108 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => {
   const { user, signOut } = useAuthStore();
   const { isGuestMode } = useGuestStore();
+  const { isPremium } = useSubscription();
 
-  const isParent = user?.role === 'parent';
+  const isLearner = user?.role === 'learner';
 
   const navigation = [
     { id: 'home', label: EN.nav.home, icon: Home, show: true },
-    { id: 'record', label: EN.nav.record, icon: Mic, show: isParent || isGuestMode },
+    { id: 'record', label: EN.nav.record, icon: Mic, show: isLearner || isGuestMode },
     { id: 'diary', label: EN.nav.diary, icon: Calendar, show: true },
     { id: 'practice', label: EN.nav.practice, icon: BookOpen, show: true },
     { id: 'settings', label: EN.nav.settings, icon: Settings, show: !isGuestMode },
   ];
 
   return (
-    <header className="bg-navy-500 border-b-4 border-navy-900 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-14 sm:h-16">
           {/* Logo */}
           <motion.div
-            className="flex items-center gap-1.5 sm:gap-2 md:gap-3 cursor-pointer flex-shrink-0"
-            whileHover={{ scale: 1.05 }}
+            className="flex items-center gap-2 cursor-pointer flex-shrink-0"
+            whileHover={{ scale: 1.02 }}
             onClick={() => onViewChange('home')}
           >
             <Logo size="sm" />
             <div>
-              <h1 className="text-sm sm:text-base md:text-xl lg:text-2xl font-bold whitespace-nowrap" style={{ color: '#FFF5E1' }}>
+              <h1 className="text-base sm:text-lg font-bold text-gray-900">
                 {EN.app.name}
               </h1>
-              <p className="text-[10px] sm:text-xs md:text-sm hidden sm:block" style={{ color: '#FFE4C4' }}>
+              <p className="text-xs text-gray-500 hidden sm:block">
                 {EN.header.voiceJournal}
               </p>
             </div>
           </motion.div>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex items-center gap-2">
-            {navigation.filter(item => item.show).map(item => (
-              <Button
-                key={item.id}
-                onClick={() => onViewChange(item.id)}
-                variant={currentView === item.id ? 'primary' : 'ghost'}
-                size="md"
-              >
-                <item.icon className="w-5 h-5" />
-                {item.label}
-              </Button>
-            ))}
-          </nav>
-
-          {/* User Menu */}
-          <div className="flex items-center gap-1 sm:gap-2 md:gap-3 flex-shrink-0">
-            <div className="hidden lg:flex items-center gap-2 md:gap-3">
-              <div className="text-right header-user-info">
-                <div className="text-sm md:text-base lg:text-lg font-medium whitespace-nowrap">
-                  {isGuestMode ? EN.user.guest : user?.name}
-                </div>
-                <div className="text-xs md:text-sm">
-                  {isGuestMode ? EN.user.trialMode : isParent ? EN.user.user : EN.user.admin}
-                </div>
-              </div>
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-lg md:text-xl font-bold text-blue-600">
-                  {isGuestMode ? 'G' : user?.name?.[0] || '👤'}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-1 sm:gap-2">
-              {/* 設定ボタンは一時的に非表示 */}
-              {/* {!isGuestMode && (
-                <button
-                  className="bg-white border-2 border-gray-300 rounded-lg p-2 sm:px-3 hover:bg-gray-100 flex items-center gap-1"
-                  onClick={() => onViewChange('settings')}
-                >
-                  <Settings className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: '#000000' }} />
-                  <span className="hidden xl:inline text-black font-bold">設定</span>
-                </button>
-              )} */}
-              {!isGuestMode && (
-                <button
-                  className="bg-white border-2 border-gray-300 rounded-lg p-2 sm:px-3 hover:bg-gray-100 flex items-center gap-1"
-                  onClick={signOut}
-                >
-                  <LogOut className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: '#000000' }} />
-                  <span className="hidden xl:inline text-black font-bold">{EN.header.logout}</span>
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Navigation */}
-        <div className="md:hidden border-t-2 border-gray-300 bg-white">
-          <div className="flex justify-around py-2 px-1">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-1">
             {navigation.filter(item => item.show).map(item => (
               <button
                 key={item.id}
                 onClick={() => onViewChange(item.id)}
-                className={`flex flex-col items-center gap-0.5 py-1.5 px-1.5 sm:px-3 rounded-lg border-2 min-w-0 flex-1 ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   currentView === item.id
-                    ? 'bg-blue-100 border-blue-500'
-                    : 'bg-gray-50 border-gray-300 hover:bg-gray-100'
+                    ? 'bg-brand-50 text-brand-700'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                <item.icon className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: currentView === item.id ? '#2563eb' : '#000000' }} />
-                <span className="text-[10px] sm:text-sm font-bold truncate" style={{ color: currentView === item.id ? '#2563eb' : '#000000' }}>{item.label}</span>
+                <item.icon className="w-4 h-4" />
+                {item.label}
+              </button>
+            ))}
+          </nav>
+
+          {/* User Menu */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Upgrade button for free users */}
+            {!isPremium && !isGuestMode && (
+              <button
+                onClick={() => onViewChange('pricing')}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-brand-500 to-purple-500 text-white text-sm font-medium rounded-lg hover:from-brand-600 hover:to-purple-600 transition-all"
+              >
+                <Crown className="w-3.5 h-3.5" />
+                Upgrade
+              </button>
+            )}
+
+            <div className="hidden lg:flex items-center gap-2">
+              <div className="w-8 h-8 bg-brand-100 rounded-full flex items-center justify-center">
+                <span className="text-sm font-semibold text-brand-700">
+                  {isGuestMode ? 'G' : user?.name?.[0] || '?'}
+                </span>
+              </div>
+              <span className="text-sm text-gray-700">
+                {isGuestMode ? EN.user.guest : user?.name}
+              </span>
+            </div>
+
+            {!isGuestMode && (
+              <button
+                className="text-gray-500 hover:text-gray-700 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                onClick={signOut}
+                title={EN.header.logout}
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile Navigation */}
+        <div className="md:hidden border-t border-gray-100">
+          <div className="flex justify-around py-1">
+            {navigation.filter(item => item.show).map(item => (
+              <button
+                key={item.id}
+                onClick={() => onViewChange(item.id)}
+                className={`flex flex-col items-center gap-0.5 py-2 px-2 rounded-lg min-w-0 flex-1 transition-colors ${
+                  currentView === item.id
+                    ? 'text-brand-600'
+                    : 'text-gray-400 hover:text-gray-600'
+                }`}
+              >
+                <item.icon className="w-5 h-5" />
+                <span className="text-[10px] font-medium truncate">{item.label}</span>
               </button>
             ))}
           </div>

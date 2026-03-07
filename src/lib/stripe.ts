@@ -17,44 +17,30 @@ export interface PricingPlan {
 export const pricingPlans: PricingPlan[] = [
   {
     id: 'free',
-    name: '無料プラン',
+    name: 'Free',
     price: 0,
     interval: 'month',
     features: [
-      '月10回まで録音',
-      '基本的な文字起こし',
-      '1名まで共有可能',
-      '30日間保存'
+      '3 diary recordings per month',
+      'Basic AI analysis',
+      '1 speaking practice per day',
+      '7-day diary storage'
     ]
   },
   {
     id: 'premium',
-    name: 'プレミアムプラン',
-    price: 980,
+    name: 'Premium',
+    price: 4.99,
     interval: 'month',
     stripePriceId: import.meta.env.VITE_STRIPE_PREMIUM_PRICE_ID,
     features: [
-      '録音無制限',
-      '高精度AI文字起こし',
-      'AI要約・感情分析',
-      '家族5名まで共有',
-      '無制限保存',
-      '音声ファイル保存',
-      '優先サポート'
-    ]
-  },
-  {
-    id: 'family',
-    name: 'ファミリープラン',
-    price: 1980,
-    interval: 'month',
-    stripePriceId: import.meta.env.VITE_STRIPE_FAMILY_PRICE_ID,
-    features: [
-      'すべてのプレミアム機能',
-      '家族10名まで共有',
-      '家族グループ機能',
-      'カスタムアルバム作成',
-      '年間レポート機能'
+      'Unlimited diary recordings',
+      'Detailed AI feedback on every entry',
+      'Unlimited JLPT speaking practice',
+      'Grammar & vocabulary corrections',
+      'Share diary with your teacher',
+      'Unlimited storage',
+      'Priority support'
     ]
   }
 ];
@@ -64,33 +50,22 @@ export class StripeService {
    * Stripeのチェックアウトセッションを作成
    */
   static async createCheckoutSession(priceId: string, userId: string) {
-    try {
-      // Supabase Edge FunctionでStripe Checkout Sessionを作成
-      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
-        body: {
-          priceId,
-          userId,
-          successUrl: `${window.location.origin}/subscription/success`,
-          cancelUrl: `${window.location.origin}/subscription/cancel`
-        }
-      });
+    const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+      body: {
+        priceId,
+        userId,
+        successUrl: `${window.location.origin}/app.html?view=subscription-success`,
+        cancelUrl: `${window.location.origin}/app.html?view=subscription-cancel`
+      }
+    });
 
-      if (error) throw error;
+    if (error) throw error;
 
-      // Stripeのチェックアウトページにリダイレクト
-      const stripe = await stripePromise;
-      if (!stripe) throw new Error('Stripe failed to load');
-
-      const { error: stripeError } = await stripe.redirectToCheckout({
-        sessionId: data.sessionId
-      });
-
-      if (stripeError) throw stripeError;
-
-      return data;
-    } catch (error) {
-      console.error('Error creating checkout session:', error);
-      throw error;
+    // Stripe Checkout URLに直接リダイレクト
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      throw new Error('No checkout URL returned');
     }
   }
 
@@ -108,8 +83,7 @@ export class StripeService {
       if (error && error.code !== 'PGRST116') throw error;
 
       return data || { status: 'free', plan_id: 'free' };
-    } catch (error) {
-      console.error('Error fetching subscription status:', error);
+    } catch {
       return { status: 'free', plan_id: 'free' };
     }
   }
@@ -126,7 +100,6 @@ export class StripeService {
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('Error canceling subscription:', error);
       throw error;
     }
   }
@@ -144,8 +117,7 @@ export class StripeService {
 
       if (error) throw error;
       return data || [];
-    } catch (error) {
-      console.error('Error fetching payment history:', error);
+    } catch {
       return [];
     }
   }
@@ -162,7 +134,6 @@ export class StripeService {
       if (error) throw error;
       return data.url;
     } catch (error) {
-      console.error('Error creating portal session:', error);
       throw error;
     }
   }

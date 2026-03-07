@@ -150,7 +150,6 @@ export const useVersantStore = create<VersantStore>((set, get) => ({
             vocabularyTips: []
           };
         } catch (feedbackError) {
-          console.error('Failed to generate feedback:', feedbackError);
           feedback = {
             jlptLevel: userJlptLevel,
             score: PRACTICE.DEFAULT_SCORE,
@@ -181,9 +180,7 @@ export const useVersantStore = create<VersantStore>((set, get) => ({
               .getPublicUrl(fileName);
             audioUrl = publicUrl;
           }
-        } catch (uploadError) {
-          console.error('Failed to upload audio:', uploadError);
-        }
+        } catch { /* ignored */ }
       }
 
       // Create answer object
@@ -213,9 +210,7 @@ export const useVersantStore = create<VersantStore>((set, get) => ({
               feedback: feedback,
               created_at: answer.createdAt
             });
-        } catch (dbError) {
-          console.error('Failed to save to database:', dbError);
-        }
+        } catch { /* ignored */ }
       }
 
       // Update local state
@@ -269,7 +264,6 @@ export const useVersantStore = create<VersantStore>((set, get) => ({
 
       set({ answers, loading: false });
     } catch (error) {
-      console.error('Failed to fetch history:', error);
       set({ loading: false });
     }
   },

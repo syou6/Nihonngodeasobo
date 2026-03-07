@@ -9,6 +9,7 @@ import { generatePracticeQuestion } from '../../lib/gemini-feedback';
 import { supabase } from '../../lib/supabase';
 import { tts } from '../../lib/tts';
 import { VoiceTranscriber } from '../../lib/speechRecognition';
+import { useSubscription } from '../../hooks/useSubscription';
 import { EN } from '../../i18n/en';
 import { PRACTICE, DEFAULT_JLPT_LEVEL } from '../../lib/constants';
 import type { JLPTLevel } from '../../lib/constants';
@@ -34,6 +35,7 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
   const audioChunksRef = useRef<Blob[]>([]);
 
   const { currentQuestion, setCurrentQuestion, saveAnswer, loading } = useVersantStore();
+  const { trackUsage } = useSubscription();
 
   const getUserJlptLevel = async (): Promise<JLPTLevel> => {
     try {
@@ -97,7 +99,6 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
         startRecording();
       }, PRACTICE.PART_E.RECORDING_DELAY_MS);
     } catch (error) {
-      console.error('TTS error:', error);
       setIsPlaying(false);
       toast.error(EN.versant.ttsErrorRetry);
       setState('ready');
@@ -124,9 +125,7 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
       };
 
       mediaRecorder.start();
-    } catch (error) {
-      console.error('Failed to start audio recording:', error);
-    }
+    } catch { /* ignored */ }
 
     if (VoiceTranscriber.isSupported()) {
       transcriberRef.current = new VoiceTranscriber();
@@ -134,9 +133,7 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
         (text) => {
           setTranscribedText(text);
         },
-        (error) => {
-          console.error('Speech recognition error:', error);
-        }
+        () => { /* ignored */ }
       );
     }
 
@@ -185,9 +182,9 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
       try {
         const answer = await saveAnswer(currentQuestion.id, finalText, audioBlob);
         setCurrentAnswer(answer);
+        await trackUsage('speaking_practice_count');
         setState('result');
       } catch (error) {
-        console.error('Failed to save answer:', error);
         toast.error(EN.versant.processError);
         setState('ready');
       }

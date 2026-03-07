@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Check, Crown, Users, Zap, CreditCard, Calendar, AlertCircle } from 'lucide-react';
+import { Check, Crown, Zap, CreditCard, Calendar, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { StripeService, pricingPlans, PricingPlan } from '../../lib/stripe';
 import { useAuthStore } from '../../stores/authStore';
@@ -33,7 +33,6 @@ export const SubscriptionManager: React.FC = () => {
       const status = await StripeService.getSubscriptionStatus(user.id);
       setSubscription(status);
     } catch (error) {
-      console.error('Failed to load subscription status:', error);
       toast.error(EN.subscription.error.loadStatus);
     } finally {
       setLoading(false);
@@ -47,7 +46,6 @@ export const SubscriptionManager: React.FC = () => {
     try {
       await StripeService.createCheckoutSession(plan.stripePriceId, user.id);
     } catch (error) {
-      console.error('Failed to create checkout session:', error);
       toast.error(EN.subscription.error.checkout);
     } finally {
       setProcessing(null);
@@ -62,7 +60,6 @@ export const SubscriptionManager: React.FC = () => {
       const portalUrl = await StripeService.getCustomerPortalUrl(user.id);
       window.open(portalUrl, '_blank');
     } catch (error) {
-      console.error('Failed to open customer portal:', error);
       toast.error(EN.subscription.error.portal);
     } finally {
       setProcessing(null);
@@ -77,7 +74,6 @@ export const SubscriptionManager: React.FC = () => {
     switch (planId) {
       case 'free': return <Zap className="w-6 h-6" />;
       case 'premium': return <Crown className="w-6 h-6" />;
-      case 'family': return <Users className="w-6 h-6" />;
       default: return <Zap className="w-6 h-6" />;
     }
   };
@@ -124,7 +120,7 @@ export const SubscriptionManager: React.FC = () => {
               </div>
               <div className="text-right">
                 <div className="text-3xl font-bold text-gray-900">
-                  ${currentPlan.price}
+                  {'$'}{currentPlan.price}
                 </div>
                 <div className="text-gray-600">
                   {currentPlan.interval === 'month' ? EN.subscription.perMonth : EN.subscription.perYear}
@@ -162,7 +158,7 @@ export const SubscriptionManager: React.FC = () => {
         </div>
 
         {/* Plan List */}
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 gap-8">
           {pricingPlans.map((plan) => {
             const isCurrentPlan = plan.id === currentPlan.id;
             const isPopular = plan.id === 'premium';
@@ -188,8 +184,7 @@ export const SubscriptionManager: React.FC = () => {
                   <div className="flex justify-center mb-4">
                     <div className={`p-3 rounded-xl ${
                       plan.id === 'free' ? 'bg-gray-100 text-gray-600' :
-                      plan.id === 'premium' ? 'bg-indigo-100 text-indigo-600' :
-                      'bg-purple-100 text-purple-600'
+                      'bg-indigo-100 text-indigo-600'
                     }`}>
                       {getPlanIcon(plan.id)}
                     </div>
@@ -198,7 +193,7 @@ export const SubscriptionManager: React.FC = () => {
                     {plan.name}
                   </h3>
                   <div className="text-4xl font-bold text-gray-900 mb-2">
-                    ${plan.price}
+                    {'$'}{plan.price}
                   </div>
                   <div className="text-gray-600">
                     {plan.interval === 'month' ? EN.subscription.perMonth : EN.subscription.perYear}

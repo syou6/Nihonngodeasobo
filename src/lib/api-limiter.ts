@@ -51,7 +51,7 @@ function resetDailyUsage(): ApiUsage {
 }
 
 // API使用可能かチェック
-export function canUseApi(): { allowed: boolean; reason?: string } {
+function canUseApi(): { allowed: boolean; reason?: string } {
   const usage = getUsage();
   
   // 日付が変わっていればリセット
@@ -96,8 +96,6 @@ export function recordApiUsage(estimatedTokens: number = 200): void {
     saveUsage(usage);
   }
   
-  // コンソールに使用状況を出力
-  console.log(`Gemini API使用状況: ${usage.count}/${DAILY_LIMIT}回, ${usage.totalTokens}トークン`);
 }
 
 // 現在の使用状況を取得
@@ -133,7 +131,6 @@ export function getCurrentUsageStats(): {
 // 使用量をリセット（テスト用）
 export function resetUsage(): void {
   saveUsage(resetDailyUsage());
-  console.log('API使用量をリセットしました');
 }
 
 // キャッシュ管理
@@ -178,10 +175,8 @@ export function getCachedAnalysis(text: string): any | null {
       return null;
     }
     
-    console.log('キャッシュから結果を取得しました');
     return found.result;
-  } catch (error) {
-    console.error('キャッシュ取得エラー:', error);
+  } catch {
     return null;
   }
 }
@@ -210,10 +205,7 @@ export function cacheAnalysis(text: string, result: any): void {
     }
     
     localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-    console.log('分析結果をキャッシュに保存しました');
-  } catch (error) {
-    console.error('キャッシュ保存エラー:', error);
-  }
+  } catch { /* ignored */ }
 }
 
 // 警告メッセージを表示
@@ -222,7 +214,6 @@ export function showApiUsageWarning(): void {
   const remainingPercent = (stats.remainingRequests / stats.dailyLimit) * 100;
   
   if (remainingPercent <= 20 && remainingPercent > 0) {
-    console.warn(`⚠️ API使用量警告: 本日の残り回数 ${stats.remainingRequests}/${stats.dailyLimit}`);
     // UIに警告を表示する場合はここに追加
   }
 }
@@ -256,7 +247,6 @@ function checkRateLimit(): boolean {
   
   // 制限チェック
   if (info.requests.length >= MAX_REQUESTS_PER_MINUTE) {
-    console.error(`🚫 レート制限: 1分間に${MAX_REQUESTS_PER_MINUTE}回までです`);
     return false;
   }
   
@@ -274,7 +264,7 @@ interface CircuitBreakerState {
   nextRetry: number;
 }
 
-export function getCircuitBreakerState(): CircuitBreakerState {
+function getCircuitBreakerState(): CircuitBreakerState {
   const stored = localStorage.getItem(CIRCUIT_BREAKER_KEY);
   if (!stored) {
     return {
@@ -296,7 +286,6 @@ export function recordApiError(): void {
   if (state.errorCount >= CIRCUIT_BREAKER_THRESHOLD) {
     state.isOpen = true;
     state.nextRetry = Date.now() + 600000; // 10分後
-    console.error('🔴 サーキットブレーカー発動: API呼び出しを10分間停止します');
   }
   
   localStorage.setItem(CIRCUIT_BREAKER_KEY, JSON.stringify(state));
@@ -309,7 +298,7 @@ export function recordApiSuccess(): void {
   localStorage.setItem(CIRCUIT_BREAKER_KEY, JSON.stringify(state));
 }
 
-export function isCircuitBreakerOpen(): boolean {
+function isCircuitBreakerOpen(): boolean {
   const state = getCircuitBreakerState();
   
   // 時間が経過していたらリセット

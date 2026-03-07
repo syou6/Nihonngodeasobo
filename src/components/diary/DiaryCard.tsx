@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../ui/Button';
 import { StandardDialog } from '../ui/StandardDialog';
 import { FeedbackCard } from '../feedback/FeedbackCard';
+import { UpgradePrompt } from '../subscription/UpgradePrompt';
 import { useAuthStore } from '../../stores/authStore';
 import { useDiaryStore } from '../../stores/diaryStore';
+import { useSubscription } from '../../hooks/useSubscription';
 import { supabase } from '../../lib/supabase';
 import { EN } from '../../i18n/en';
 import type { DiaryEntry } from '../../types';
@@ -12,9 +14,6 @@ import {
   Play,
   Pause,
   MessageCircle,
-  Heart,
-  ThumbsUp,
-  Smile,
   Calendar,
   Volume2,
   Trash2,
@@ -44,7 +43,12 @@ export const DiaryCard: React.FC<DiaryCardProps> = ({ entry }) => {
 
   const { user } = useAuthStore();
   const { deleteEntry, fetchEntries } = useDiaryStore();
+  const { isPremium } = useSubscription();
   const isOwner = user?.id === entry.user_id;
+
+  const handleUpgrade = () => {
+    window.location.href = '/subscription';
+  };
 
   useEffect(() => {
     return () => {
@@ -85,7 +89,6 @@ export const DiaryCard: React.FC<DiaryCardProps> = ({ entry }) => {
         await audio.play();
         setIsPlaying(true);
       } catch (error) {
-        console.error('Failed to play audio:', error);
         toast.error('Failed to play audio');
       } finally {
         setIsLoadingAudio(false);
@@ -146,9 +149,7 @@ export const DiaryCard: React.FC<DiaryCardProps> = ({ entry }) => {
               }
             });
           }
-        } catch (notifyError) {
-          console.error('Failed to send comment notification:', notifyError);
-        }
+        } catch { /* ignored */ }
       }
 
       toast.success('Comment posted');
@@ -186,7 +187,7 @@ export const DiaryCard: React.FC<DiaryCardProps> = ({ entry }) => {
     return emotionMap[emotion] || '😌';
   };
 
-  const getHealthColor = (score?: number) => {
+  const getLanguageScoreColor = (score?: number) => {
     if (!score) return 'text-gray-500';
     if (score >= 80) return 'text-green-500';
     if (score >= 60) return 'text-yellow-500';
@@ -223,10 +224,10 @@ export const DiaryCard: React.FC<DiaryCardProps> = ({ entry }) => {
                     <span className="text-sm sm:text-lg hidden sm:inline">{entry.emotion}</span>
                   </div>
                 )}
-                {entry.health_score && (
-                  <div className={`text-sm sm:text-lg font-medium ${getHealthColor(entry.health_score)}`}>
-                    <span className="hidden sm:inline">Health: </span>
-                    <span>{entry.health_score}/100</span>
+                {entry.language_score != null && (
+                  <div className={`text-sm sm:text-lg font-medium ${getLanguageScoreColor(entry.language_score)}`}>
+                    <span className="hidden sm:inline">Score: </span>
+                    <span>{entry.language_score}/100</span>
                   </div>
                 )}
               </div>
@@ -370,28 +371,22 @@ export const DiaryCard: React.FC<DiaryCardProps> = ({ entry }) => {
             </AnimatePresence>
           </div>
         )}
+
+        {/* Upgrade prompt for free users who own this entry and have no AI feedback */}
+        {isOwner && !entry.ai_feedback && !isPremium && (
+          <div className="mt-4">
+            <UpgradePrompt
+              feature="AI feedback analyzes your Japanese diary and provides personalized corrections, vocabulary tips, and grammar suggestions."
+              onUpgrade={handleUpgrade}
+            />
+          </div>
+        )}
       </div>
 
       {/* Actions */}
       <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100">
         <div className="flex items-center justify-around sm:justify-between">
           <div className="flex items-center gap-3 sm:gap-4">
-            {/* Like button */}
-            <button
-              className="flex items-center gap-2 p-2 sm:px-4 sm:py-2 hover:bg-gray-50 rounded-lg transition-colors"
-            >
-              <Heart className="w-6 h-6 sm:w-5 sm:h-5 text-red-500" />
-              <span className="hidden sm:inline text-lg">Like</span>
-            </button>
-
-            {/* Support button */}
-            <button
-              className="flex items-center gap-2 p-2 sm:px-4 sm:py-2 hover:bg-gray-50 rounded-lg transition-colors"
-            >
-              <ThumbsUp className="w-6 h-6 sm:w-5 sm:h-5 text-blue-500" />
-              <span className="hidden sm:inline text-lg">Support</span>
-            </button>
-
             {/* Comment button */}
             <button
               onClick={() => setShowComments(!showComments)}
@@ -406,13 +401,6 @@ export const DiaryCard: React.FC<DiaryCardProps> = ({ entry }) => {
               <span className="hidden sm:inline text-lg">
                 Comments{entry.comments && entry.comments.length > 0 && ` ${entry.comments.length}`}
               </span>
-            </button>
-
-            {/* Smile button */}
-            <button
-              className="flex items-center gap-2 p-2 sm:px-4 sm:py-2 hover:bg-gray-50 rounded-lg transition-colors sm:ml-auto"
-            >
-              <Smile className="w-6 h-6 sm:w-5 sm:h-5 text-orange-500" />
             </button>
           </div>
         </div>

@@ -2,14 +2,11 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { XCircle, ArrowLeft, RefreshCw } from 'lucide-react';
 import { Button } from '../components/ui/Button';
-import { useNavigate } from 'react-router-dom';
 import { EN } from '../i18n/en';
 
 export const SubscriptionCancel: React.FC = () => {
-  const navigate = useNavigate();
-
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
+    <div className="flex items-center justify-center py-12 px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -35,7 +32,7 @@ export const SubscriptionCancel: React.FC = () => {
 
         <div className="space-y-4">
           <Button
-            onClick={() => navigate('/app')}
+            onClick={() => window.location.href = '/app.html'}
             variant="primary"
             className="w-full"
           >
@@ -44,7 +41,7 @@ export const SubscriptionCancel: React.FC = () => {
           </Button>
 
           <Button
-            onClick={() => navigate('/subscription')}
+            onClick={() => window.location.href = '/app.html?view=pricing'}
             variant="outline"
             className="w-full"
           >

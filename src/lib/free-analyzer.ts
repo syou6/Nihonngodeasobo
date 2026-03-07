@@ -2,96 +2,43 @@
 
 export interface AnalysisResult {
   summary: string;
-  emotion: string;
-  health_score: number;
   keywords: string[];
 }
 
 /**
- * シンプルな感情分析（ルールベース）
- */
-function analyzeEmotion(text: string): string {
-  const emotions = {
-    '喜び': ['嬉しい', '楽しい', '幸せ', '良かった', 'ありがとう', '最高'],
-    '楽しい': ['面白い', '笑', 'わくわく', '楽しみ', '遊んだ'],
-    '悲しみ': ['悲しい', '寂しい', '辛い', '泣', '涙'],
-    '不安': ['心配', '不安', '怖い', '困った', 'どうしよう'],
-    '疲れ': ['疲れた', '眠い', 'だるい', '休みたい', 'しんどい'],
-  };
-
-  let maxScore = 0;
-  let detectedEmotion = '普通';
-
-  for (const [emotion, keywords] of Object.entries(emotions)) {
-    let score = 0;
-    keywords.forEach(keyword => {
-      if (text.includes(keyword)) {
-        score++;
-      }
-    });
-    
-    if (score > maxScore) {
-      maxScore = score;
-      detectedEmotion = emotion;
-    }
-  }
-
-  return detectedEmotion;
-}
-
-/**
- * 健康スコアの簡易計算
- */
-function calculateHealthScore(text: string): number {
-  let score = 75; // 基準値
-
-  // ポジティブワード
-  const positiveWords = ['元気', '健康', '食べた', '歩いた', '運動', '眠れた', '美味しい'];
-  const negativeWords = ['痛い', '具合悪い', '食欲ない', '眠れない', '薬', '病院'];
-
-  positiveWords.forEach(word => {
-    if (text.includes(word)) score += 5;
-  });
-
-  negativeWords.forEach(word => {
-    if (text.includes(word)) score -= 10;
-  });
-
-  // 0-100の範囲に収める
-  return Math.max(0, Math.min(100, score));
-}
-
-/**
- * キーワード抽出（簡易版）
+ * キーワード抽出（日本語学習向け：動詞・形容詞・名詞の頻出ワード）
  */
 function extractKeywords(text: string): string[] {
-  // 重要そうな名詞を抽出（簡易版）
-  const importantWords = [
-    '散歩', '買い物', '病院', '薬', '家族', '友達',
-    '朝ごはん', '昼ごはん', '夕ごはん', '運動', 'テレビ',
-    '電話', '孫', '天気', '体調', '睡眠'
+  const candidates = [
+    // 動詞
+    '食べる', '飲む', '行く', '来る', '見る', '聞く', '話す', '書く', '読む', '勉強する',
+    '練習する', '覚える', '学ぶ', '使う', '遊ぶ', '働く', '休む', '寝る', '起きる',
+    // 形容詞
+    '楽しい', '難しい', '面白い', '簡単', '嬉しい', '大変', '好き', '素晴らしい',
+    // 名詞（学習関連）
+    '日本語', '漢字', 'ひらがな', 'カタカナ', '文法', '単語', '発音', '会話',
+    '授業', '先生', '友達', '学校', '仕事', '旅行', '食べ物', '文化'
   ];
 
   const found: string[] = [];
-  importantWords.forEach(word => {
-    if (text.includes(word) && found.length < 3) {
+  for (const word of candidates) {
+    if (text.includes(word) && found.length < 5) {
       found.push(word);
     }
-  });
+  }
 
-  return found.length > 0 ? found : ['日常'];
+  return found.length > 0 ? found : [];
 }
 
 /**
- * 簡易要約（最初の50文字 + 重要部分）
+ * 簡易要約（最初の2文）
  */
-function generateSummary(text: string): string {
+function buildSummary(text: string): string {
   if (text.length <= 50) {
     return text;
   }
 
-  // 句読点で区切って最初の2文を取得
-  const sentences = text.split(/[。！？]/).filter(s => s.length > 0);
+  const sentences = text.split(/[。！？]/).filter(s => s.trim().length > 0);
   if (sentences.length > 0) {
     return sentences.slice(0, 2).join('。') + '。';
   }
@@ -104,67 +51,32 @@ function generateSummary(text: string): string {
  */
 export function analyzeFree(text: string): AnalysisResult {
   if (!text) {
-    return {
-      summary: '',
-      emotion: '普通',
-      health_score: 75,
-      keywords: []
-    };
+    return { summary: '', keywords: [] };
   }
 
   try {
-    const emotion = analyzeEmotion(text);
-    const health_score = calculateHealthScore(text);
-    const keywords = extractKeywords(text);
-    const summary = generateSummary(text);
-
-    console.log('無料分析結果:', { emotion, health_score, keywords });
-
     return {
-      summary,
-      emotion,
-      health_score,
-      keywords
+      summary: buildSummary(text),
+      keywords: extractKeywords(text)
     };
   } catch (error) {
-    console.error('分析エラー:', error);
     return {
       summary: text.substring(0, 50) + '...',
-      emotion: '普通',
-      health_score: 75,
       keywords: []
     };
   }
 }
 
 /**
- * 家族向け要約（簡易版）
+ * 簡易要約生成
  */
-export function generateFamilySummaryFree(text: string): string {
+export function generateSummaryFree(text: string): string {
   const keywords = extractKeywords(text);
-  const emotion = analyzeEmotion(text);
-  const health = calculateHealthScore(text);
+  const base = buildSummary(text);
 
-  let summary = '';
-  
-  // 健康状態
-  if (health >= 80) {
-    summary += '元気に過ごされています。';
-  } else if (health >= 60) {
-    summary += '普通に過ごされています。';
-  } else {
-    summary += '少し体調が気になります。';
-  }
-
-  // キーワード
   if (keywords.length > 0) {
-    summary += `今日は${keywords.join('、')}などの話がありました。`;
+    return `${base}（${keywords.slice(0, 3).join('・')}について書かれています）`;
   }
 
-  // 感情
-  if (emotion !== '普通') {
-    summary += `気分は${emotion}のようです。`;
-  }
-
-  return summary || generateSummary(text);
+  return base;
 }

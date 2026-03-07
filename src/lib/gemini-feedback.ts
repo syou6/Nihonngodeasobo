@@ -1,6 +1,7 @@
 import { canCallApi, recordApiUsage, recordApiSuccess, recordApiError, showApiUsageWarning } from './api-limiter';
 import { getNextJlptLevel, DEFAULT_JLPT_LEVEL, API } from './constants';
 import type { JLPTLevel } from './constants';
+import { callGeminiApi } from './gemini-api';
 
 // Re-export for backward compatibility
 export type { JLPTLevel } from './constants';
@@ -10,21 +11,6 @@ export interface JapaneseFeedback {
   jlptLevel: JLPTLevel;
   targetLevel: JLPTLevel;
   markdownContent: string;  // 全フィードバックをMarkdownで保存
-}
-
-async function callGeminiApi(body: Record<string, unknown>): Promise<any> {
-  const response = await fetch('/api/gemini-ai', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(error.error || `API error: ${response.status}`);
-  }
-
-  return response.json();
 }
 
 /**
@@ -46,9 +32,8 @@ Your diary entry has been recorded. Keep practicing your Japanese every day!
 Great effort! Consistent daily practice is the key to improving your Japanese. Keep it up!`
   };
 
-  const { allowed, reason } = canCallApi();
+  const { allowed } = canCallApi();
   if (!allowed) {
-    console.warn('API limit reached:', reason);
     return defaultFeedback;
   }
 
@@ -56,7 +41,7 @@ Great effort! Consistent daily practice is the key to improving your Japanese. K
 
   try {
     const data = await callGeminiApi({
-      type: 'feedback', content, cefrLevel: userJlptLevel
+      type: 'feedback', content, jlptLevel: userJlptLevel
     });
 
     const estimatedTokens = Math.ceil(content.length / API.TOKEN_ESTIMATION_DIVISOR) + API.TOKEN_BASE_FEEDBACK;
@@ -64,13 +49,12 @@ Great effort! Consistent daily practice is the key to improving your Japanese. K
     recordApiSuccess();
 
     return {
-      jlptLevel: (data.cefrLevel as JLPTLevel) || userJlptLevel,
+      jlptLevel: (data.jlptLevel as JLPTLevel) || (data.cefrLevel as JLPTLevel) || userJlptLevel,
       targetLevel: (data.targetLevel as JLPTLevel) || targetLevel,
       markdownContent: data.markdownContent || defaultFeedback.markdownContent
     };
 
   } catch (error: any) {
-    console.error('Gemini feedback error:', error.message);
     recordApiError();
     return defaultFeedback;
   }
@@ -92,9 +76,8 @@ export async function generatePracticeFeedback(
     markdownContent: `## 📊 Response Analysis\nYour response has been recorded. Keep practicing your Japanese speaking skills!\n\n## 💪 Encouragement\nGreat effort! Every speaking practice session brings you closer to fluency in Japanese. Keep going!`
   };
 
-  const { allowed, reason } = canCallApi();
+  const { allowed } = canCallApi();
   if (!allowed) {
-    console.warn('API limit reached:', reason);
     return defaultFeedback;
   }
 
@@ -102,7 +85,7 @@ export async function generatePracticeFeedback(
 
   try {
     const data = await callGeminiApi({
-      type: 'versant-feedback', content, part, cefrLevel: userJlptLevel
+      type: 'versant-feedback', content, part, jlptLevel: userJlptLevel
     });
 
     const estimatedTokens = Math.ceil(content.length / API.TOKEN_ESTIMATION_DIVISOR) + API.TOKEN_BASE_FEEDBACK;
@@ -110,13 +93,12 @@ export async function generatePracticeFeedback(
     recordApiSuccess();
 
     return {
-      jlptLevel: (data.cefrLevel as JLPTLevel) || userJlptLevel,
+      jlptLevel: (data.jlptLevel as JLPTLevel) || (data.cefrLevel as JLPTLevel) || userJlptLevel,
       targetLevel: (data.targetLevel as JLPTLevel) || targetLevel,
       markdownContent: data.markdownContent || defaultFeedback.markdownContent
     };
 
   } catch (error: any) {
-    console.error('Gemini practice feedback error:', error.message);
     recordApiError();
     return defaultFeedback;
   }
@@ -155,7 +137,7 @@ export async function generatePracticeSampleAnswer(
 
   try {
     const data = await callGeminiApi({
-      type: 'versant-sample', question, part, cefrLevel: userJlptLevel
+      type: 'versant-sample', question, part, jlptLevel: userJlptLevel
     });
 
     const estimatedTokens = Math.ceil(question.length / API.TOKEN_ESTIMATION_DIVISOR) + API.TOKEN_BASE_SAMPLE;
@@ -165,7 +147,6 @@ export async function generatePracticeSampleAnswer(
     return data.sampleAnswer || defaultAnswer;
 
   } catch (error: any) {
-    console.error('Gemini sample answer error:', error.message);
     recordApiError();
     return defaultAnswer;
   }
@@ -186,7 +167,7 @@ export async function generatePracticeQuestion(
 
   try {
     const data = await callGeminiApi({
-      type: 'versant-question', part, cefrLevel: userJlptLevel
+      type: 'versant-question', part, jlptLevel: userJlptLevel
     });
 
     const estimatedTokens = API.TOKEN_BASE_SAMPLE;
@@ -204,7 +185,6 @@ export async function generatePracticeQuestion(
     };
 
   } catch (error: any) {
-    console.error('Gemini question generation error:', error.message);
     recordApiError();
     return null;
   }

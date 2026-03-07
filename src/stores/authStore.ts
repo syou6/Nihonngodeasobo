@@ -29,7 +29,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         options: {
           data: {
             name: userData.name || '',
-            role: 'parent' // デフォルトでparentに設定
+            role: 'learner' // デフォルトでlearnerに設定
           }
         }
       });
@@ -43,11 +43,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             id: data.user.id,
             email: data.user.email,
             name: userData.name || '',
-            role: 'parent'
+            role: 'learner'
           });
 
         if (profileError) {
-          console.warn('プロファイル作成エラー（自動作成されます）:', profileError);
         }
       }
     } catch (error) {
@@ -57,21 +56,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   signIn: async (email: string, password: string) => {
     try {
-      console.log('ログイン試行:', { email, url: window.location.origin });
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        console.error('ログインエラー詳細:', {
-          error,
-          message: error.message,
-          status: error.status,
-          name: error.name
-        });
-        
         if (error.message.includes('Invalid login credentials')) {
           throw new Error('メールアドレスまたはパスワードが正しくありません');
         }
@@ -97,7 +87,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
               id: data.user.id,
               email: data.user.email,
               name: data.user.user_metadata?.name || '',
-              role: 'parent'
+              role: 'learner'
             });
         }
       }
@@ -108,33 +98,20 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   signInWithGoogle: async () => {
     try {
-      console.log('Googleログイン開始:', {
-        redirectTo: `${window.location.origin}/`,
-        origin: window.location.origin
-      });
-      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}/app.html`,
         },
       });
 
       if (error) {
-        console.error('Googleログインエラー詳細:', {
-          error,
-          message: error.message,
-          code: error.code,
-          details: error
-        });
-        
         if (error.message?.includes('provider is not enabled')) {
           throw new Error('Google認証が有効化されていません。管理者に連絡してください。');
         }
         throw new Error(`Googleログインに失敗しました: ${error.message}`);
       }
     } catch (error: any) {
-      console.error('Googleログインエラー:', error);
       throw error;
     }
   },
@@ -148,9 +125,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
     try {
       await supabase.auth.signOut({ scope: 'local' });
-    } catch (error) {
-      console.error('ログアウトエラー:', error);
-    }
+    } catch { /* ignored */ }
 
     // Always clear state and storage, regardless of signOut result
     set({ user: null, loading: false });
@@ -167,7 +142,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     }
 
     // Force full page reload to clear any in-memory state
-    window.location.replace('/');
+    window.location.replace('/app.html');
   },
 
   initialize: async () => {
@@ -179,17 +154,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         import.meta.env.VITE_SUPABASE_ANON_KEY !== 'your_supabase_anon_key';
 
       if (!hasValidConfig) {
-        console.log('Supabase環境変数が未設定のため、ゲストモードで開始します');
         set({ user: null, loading: false });
         return Promise.resolve();
       }
 
-      console.log('認証ストア初期化開始');
-
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
+
       if (sessionError) {
-        console.error('セッション取得エラー:', sessionError);
         set({ user: null, loading: false });
         return;
       }
@@ -209,18 +180,14 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             id: session.user.id,
             email: session.user.email!,
             name: session.user.user_metadata?.name || '',
-            role: session.user.user_metadata?.role || 'parent',
+            role: session.user.user_metadata?.role || 'learner',
           };
-          
+
           const { data: createdProfile, error: createError } = await supabase
             .from('users')
             .insert(newUserProfile)
             .select()
             .single();
-          
-          if (createError) {
-            console.warn('プロファイル作成エラー（自動リトライ）:', createError);
-          }
           
           set({ user: createdProfile || newUserProfile, loading: false });
         }
@@ -250,7 +217,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
               id: session.user.id,
               email: session.user.email!,
               name: session.user.user_metadata?.name || '',
-              role: session.user.user_metadata?.role || 'parent',
+              role: session.user.user_metadata?.role || 'learner',
             };
 
             const { data: createdProfile } = await supabase
@@ -267,7 +234,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       });
       authSubscription = subscription;
     } catch (error) {
-      console.error('Auth初期化エラー:', error);
       set({ user: null, loading: false });
       return Promise.resolve(); // エラーでもPromiseを返す
     }
@@ -287,7 +253,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
       set({ user: { ...user, jlpt_level: level } });
     } catch (error) {
-      console.error('Failed to update JLPT level:', error);
       throw error;
     }
   },

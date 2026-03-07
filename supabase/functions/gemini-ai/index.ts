@@ -5,12 +5,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
+
+const jlptProgression: Record<string, string> = {
+  'N5': 'N4', 'N4': 'N3', 'N3': 'N2', 'N2': 'N1', 'N1': 'N1'
+}
 
 interface GeminiRequest {
-  type: 'analyze' | 'summary' | 'feedback' | 'versant-sample'
+  type: 'analyze' | 'summary' | 'feedback' | 'versant-feedback' | 'versant-sample' | 'versant-question'
   content?: string
-  cefrLevel?: string
+  jlptLevel?: string
+  cefrLevel?: string  // kept for backwards compatibility
   question?: string
   part?: 'E' | 'F'
 }
@@ -38,129 +43,114 @@ async function callGemini(apiKey: string, prompt: string): Promise<string> {
 }
 
 function buildAnalyzePrompt(content: string): string {
-  return `以下の日記を分析して、JSON形式で結果を返してください。
+  return `Analyze the following Japanese diary entry written by a foreign language learner. Return results in JSON format only.
 
-日記内容：
+Diary content:
 ${content}
 
-以下の形式で返してください（JSONのみ、説明文は不要）：
+Return ONLY the following JSON (no explanations, no markdown code blocks):
 {
-  "summary": "50文字以内の要約",
-  "emotion": "喜び/楽しい/悲しみ/不安/疲れ/普通のいずれか",
-  "health_score": 0-100の数値（健康状態スコア）,
-  "keywords": ["キーワード1", "キーワード2", "キーワード3"]（最大3個）
+  "summary": "50文字以内の日本語要約",
+  "summary_en": "English translation of the summary (under 100 characters)",
+  "emotion": "one of: happy, excited, neutral, tired, sad, anxious",
+  "language_score": <integer 0-100 based on grammar accuracy, vocabulary range, and naturalness>,
+  "grammar_errors": <integer count of grammar errors found>,
+  "jlpt_estimated_level": "estimated JLPT level of the writing: N5, N4, N3, N2, or N1",
+  "keywords": ["keyword1", "keyword2", "keyword3"]
 }`
 }
 
 function buildSummaryPrompt(content: string): string {
-  return `以下の日記を家族が読みやすいように100文字以内で要約してください。
-健康状態や気分、主な出来事を含めてください。
+  return `Summarize the following Japanese diary entry written by a language learner. Provide both a Japanese summary and an English translation.
 
-日記内容：
+Focus on: what the learner practiced, key language patterns used, and main events described.
+
+Diary content:
 ${content}
 
-要約（100文字以内）：`
+Japanese summary (100 characters or less):
+English translation of the summary:`
 }
 
-function buildFeedbackPrompt(content: string, cefrLevel: string): string {
-  const levelProgression: Record<string, string> = {
-    'A1': 'A1+', 'A1+': 'A2', 'A2': 'A2+', 'A2+': 'B1',
-    'B1': 'B1+', 'B1+': 'B2', 'B2': 'B2+', 'B2+': 'C1',
-    'C1': 'C1+', 'C1+': 'C1+'
-  }
-  const targetLevel = levelProgression[cefrLevel] || 'B1+'
+function buildFeedbackPrompt(content: string, jlptLevel: string): string {
+  const targetLevel = jlptProgression[jlptLevel] || 'N3'
 
   return `# Role
-You are an expert English language coach designed to help users improve their English skills through their diary entries.
+You are a warm, encouraging Japanese language tutor for foreign learners. Your goal is to help learners improve through their diary entries.
 
-# Inputs provided by the system
-1. **User Level:** ${cefrLevel} (CEFR)
-2. **Diary Transcript:**
+# Context
+- Learner's current JLPT level: ${jlptLevel}
+- Next target level: ${targetLevel}
+- Diary entry:
 ${content}
 
-# Your Task
-Analyze the diary transcript and provide output in two main sections.
+# Instructions
+Provide feedback ENTIRELY IN ENGLISH (except for Japanese examples). The learner may not be able to read complex Japanese explanations yet.
 
-## Section 1: Feedback & Level Up
-Analyze the English based on the user's level.
-- **Tone:** Encouraging, empathetic, and professional.
-- **Language:** Explain the feedback in **Japanese** so the user clearly understands, but show English examples.
-- **Constraint:** The advice must be aimed at **one level slightly higher** than the User Level (i+1 = ${targetLevel}).
+# Required Output Format (Markdown)
 
-**Analysis points:**
-1. **Grammar & Phrasing:** Correct unnatural phrasing. If the user uses simple grammar, suggest a more sophisticated structure appropriate for the next level.
-2. **Vocabulary:** Identify basic words used and suggest more precise or academic synonyms.
-3. **Pronunciation Advice:** Identify 2-3 words in the user's text that are typically difficult to pronounce. Provide phonetics or tips.
+## Score: [X]/100
+(Rate the overall quality: grammar accuracy, vocabulary range, naturalness, and effort)
 
-## Section 2: Topic Extension (Reading Material)
-Based on the content of the diary:
-1. **Identify the Main Topic:** Extract the core theme.
-2. **Generate an Article:** Write an engaging article (approx. 150-200 words) about this topic.
-   - **Difficulty:** The English level must be **slightly higher (i+1 = ${targetLevel})** than the User Level.
-   - **Content:** Include enough rich vocabulary to support the extraction of 10 key items.
-3. **Vocabulary List:** Extract **10 key words or phrases** from this generated article that are valuable for the user to learn.
+## Corrections
+For each error found, format as:
+- ❌ "[original text]" → ✅ "[corrected text]"
+  - Why: [brief explanation in English]
 
-# Output Format (Markdown)
+If no errors found, praise the accuracy.
 
-## 📊 Feedback & Corrections
-(Provide corrections, grammar explanations in Japanese, and better vocabulary suggestions here)
+## Vocabulary Builder
+List 5 useful words/phrases related to the diary topic that the learner should know at ${targetLevel} level:
+| Japanese | Reading | English | Example Sentence |
+|----------|---------|---------|-----------------|
 
-## 🗣️ Pronunciation Tips
-(List tricky words from the user's text and tips on how to say them)
+## Grammar Point
+Pick ONE grammar pattern from the diary (or suggest one the learner should learn next at ${targetLevel} level):
+- Pattern: [grammar pattern]
+- Meaning: [English explanation]
+- Example: [example sentence]
+- Tip: [when/how to use it]
 
-## 📖 Recommended Reading: [Insert Topic Name]
-(Insert the generated English article here)
+## What You Did Well
+(Specific praise about what was good in this entry - be genuine and specific, not generic)
 
-## 🇯🇵 Summary
-(Brief summary of the article in Japanese)
-
-## 🗝️ Key Vocabulary & Phrases
-(List **10** important words/phrases from the "Recommended Reading" article above. Use the format below:)
-- **[Word/Phrase]** \`[IPA Pronunciation]\` : [Japanese Meaning]
-
-## 💪 Encouragement
-(Write a personalized encouraging message in Japanese, praising specific good points and suggesting next steps)`
+## Challenge for Next Time
+(One small, specific challenge for the next diary entry to push them toward ${targetLevel})`
 }
 
-function buildVersantSamplePrompt(question: string, part: 'E' | 'F', cefrLevel: string): string {
-  const levelProgression: Record<string, string> = {
-    'A1': 'A1+', 'A1+': 'A2', 'A2': 'A2+', 'A2+': 'B1',
-    'B1': 'B1+', 'B1+': 'B2', 'B2': 'B2+', 'B2+': 'C1',
-    'C1': 'C1+', 'C1+': 'C1+'
-  }
-  const targetLevel = levelProgression[cefrLevel] || 'B1+'
+function buildVersantSamplePrompt(question: string, part: 'E' | 'F', jlptLevel: string): string {
+  const targetLevel = jlptProgression[jlptLevel] || 'N3'
   const timeLimit = part === 'E' ? 30 : 40
-  const wordCount = part === 'E' ? '60-80' : '80-100'
 
   if (part === 'E') {
-    return `You are an English speaking test sample answer generator.
+    return `You are a Japanese speaking practice sample answer generator.
 
-**Task:** Generate a model summary answer for this passage:
+**Task:** Generate a model summary answer in Japanese for this passage:
 "${question}"
 
 **Requirements:**
-- CEFR Level: ${targetLevel} (target level for the learner)
-- Length: ${wordCount} words (speakable within ${timeLimit} seconds)
+- JLPT Level: ${targetLevel} (target level for the learner)
+- Length: Speakable within ${timeLimit} seconds
 - Include: Main idea, key supporting points, conclusion
-- Tone: Clear, organized, natural spoken English
-- Use appropriate transition words (First, Additionally, In conclusion, etc.)
+- Write in natural spoken Japanese appropriate for ${targetLevel} level
+- Use appropriate transition expressions (まず、次に、最後に etc.)
 
-**Output:** Only the sample answer text, no explanations or labels.`
+**Output:** Only the sample answer text in Japanese, no explanations or labels.`
   }
 
-  return `You are an English speaking test sample answer generator.
+  return `You are a Japanese speaking practice sample answer generator.
 
-**Task:** Generate a model opinion answer for this question:
+**Task:** Generate a model opinion answer in Japanese for this question:
 "${question}"
 
 **Requirements:**
-- CEFR Level: ${targetLevel} (target level for the learner)
-- Length: ${wordCount} words (speakable within ${timeLimit} seconds)
+- JLPT Level: ${targetLevel} (target level for the learner)
+- Length: Speakable within ${timeLimit} seconds
 - Structure: State opinion → Give 2-3 reasons with examples → Conclude
-- Tone: Natural spoken English, conversational but organized
-- Use appropriate phrases: "In my opinion", "I believe that", "For example", "Furthermore", "To sum up"
+- Write in natural spoken Japanese appropriate for ${targetLevel} level
+- Use appropriate expressions (私は〜と思います、なぜなら、例えば、まとめると etc.)
 
-**Output:** Only the sample answer text, no explanations or labels.`
+**Output:** Only the sample answer text in Japanese, no explanations or labels.`
 }
 
 serve(async (req) => {
@@ -180,6 +170,9 @@ serve(async (req) => {
     const body: GeminiRequest = await req.json()
     const { type } = body
 
+    // Accept both jlptLevel and cefrLevel for backwards compatibility
+    const jlptLevel = body.jlptLevel || body.cefrLevel || 'N4'
+
     let result: unknown
 
     switch (type) {
@@ -192,13 +185,16 @@ serve(async (req) => {
 
         const jsonMatch = responseText.match(/\{[\s\S]*\}/)
         if (!jsonMatch) {
-          throw new Error('JSON形式の応答が得られませんでした')
+          throw new Error('No JSON found in Gemini response')
         }
         const analysis = JSON.parse(jsonMatch[0])
         result = {
           summary: analysis.summary || body.content.substring(0, 50),
-          emotion: analysis.emotion || '普通',
-          health_score: Math.min(100, Math.max(0, analysis.health_score || 75)),
+          summary_en: analysis.summary_en || '',
+          emotion: analysis.emotion || 'neutral',
+          language_score: Math.min(100, Math.max(0, analysis.language_score || 50)),
+          grammar_errors: analysis.grammar_errors || 0,
+          jlpt_estimated_level: analysis.jlpt_estimated_level || 'N5',
           keywords: Array.isArray(analysis.keywords) ? analysis.keywords.slice(0, 3) : []
         }
         break
@@ -218,18 +214,52 @@ serve(async (req) => {
         if (!body.content) {
           throw new Error('content is required for feedback')
         }
-        const cefrLevel = body.cefrLevel || 'B1'
-        const prompt = buildFeedbackPrompt(body.content, cefrLevel)
+        const prompt = buildFeedbackPrompt(body.content, jlptLevel)
         const responseText = await callGemini(apiKey, prompt)
 
-        const levelProgression: Record<string, string> = {
-          'A1': 'A1+', 'A1+': 'A2', 'A2': 'A2+', 'A2+': 'B1',
-          'B1': 'B1+', 'B1+': 'B2', 'B2': 'B2+', 'B2+': 'C1',
-          'C1': 'C1+', 'C1+': 'C1+'
-        }
         result = {
-          cefrLevel,
-          targetLevel: levelProgression[cefrLevel] || 'B1+',
+          jlptLevel,
+          targetLevel: jlptProgression[jlptLevel] || 'N3',
+          markdownContent: responseText
+        }
+        break
+      }
+
+      case 'versant-feedback': {
+        if (!body.content || !body.part) {
+          throw new Error('content and part are required for versant-feedback')
+        }
+        const targetLevel = jlptProgression[jlptLevel] || 'N3'
+        const prompt = `# Role
+You are a Japanese language speaking coach for foreign learners.
+
+# Inputs
+- **User JLPT Level:** ${jlptLevel}
+- **Practice Type:** Part ${body.part} (${body.part === 'E' ? 'Summary' : 'Opinion'})
+- **User's Response:**
+${body.content}
+
+# Task
+Analyze the user's Japanese speaking response and provide feedback ENTIRELY IN ENGLISH (except for Japanese examples).
+
+## Output Format (Markdown)
+
+## Fluency Analysis
+(Assess sentence structure, flow, and coherence of the response)
+
+## Accuracy Check
+(Grammar and vocabulary corrections - for each error: ❌ original → ✅ corrected, with brief explanation)
+
+## Expression Upgrade
+(Suggest more natural or advanced alternatives for phrases used, appropriate for ${targetLevel} level)
+
+## Score: [X]/100
+(Overall speaking readiness assessment based on accuracy, fluency, and vocabulary range)`
+
+        const responseText = await callGemini(apiKey, prompt)
+        result = {
+          jlptLevel,
+          targetLevel,
           markdownContent: responseText
         }
         break
@@ -239,10 +269,32 @@ serve(async (req) => {
         if (!body.question || !body.part) {
           throw new Error('question and part are required for versant-sample')
         }
-        const cefrLevel = body.cefrLevel || 'B1'
-        const prompt = buildVersantSamplePrompt(body.question, body.part, cefrLevel)
+        const prompt = buildVersantSamplePrompt(body.question, body.part, jlptLevel)
         const responseText = await callGemini(apiKey, prompt)
         result = { sampleAnswer: responseText.trim() }
+        break
+      }
+
+      case 'versant-question': {
+        if (!body.part) {
+          throw new Error('part is required for versant-question')
+        }
+        const timeLimit = body.part === 'E' ? 30 : 40
+
+        const prompt = body.part === 'E'
+          ? `Generate a Japanese reading passage for JLPT ${jlptLevel} level learners to practice summarizing.
+The passage should be 3-5 sentences about an interesting topic (daily life, culture, technology, nature).
+Write ONLY in Japanese. Output ONLY the passage text, no labels or instructions.`
+          : `Generate a Japanese discussion question for JLPT ${jlptLevel} level learners to practice expressing opinions.
+The question should be about an everyday topic that's easy to have an opinion on.
+Write ONLY in Japanese. Output ONLY the question text, no labels or instructions.`
+
+        const responseText = await callGemini(apiKey, prompt)
+        result = {
+          text: responseText.trim(),
+          part: body.part,
+          timeLimit
+        }
         break
       }
 

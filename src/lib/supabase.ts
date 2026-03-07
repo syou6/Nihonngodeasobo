@@ -8,15 +8,11 @@ const hasValidConfig = supabaseUrl && supabaseAnonKey &&
   supabaseUrl !== 'your_supabase_url' && 
   supabaseAnonKey !== 'your_supabase_anon_key';
 
-console.log('Supabase初期化:', hasValidConfig ? '設定済み' : '未設定');
-
 let supabase: any = null;
 
 if (hasValidConfig) {
-  console.log('Supabase環境変数が設定されています。');
   supabase = createClient(supabaseUrl, supabaseAnonKey);
 } else {
-  console.warn('Supabase環境変数が設定されていません。ゲストモードで動作します。');
   // ダミーのSupabaseクライアントを作成（エラーを防ぐため）
   supabase = {
     auth: {

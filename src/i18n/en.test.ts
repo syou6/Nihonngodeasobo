@@ -3,7 +3,7 @@ import { EN } from './en';
 
 describe('i18n/en', () => {
   it('has app name', () => {
-    expect(EN.app.name).toBe('Nihongo de Asobo');
+    expect(EN.app.name).toBe('NihonGo');
   });
 
   it('has all navigation items', () => {

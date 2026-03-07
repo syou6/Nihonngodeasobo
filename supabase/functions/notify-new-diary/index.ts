@@ -36,8 +36,8 @@ serve(async (req) => {
     // 家族関係を取得
     const { data: relationships } = await supabase
       .from('family_relationships')
-      .select('parent_id, child_id')
-      .or(`parent_id.eq.${record.user_id},child_id.eq.${record.user_id}`)
+      .select('teacher_id, learner_id')
+      .or(`teacher_id.eq.${record.user_id},learner_id.eq.${record.user_id}`)
 
     if (!relationships || relationships.length === 0) {
       console.log('No family relationships found')
@@ -50,8 +50,8 @@ serve(async (req) => {
     // 通知対象のユーザーIDを収集
     const familyUserIds = new Set<string>()
     relationships.forEach(rel => {
-      if (rel.parent_id !== record.user_id) familyUserIds.add(rel.parent_id)
-      if (rel.child_id !== record.user_id) familyUserIds.add(rel.child_id)
+      if (rel.teacher_id !== record.user_id) familyUserIds.add(rel.teacher_id)
+      if (rel.learner_id !== record.user_id) familyUserIds.add(rel.learner_id)
     })
 
     console.log(`Found ${familyUserIds.size} family members to potentially notify`)

@@ -43,7 +43,7 @@ export const GuestDiaryCard: React.FC<GuestDiaryCardProps> = ({ diary }) => {
     }
   };
 
-  const getHealthScoreColor = (score: number) => {
+  const getLanguageScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600';
     if (score >= 60) return 'text-yellow-600';
     return 'text-red-600';
@@ -76,8 +76,8 @@ export const GuestDiaryCard: React.FC<GuestDiaryCardProps> = ({ diary }) => {
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <span className={`text-sm font-medium ${getHealthScoreColor(diary.health_score)}`}>
-                {EN.guestMode.healthScore}: {diary.health_score}
+              <span className={`text-sm font-medium ${getLanguageScoreColor(diary.language_score)}`}>
+                {EN.guestMode.healthScore}: {diary.language_score}
               </span>
               <div className="flex items-center gap-1 text-gray-500">
                 <Clock className="w-4 h-4" />

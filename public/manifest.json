@@ -1,15 +1,15 @@
 {
-  "name": "English AI Diary",
-  "short_name": "English AI Diary",
-  "description": "AI-powered English diary app - Speak English Every Day",
-  "theme_color": "#667eea",
+  "name": "NihonGo - Master Japanese with AI",
+  "short_name": "NihonGo",
+  "description": "AI-powered Japanese learning app. Voice diaries, AI feedback, and JLPT practice.",
+  "theme_color": "#4F46E5",
   "background_color": "#ffffff",
   "display": "standalone",
   "orientation": "portrait",
   "scope": "/",
-  "start_url": "/lp.html",
-  "id": "ai-voice-journal-pwa",
-  "categories": ["lifestyle", "productivity", "health"],
+  "start_url": "/app.html",
+  "id": "nihongo-pwa",
+  "categories": ["education", "productivity"],
   "icons": [
     {
       "src": "/icon-192x192.png",

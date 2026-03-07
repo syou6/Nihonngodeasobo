@@ -9,6 +9,8 @@ interface ApiUsageMonitorProps {
 }
 
 export const ApiUsageMonitor: React.FC<ApiUsageMonitorProps> = ({ embedded = true }) => {
+  if (import.meta.env.PROD) return null;
+
   const [stats, setStats] = useState(getCurrentUsageStats());
   const [showDetails, setShowDetails] = useState(false);
   const { isGuestMode, aiUsageCount } = useGuestStore();

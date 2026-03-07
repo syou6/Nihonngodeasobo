@@ -63,7 +63,7 @@ export async function fetchWeather(): Promise<WeatherData> {
   if (cached) return cached;
 
   const apiKey = import.meta.env.VITE_WEATHER_API_KEY;
-  if (!apiKey) {
+  if (!apiKey || apiKey === 'your_openweathermap_api_key') {
     return { temp: 25, description: 'Sunny', icon: '01d' };
   }
 

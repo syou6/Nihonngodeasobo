@@ -7,6 +7,7 @@ import { VoiceTranscriber } from '../../lib/speechRecognition';
 import { VolumeIndicator } from '../audio/VolumeIndicator';
 import { colors } from '../../styles/colorPalette';
 import { EN } from '../../i18n/en';
+import { useSubscription } from '../../hooks/useSubscription';
 import { Mic, MicOff, Play, Pause, Save, X, Trash2, Home, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -40,6 +41,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onViewChange, isGu
   } = useDiaryStore();
 
   const { createGuestDiary, canCreateMore } = useGuestStore();
+  const { checkAction, trackUsage } = useSubscription();
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -93,6 +95,15 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onViewChange, isGu
       return;
     }
 
+    // Check subscription recording limit for authenticated users
+    if (!isGuest) {
+      const canRecord = await checkAction('record_diary');
+      if (!canRecord.allowed) {
+        toast.error(`Monthly recording limit reached (${canRecord.limit}/month). Upgrade to Premium for unlimited recordings.`);
+        return;
+      }
+    }
+
     try {
       // Start audio recording
       await startRecording();
@@ -107,22 +118,17 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onViewChange, isGu
         analyserRef.current.fftSize = 256;
 
         analyzeVolume();
-      } catch (error) {
-        console.warn('Failed to initialize volume analysis:', error);
-      }
+      } catch { /* ignored */ }
 
       // Start speech recognition
       if (VoiceTranscriber.isSupported()) {
-        console.log('Speech recognition supported: yes');
         transcriberRef.current = new VoiceTranscriber();
         setIsTranscribing(true);
         transcriberRef.current.start(
-          (text, isFinal) => {
+          (text) => {
             setTranscribedText(text);
-            console.log('Transcribing:', text, 'Final:', isFinal);
           },
           (error) => {
-            console.error('Speech recognition error:', error);
             setIsTranscribing(false);
             if (error === 'not-allowed') {
               toast.error(EN.recording.micPermissionDenied);
@@ -130,7 +136,6 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onViewChange, isGu
           }
         );
       } else {
-        console.log('Speech recognition supported: no');
         toast.error(EN.recording.notSupported);
       }
 
@@ -151,14 +156,9 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onViewChange, isGu
   };
 
   const handleStopRecording = async () => {
-    console.log('handleStopRecording started');
     try {
       // Stop recording
       const audioBlob = await stopRecording();
-      console.log('Recording stopped:', {
-        blobSize: audioBlob?.size,
-        blobType: audioBlob?.type
-      });
 
       // Stop volume analysis
       if (animationFrameRef.current) {
@@ -176,14 +176,11 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onViewChange, isGu
         const finalText = transcriberRef.current.stop();
         setTranscribedText(finalText);
         setIsTranscribing(false);
-        console.log('Final transcription:', finalText);
       }
 
       toast.success(EN.recording.stopSuccess);
       setShowSaveDialog(true);
-      console.log('Save dialog shown');
     } catch (error) {
-      console.error('Stop recording error:', error);
       toast.error(EN.recording.saveError + ': ' + (error as Error).message);
     }
   };
@@ -200,20 +197,12 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onViewChange, isGu
   };
 
   const handleSave = async () => {
-    console.log('handleSave started:', {
-      hasCurrentAudio: !!currentAudio,
-      audioSize: currentAudio?.size,
-      isSaving,
-      isGuest
-    });
-
     if (!currentAudio) {
       toast.error(EN.recording.noRecordingData);
       return;
     }
 
     if (isSaving) {
-      console.log('Already saving');
       return;
     }
 
@@ -234,13 +223,6 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onViewChange, isGu
         contentToSave = EN.recording.noTranscription;
       }
 
-      console.log('Saving:', {
-        transcribedLength: transcribedText.length,
-        additionalLength: additionalText.length,
-        contentLength: contentToSave.length,
-        audioSize: currentAudio.size
-      });
-
       // Show loading toast
       const loadingToast = toast.loading(EN.recording.saving);
 
@@ -253,22 +235,13 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onViewChange, isGu
 
       // Save as guest or normal mode
       let saveResult;
-      console.log('Save processing:', {
-        isGuest,
-        contentLength: contentToSave.length,
-        audioSize: currentAudio.size
-      });
 
       if (isGuest) {
-        console.log('Saving as guest');
         await createGuestDiary(contentToSave, currentAudio);
         saveResult = true;
       } else {
-        console.log('Saving as normal user');
         saveResult = await createEntry(contentToSave, currentAudio);
       }
-
-      console.log('Save result:', saveResult);
 
       // Clear timeout
       clearTimeout(timeoutId);
@@ -277,6 +250,11 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onViewChange, isGu
       if (saveResult !== undefined) {
         toast.dismiss(loadingToast);
         toast.success(EN.recording.saveSuccess);
+
+        // Track usage for authenticated users
+        if (!isGuest) {
+          await trackUsage('diary_count');
+        }
 
         clearRecording();
         setShowSaveDialog(false);
@@ -293,13 +271,6 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onViewChange, isGu
         throw new Error('Save process did not complete');
       }
     } catch (error) {
-      console.error('Save error details:', {
-        error,
-        message: (error as Error).message,
-        stack: (error as Error).stack,
-        audioSize: currentAudio?.size,
-        contentLength: contentToSave?.length
-      });
       try {
         toast.dismiss();
       } catch {}

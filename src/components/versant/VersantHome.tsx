@@ -7,11 +7,23 @@ import { PartFPractice } from './PartFPractice';
 import { TestHistory } from './TestHistory';
 import { EN } from '../../i18n/en';
 import { PRACTICE } from '../../lib/constants';
+import { useSubscription } from '../../hooks/useSubscription';
+import toast from 'react-hot-toast';
 
 type ViewMode = 'home' | 'partE' | 'partF' | 'history';
 
 export const VersantHome: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('home');
+  const { checkAction } = useSubscription();
+
+  const handleStartPractice = async (part: 'partE' | 'partF') => {
+    const canPractice = await checkAction('speaking_practice');
+    if (!canPractice.allowed) {
+      toast.error('Daily practice limit reached. Upgrade to Premium for unlimited practice.');
+      return;
+    }
+    setViewMode(part);
+  };
 
   if (viewMode === 'partE') {
     return <PartEPractice onBack={() => setViewMode('home')} />;
@@ -52,7 +64,7 @@ export const VersantHome: React.FC = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 border-2 border-indigo-200 cursor-pointer"
-            onClick={() => setViewMode('partE')}
+            onClick={() => handleStartPractice('partE')}
           >
             <div className="flex items-start justify-between mb-4">
               <div className="w-14 h-14 bg-indigo-500 rounded-xl flex items-center justify-center">
@@ -78,7 +90,7 @@ export const VersantHome: React.FC = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="bg-gradient-to-br from-purple-50 to-pink-100 rounded-2xl p-6 border-2 border-purple-200 cursor-pointer"
-            onClick={() => setViewMode('partF')}
+            onClick={() => handleStartPractice('partF')}
           >
             <div className="flex items-start justify-between mb-4">
               <div className="w-14 h-14 bg-purple-500 rounded-xl flex items-center justify-center">

@@ -1,13 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-// import { analyzeText, generateFamilySummary, analyzeHealthScore } from '../lib/gemini'; // AI機能無効化
 
 interface GuestDiary {
   id: string;
   content: string;
   title: string;
   emotion: string;
-  health_score: number;
+  language_score: number;
   ai_summary: string;
   created_at: string;
   expires_at: string; // 有効期限
@@ -63,28 +62,19 @@ export const useGuestStore = create<GuestStore>()(
         }
 
         // ゲストモードのAI機能制限
-        let emotion = '普通';
-        let healthScore = 75;
         let aiSummary = '';
 
         // ゲストモードは1回だけAI分析を使用可能
         if (get().canUseAI() && content) {
           try {
-            const { analyzeText, generateFamilySummary, analyzeHealthScore } = await import('../lib/gemini');
-            console.log('ゲストモード: AI分析を実行（1回限定）');
-            
+            const { analyzeText, generateSummary } = await import('../lib/gemini');
             const analysisResult = await analyzeText(content);
-            emotion = analysisResult?.emotion || '普通';
-            aiSummary = await generateFamilySummary(content);
-            healthScore = await analyzeHealthScore(content);
-            
-            // AI使用回数を増やす
+            aiSummary = await generateSummary(content);
             set(state => ({ aiUsageCount: state.aiUsageCount + 1 }));
           } catch (error) {
-            console.warn('AI分析エラー:', error);
+            // AI分析エラーは無視
           }
         } else if (get().aiUsageCount >= 1) {
-          console.log('ゲストモード: AI分析の上限に達しています（1回まで）');
           aiSummary = 'AI分析はゲストモードで1回まで利用可能です。';
         }
 
@@ -95,8 +85,8 @@ export const useGuestStore = create<GuestStore>()(
           id: `guest-${Date.now()}`,
           content,
           title: content.substring(0, 50),
-          emotion,
-          health_score: healthScore,
+          emotion: 'neutral',
+          language_score: 50,
           ai_summary: aiSummary,
           created_at: now.toISOString(),
           expires_at: expiresAt.toISOString(),
@@ -143,7 +133,6 @@ export const useGuestStore = create<GuestStore>()(
       },
 
       setGuestMode: (enabled: boolean) => {
-        console.log('setGuestMode called:', enabled);
         set({ isGuestMode: enabled });
       },
 
@@ -157,9 +146,7 @@ export const useGuestStore = create<GuestStore>()(
           
           // 削除された日記の数だけusageCountも減らす
           const deletedCount = state.diaries.length - validDiaries.length;
-          
-          console.log(`期限切れの日記を${deletedCount}件削除しました`);
-          
+
           return {
             diaries: validDiaries,
             usageCount: Math.max(0, state.usageCount - deletedCount)

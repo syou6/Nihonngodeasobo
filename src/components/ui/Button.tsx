@@ -15,26 +15,26 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const baseClasses = 'font-bold rounded-xl focus:outline-none focus:ring-4 focus:ring-offset-2 transition-all duration-200 flex items-center justify-center gap-2 border-3';
-  
+  const baseClasses = 'font-semibold rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 flex items-center justify-center gap-2';
+
   const variants = {
-    primary: 'bg-navy-500 hover:bg-navy-600 text-white border-navy-500 focus:ring-navy-500 disabled:bg-gray-400 disabled:border-gray-400',
-    secondary: 'bg-gray-700 hover:bg-gray-800 text-white border-gray-700 focus:ring-gray-700 disabled:bg-gray-400 disabled:border-gray-400',
-    outline: 'bg-white text-navy-900 border-navy-900 hover:bg-gray-50 focus:ring-navy-500',
-    ghost: 'bg-white text-navy-900 border-transparent hover:border-navy-900 hover:bg-gray-50 focus:ring-navy-500'
+    primary: 'bg-brand-600 hover:bg-brand-700 text-white focus:ring-brand-500 disabled:bg-gray-300',
+    secondary: 'bg-gray-600 hover:bg-gray-700 text-white focus:ring-gray-500 disabled:bg-gray-300',
+    outline: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-brand-500',
+    ghost: 'bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-brand-500'
   };
 
   const sizes = {
-    sm: 'px-4 py-2 text-lg min-h-[56px]',
-    md: 'px-6 py-3 text-xl min-h-[64px]',
-    lg: 'px-8 py-4 text-2xl min-h-[72px]',
-    xl: 'px-12 py-6 text-3xl min-h-[96px]'
+    sm: 'px-3 py-1.5 text-sm',
+    md: 'px-4 py-2 text-base',
+    lg: 'px-5 py-2.5 text-lg',
+    xl: 'px-6 py-3 text-xl'
   };
 
   return (
     <motion.button
-      whileHover={{ scale: disabled ? 1 : 1.02 }}
-      whileTap={{ scale: disabled ? 1 : 0.98 }}
+      whileHover={{ scale: disabled ? 1 : 1.01 }}
+      whileTap={{ scale: disabled ? 1 : 0.99 }}
       className={`${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`}
       disabled={disabled}
       {...props}

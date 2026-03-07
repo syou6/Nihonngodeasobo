@@ -2,25 +2,20 @@ import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle, ArrowRight } from 'lucide-react';
 import { Button } from '../components/ui/Button';
-import { useNavigate } from 'react-router-dom';
 import { EN } from '../i18n/en';
 
 export const SubscriptionSuccess: React.FC = () => {
-  const navigate = useNavigate();
-
   useEffect(() => {
-    // Get session info from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get('session_id');
 
     if (sessionId) {
-      // Save session ID to local storage if needed
       localStorage.setItem('stripe_session_id', sessionId);
     }
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
+    <div className="flex items-center justify-center py-12 px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -46,20 +41,12 @@ export const SubscriptionSuccess: React.FC = () => {
 
         <div className="space-y-4">
           <Button
-            onClick={() => navigate('/app')}
+            onClick={() => window.location.href = '/app.html'}
             variant="primary"
             className="w-full"
           >
             {EN.subscriptionResult.startApp}
             <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-
-          <Button
-            onClick={() => navigate('/subscription')}
-            variant="outline"
-            className="w-full"
-          >
-            {EN.subscriptionResult.manageSubscription}
           </Button>
         </div>
 
