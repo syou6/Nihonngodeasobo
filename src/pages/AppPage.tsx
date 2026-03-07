@@ -74,18 +74,20 @@ export const AppPage: React.FC = () => {
       sessionStorage.setItem('showAuthForm', 'true');
       sessionStorage.setItem('showSignupForm', 'true');
       setGuestMode(false);
+      setIsInitialized(true);
       // URLからパラメータを削除
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.delete('signup');
       window.history.replaceState({}, '', newUrl.toString());
       return;
     }
-    
+
     // ログインパラメータがある場合
     if (isLoginParam) {
       sessionStorage.setItem('showAuthForm', 'true');
       sessionStorage.removeItem('showSignupForm');
       setGuestMode(false);
+      setIsInitialized(true);
       // URLからパラメータを削除
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.delete('login');
@@ -175,6 +177,18 @@ export const AppPage: React.FC = () => {
     );
   }
 
+  // 認証フォーム表示（loadingより優先）
+  const showAuthForm = sessionStorage.getItem('showAuthForm') === 'true';
+
+  if (showAuthForm || (isInitialized && !loading && !user && !isGuestMode)) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <AuthForm />
+        <Toaster position="top-center" />
+      </div>
+    );
+  }
+
   // Loading state
   if (!isInitialized || loading) {
     return (
@@ -183,18 +197,6 @@ export const AppPage: React.FC = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
           <p className="text-gray-600">{EN.common.loading}</p>
         </div>
-      </div>
-    );
-  }
-
-  // 認証フォーム表示
-  const showAuthForm = sessionStorage.getItem('showAuthForm') === 'true';
-  
-  if (showAuthForm || (!user && !isGuestMode)) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <AuthForm />
-        <Toaster position="top-center" />
       </div>
     );
   }
