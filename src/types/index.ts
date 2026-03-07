@@ -17,15 +17,6 @@ export interface JapaneseFeedback {
   markdownContent: string;
 }
 
-export interface AnalyzeResult {
-  summary: string;
-  summary_en: string;
-  emotion: 'happy' | 'excited' | 'neutral' | 'tired' | 'sad' | 'anxious';
-  language_score: number;
-  grammar_errors: number;
-  jlpt_estimated_level: string;
-  keywords: string[];
-}
 
 export interface DiaryEntry {
   id: string;

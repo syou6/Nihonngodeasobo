@@ -5,11 +5,6 @@ vi.mock('../lib/gemini', () => ({
   analyzeText: vi.fn().mockResolvedValue({
     summary: 'Test summary',
     keywords: ['test'],
-    emotion: 'neutral',
-    language_score: 70,
-    grammar_errors: 0,
-    jlpt_estimated_level: 'N4',
-    summary_en: 'Test summary EN',
   }),
   generateSummary: vi.fn().mockResolvedValue('AI generated summary'),
 }));
