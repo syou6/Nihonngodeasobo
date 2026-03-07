@@ -206,7 +206,7 @@ export const useDiaryStore = create<DiaryStore>((set, get) => ({
           ai_keywords: [],
           ai_feedback: null,
           tags: [],
-          visibility: 'shared'
+          visibility: 'family'
         })
         .select()
         .single();
