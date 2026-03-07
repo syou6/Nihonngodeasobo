@@ -1,25 +1,20 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GraduationCap, Check, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
-import type { CEFRLevel } from '../../types';
+import type { JLPTLevel } from '../../types';
 import { EN } from '../../i18n/en';
 
 interface CEFRSettingsProps {
-  currentLevel: CEFRLevel;
-  onLevelChange: (level: CEFRLevel) => void;
+  currentLevel: JLPTLevel;
+  onLevelChange: (level: JLPTLevel) => void;
 }
 
-const cefrLevels: { level: CEFRLevel; description: string; color: string }[] = [
-  { level: 'A1', description: EN.cefr['A1'], color: 'bg-gray-100 border-gray-300 text-gray-700' },
-  { level: 'A1+', description: EN.cefr['A1+'], color: 'bg-gray-200 border-gray-400 text-gray-800' },
-  { level: 'A2', description: EN.cefr['A2'], color: 'bg-blue-100 border-blue-300 text-blue-700' },
-  { level: 'A2+', description: EN.cefr['A2+'], color: 'bg-blue-200 border-blue-400 text-blue-800' },
-  { level: 'B1', description: EN.cefr['B1'], color: 'bg-green-100 border-green-300 text-green-700' },
-  { level: 'B1+', description: EN.cefr['B1+'], color: 'bg-green-200 border-green-400 text-green-800' },
-  { level: 'B2', description: EN.cefr['B2'], color: 'bg-yellow-100 border-yellow-300 text-yellow-700' },
-  { level: 'B2+', description: EN.cefr['B2+'], color: 'bg-yellow-200 border-yellow-400 text-yellow-800' },
-  { level: 'C1', description: EN.cefr['C1'], color: 'bg-orange-100 border-orange-300 text-orange-700' },
-  { level: 'C1+', description: EN.cefr['C1+'], color: 'bg-purple-100 border-purple-300 text-purple-700' }
+const jlptLevels: { level: JLPTLevel; description: string; color: string }[] = [
+  { level: 'N5', description: EN.jlpt['N5'], color: 'bg-gray-100 border-gray-300 text-gray-700' },
+  { level: 'N4', description: EN.jlpt['N4'], color: 'bg-blue-100 border-blue-300 text-blue-700' },
+  { level: 'N3', description: EN.jlpt['N3'], color: 'bg-green-100 border-green-300 text-green-700' },
+  { level: 'N2', description: EN.jlpt['N2'], color: 'bg-yellow-100 border-yellow-300 text-yellow-700' },
+  { level: 'N1', description: EN.jlpt['N1'], color: 'bg-purple-100 border-purple-300 text-purple-700' },
 ];
 
 export const CEFRSettings: React.FC<CEFRSettingsProps> = ({ currentLevel, onLevelChange }) => {
@@ -32,13 +27,13 @@ export const CEFRSettings: React.FC<CEFRSettingsProps> = ({ currentLevel, onLeve
           <GraduationCap className="w-6 h-6 text-indigo-600" />
         </div>
         <div>
-          <h3 className="text-xl font-bold text-gray-900">Your English Level</h3>
-          <p className="text-gray-600">Select your current CEFR level for personalized feedback</p>
+          <h3 className="text-xl font-bold text-gray-900">Your Japanese Level</h3>
+          <p className="text-gray-600">Select your current JLPT level for personalized feedback</p>
         </div>
       </div>
 
       <div className="grid gap-2">
-        {cefrLevels.map(({ level, description, color }) => {
+        {jlptLevels.map(({ level, description, color }) => {
           const isSelected = currentLevel === level;
           return (
             <motion.button
@@ -72,7 +67,7 @@ export const CEFRSettings: React.FC<CEFRSettingsProps> = ({ currentLevel, onLeve
         })}
       </div>
 
-      {/* Check your English Level - Versant Score Chart */}
+      {/* JLPT Level Reference */}
       <div className="mt-6 border border-blue-200 rounded-xl overflow-hidden">
         <button
           onClick={() => setShowLevelChart(!showLevelChart)}
@@ -80,7 +75,7 @@ export const CEFRSettings: React.FC<CEFRSettingsProps> = ({ currentLevel, onLeve
         >
           <div className="flex items-center gap-2">
             <ExternalLink className="w-4 h-4 text-blue-600" />
-            <span className="font-medium text-blue-800">Check your English Level (Versant Score)</span>
+            <span className="font-medium text-blue-800">About JLPT Levels</span>
           </div>
           {showLevelChart ? (
             <ChevronUp className="w-5 h-5 text-blue-600" />
@@ -96,29 +91,15 @@ export const CEFRSettings: React.FC<CEFRSettingsProps> = ({ currentLevel, onLeve
               exit={{ height: 0, opacity: 0 }}
               className="border-t border-blue-200"
             >
-              <div className="p-4 bg-white">
-                <img
-                  src="/images/versant-cefr-chart.png"
-                  alt="Versant Score to CEFR Level Chart"
-                  className="w-full rounded-lg border border-gray-200"
-                  onError={(e) => {
-                    // Fallback to text if image fails to load
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    target.nextElementSibling?.classList.remove('hidden');
-                  }}
-                />
-                <div className="hidden mt-4 text-sm text-gray-600">
-                  <p className="font-medium mb-2">Versant Score → CEFR Level:</p>
-                  <ul className="space-y-1">
-                    <li>26-35 → A1 (Beginner)</li>
-                    <li>36-42 → A1+ / A2</li>
-                    <li>43-50 → A2+ / B1</li>
-                    <li>51-57 → B1+ / B2</li>
-                    <li>58-68 → B2+ / C1</li>
-                    <li>69-80 → C1+ (Proficient)</li>
-                  </ul>
-                </div>
+              <div className="p-4 bg-white text-sm text-gray-600">
+                <p className="font-medium mb-2">JLPT Level Guide:</p>
+                <ul className="space-y-1">
+                  <li><span className="font-semibold text-gray-700">N5</span> - Basic hiragana, katakana, ~100 kanji. Simple daily phrases.</li>
+                  <li><span className="font-semibold text-blue-700">N4</span> - ~300 kanji. Basic grammar for everyday conversations.</li>
+                  <li><span className="font-semibold text-green-700">N3</span> - ~650 kanji. Everyday situations and simple written Japanese.</li>
+                  <li><span className="font-semibold text-yellow-700">N2</span> - ~1000 kanji. Broad range of topics and complex Japanese.</li>
+                  <li><span className="font-semibold text-purple-700">N1</span> - ~2000 kanji. Complex Japanese in any context.</li>
+                </ul>
               </div>
             </motion.div>
           )}

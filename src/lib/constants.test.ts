@@ -1,56 +1,56 @@
 import { describe, it, expect } from 'vitest';
 import {
-  DEFAULT_CEFR_LEVEL,
-  CEFR_LEVEL_PROGRESSION,
-  getNextCefrLevel,
-  VERSANT,
+  DEFAULT_JLPT_LEVEL,
+  JLPT_LEVEL_PROGRESSION,
+  getNextJlptLevel,
+  PRACTICE,
   API,
   SCORE_THRESHOLDS,
   getScoreColor,
-  getCefrColor,
+  getJlptColor,
   STORAGE,
   DATA_LIMITS,
 } from './constants';
 
 describe('constants', () => {
-  describe('CEFR Level', () => {
-    it('DEFAULT_CEFR_LEVEL is B1', () => {
-      expect(DEFAULT_CEFR_LEVEL).toBe('B1');
+  describe('JLPT Level', () => {
+    it('DEFAULT_JLPT_LEVEL is N4', () => {
+      expect(DEFAULT_JLPT_LEVEL).toBe('N4');
     });
 
-    it('CEFR_LEVEL_PROGRESSION covers all levels', () => {
-      const levels = ['A1', 'A1+', 'A2', 'A2+', 'B1', 'B1+', 'B2', 'B2+', 'C1', 'C1+'];
+    it('JLPT_LEVEL_PROGRESSION covers all levels', () => {
+      const levels = ['N5', 'N4', 'N3', 'N2', 'N1'];
       for (const level of levels) {
-        expect(CEFR_LEVEL_PROGRESSION).toHaveProperty(level);
+        expect(JLPT_LEVEL_PROGRESSION).toHaveProperty(level);
       }
     });
 
-    it('getNextCefrLevel returns correct next level', () => {
-      expect(getNextCefrLevel('A1')).toBe('A1+');
-      expect(getNextCefrLevel('B1')).toBe('B1+');
-      expect(getNextCefrLevel('C1+')).toBe('C1+');
+    it('getNextJlptLevel returns correct next level', () => {
+      expect(getNextJlptLevel('N5')).toBe('N4');
+      expect(getNextJlptLevel('N4')).toBe('N3');
+      expect(getNextJlptLevel('N1')).toBe('N1');
     });
 
-    it('getNextCefrLevel falls back for unknown level', () => {
-      expect(getNextCefrLevel('X' as any)).toBe('B1+');
+    it('getNextJlptLevel falls back for unknown level', () => {
+      expect(getNextJlptLevel('X' as any)).toBe('N3');
     });
   });
 
-  describe('VERSANT config', () => {
+  describe('PRACTICE config', () => {
     it('Part E has 30 second time limit', () => {
-      expect(VERSANT.PART_E.TIME_LIMIT).toBe(30);
+      expect(PRACTICE.PART_E.TIME_LIMIT).toBe(30);
     });
 
     it('Part F has 40 second time limit', () => {
-      expect(VERSANT.PART_F.TIME_LIMIT).toBe(40);
+      expect(PRACTICE.PART_F.TIME_LIMIT).toBe(40);
     });
 
     it('has default score', () => {
-      expect(VERSANT.DEFAULT_SCORE).toBe(70);
+      expect(PRACTICE.DEFAULT_SCORE).toBe(70);
     });
 
     it('has timer warning threshold', () => {
-      expect(VERSANT.TIMER_WARNING_THRESHOLD).toBe(10);
+      expect(PRACTICE.TIMER_WARNING_THRESHOLD).toBe(10);
     });
   });
 
@@ -84,15 +84,17 @@ describe('constants', () => {
     });
   });
 
-  describe('getCefrColor', () => {
+  describe('getJlptColor', () => {
     it('returns correct color for each level', () => {
-      expect(getCefrColor('A1')).toContain('gray');
-      expect(getCefrColor('B1')).toContain('green');
-      expect(getCefrColor('C1')).toContain('orange');
+      expect(getJlptColor('N5')).toContain('gray');
+      expect(getJlptColor('N4')).toContain('blue');
+      expect(getJlptColor('N3')).toContain('green');
+      expect(getJlptColor('N2')).toContain('yellow');
+      expect(getJlptColor('N1')).toContain('purple');
     });
 
     it('returns fallback for unknown level', () => {
-      expect(getCefrColor('X')).toContain('gray');
+      expect(getJlptColor('X')).toContain('gray');
     });
   });
 

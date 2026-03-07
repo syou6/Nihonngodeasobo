@@ -5,13 +5,13 @@ import { Button } from '../ui/Button';
 import { ResultDisplay } from './ResultDisplay';
 import { useVersantStore } from '../../stores/versantStore';
 import { getRandomQuestion } from '../../lib/versant-questions';
-import { generateVersantQuestion } from '../../lib/gemini-feedback';
+import { generatePracticeQuestion } from '../../lib/gemini-feedback';
 import { supabase } from '../../lib/supabase';
 import { tts } from '../../lib/tts';
 import { VoiceTranscriber } from '../../lib/speechRecognition';
 import { EN } from '../../i18n/en';
-import { VERSANT, DEFAULT_CEFR_LEVEL } from '../../lib/constants';
-import type { CEFRLevel } from '../../lib/constants';
+import { PRACTICE, DEFAULT_JLPT_LEVEL } from '../../lib/constants';
+import type { JLPTLevel } from '../../lib/constants';
 import toast from 'react-hot-toast';
 
 interface PartFPracticeProps {
@@ -22,7 +22,7 @@ type PracticeState = 'ready' | 'listening' | 'recording' | 'processing' | 'resul
 
 export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
   const [state, setState] = useState<PracticeState>('ready');
-  const [timeRemaining, setTimeRemaining] = useState(VERSANT.PART_F.TIME_LIMIT);
+  const [timeRemaining, setTimeRemaining] = useState(PRACTICE.PART_F.TIME_LIMIT);
   const [transcribedText, setTranscribedText] = useState('');
   const [currentAnswer, setCurrentAnswer] = useState<any>(null);
   const [showQuestion, setShowQuestion] = useState(false);
@@ -34,28 +34,28 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
 
   const { currentQuestion, setCurrentQuestion, saveAnswer, loading } = useVersantStore();
 
-  const getUserCefrLevel = async (): Promise<CEFRLevel> => {
+  const getUserJlptLevel = async (): Promise<JLPTLevel> => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase
           .from('users')
-          .select('cefr_level')
+          .select('jlpt_level')
           .eq('id', user.id)
           .single();
-        return profile?.cefr_level || DEFAULT_CEFR_LEVEL;
+        return profile?.jlpt_level || DEFAULT_JLPT_LEVEL;
       }
     } catch {
       // Use default
     }
-    return DEFAULT_CEFR_LEVEL;
+    return DEFAULT_JLPT_LEVEL;
   };
 
   const loadNewQuestion = async (excludeId?: string) => {
-    const cefrLevel = await getUserCefrLevel();
+    const jlptLevel = await getUserJlptLevel();
 
     // Try AI generation first
-    const aiQuestion = await generateVersantQuestion('F', cefrLevel);
+    const aiQuestion = await generatePracticeQuestion('F', jlptLevel);
     if (aiQuestion) {
       setCurrentQuestion({
         id: `f-ai-${Date.now()}`,
@@ -88,10 +88,10 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
     setState('listening');
 
     try {
-      await tts.speak(currentQuestion.text, { rate: VERSANT.PART_F.TTS_RATE });
+      await tts.speak(currentQuestion.text, { rate: PRACTICE.PART_F.TTS_RATE });
       setTimeout(() => {
         startRecording();
-      }, VERSANT.PART_F.RECORDING_DELAY_MS);
+      }, PRACTICE.PART_F.RECORDING_DELAY_MS);
     } catch (error) {
       console.error('TTS error:', error);
       toast.error(EN.versant.ttsError);
@@ -333,7 +333,7 @@ export const PartFPractice: React.FC<PartFPracticeProps> = ({ onBack }) => {
 
                   {/* Timer */}
                   <div className="mb-6">
-                    <div className={`text-5xl font-bold ${timeRemaining <= VERSANT.TIMER_WARNING_THRESHOLD ? 'text-red-600' : 'text-gray-900'}`}>
+                    <div className={`text-5xl font-bold ${timeRemaining <= PRACTICE.TIMER_WARNING_THRESHOLD ? 'text-red-600' : 'text-gray-900'}`}>
                       {timeRemaining}
                     </div>
                     <p className="text-gray-500">{EN.versant.secondsRemaining}</p>

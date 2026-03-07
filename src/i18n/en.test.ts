@@ -3,7 +3,7 @@ import { EN } from './en';
 
 describe('i18n/en', () => {
   it('has app name', () => {
-    expect(EN.app.name).toBe('English AI Diary');
+    expect(EN.app.name).toBe('Nihongo de Asobo');
   });
 
   it('has all navigation items', () => {
@@ -14,14 +14,14 @@ describe('i18n/en', () => {
     expect(EN.nav.settings).toBeDefined();
   });
 
-  it('has all CEFR level labels', () => {
-    const levels = ['A1', 'A1+', 'A2', 'A2+', 'B1', 'B1+', 'B2', 'B2+', 'C1', 'C1+'];
+  it('has all JLPT level labels', () => {
+    const levels = ['N5', 'N4', 'N3', 'N2', 'N1'];
     for (const level of levels) {
-      expect(EN.cefr).toHaveProperty(level);
+      expect(EN.jlpt).toHaveProperty(level);
     }
   });
 
-  it('has versant section with Part E and Part F', () => {
+  it('has practice section with Part E and Part F', () => {
     expect(EN.versant.partE.title).toBeDefined();
     expect(EN.versant.partE.description).toBeDefined();
     expect(EN.versant.partE.instructions).toBeDefined();
@@ -30,7 +30,7 @@ describe('i18n/en', () => {
     expect(EN.versant.partF.instructions).toBeDefined();
   });
 
-  it('has versant UI strings', () => {
+  it('has practice UI strings', () => {
     expect(EN.versant.result).toBeDefined();
     expect(EN.versant.yourResponse).toBeDefined();
     expect(EN.versant.sampleAnswer).toBeDefined();
@@ -41,7 +41,7 @@ describe('i18n/en', () => {
     expect(EN.versant.analyzing).toBeDefined();
   });
 
-  it('has versant tips as array', () => {
+  it('has practice tips as array', () => {
     expect(Array.isArray(EN.versant.tips)).toBe(true);
     expect(EN.versant.tips.length).toBeGreaterThan(0);
   });

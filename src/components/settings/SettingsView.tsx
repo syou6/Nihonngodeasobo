@@ -6,21 +6,21 @@ import { SubscriptionManager } from '../subscription/SubscriptionManager';
 import { ApiUsageMonitor } from '../ApiUsageMonitor';
 import { useAuthStore } from '../../stores/authStore';
 import { EN } from '../../i18n/en';
-import type { CEFRLevel } from '../../types';
+import type { JLPTLevel } from '../../types';
 import toast from 'react-hot-toast';
 import { ChevronDown, ChevronUp, Activity } from 'lucide-react';
 
 export const SettingsView: React.FC = () => {
-  const { user, updateCefrLevel } = useAuthStore();
+  const { user, updateJlptLevel } = useAuthStore();
   const [showApiUsage, setShowApiUsage] = useState(false);
 
-  const handleCefrChange = async (level: CEFRLevel) => {
+  const handleJlptChange = async (level: JLPTLevel) => {
     try {
-      await updateCefrLevel(level);
-      toast.success(`CEFR level updated to ${level}`);
+      await updateJlptLevel(level);
+      toast.success(`JLPT level updated to ${level}`);
     } catch (error: any) {
       const message = error?.message || 'Unknown error';
-      toast.error(`Failed to update CEFR level: ${message}`);
+      toast.error(`Failed to update JLPT level: ${message}`);
     }
   };
 
@@ -30,10 +30,10 @@ export const SettingsView: React.FC = () => {
         {EN.nav.settings}
       </h1>
 
-      {/* CEFR Level Settings */}
+      {/* JLPT Level Settings */}
       <CEFRSettings
-        currentLevel={user?.cefr_level || 'B1'}
-        onLevelChange={handleCefrChange}
+        currentLevel={user?.jlpt_level || 'N4'}
+        onLevelChange={handleJlptChange}
       />
 
       {/* Teacher Connection */}

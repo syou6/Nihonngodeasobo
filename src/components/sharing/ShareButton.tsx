@@ -12,8 +12,8 @@ interface ShareButtonProps {
 }
 
 export const ShareButton: React.FC<ShareButtonProps> = ({
-  title = "English AI Diary - Speak English Every Day",
-  text = "Record your thoughts in English, get AI feedback, and improve your speaking skills. Perfect for English learners!",
+  title = "Nihongo de Asobo - Learn Japanese Every Day",
+  text = "Record your thoughts in Japanese, get AI feedback, and improve your speaking skills. Perfect for Japanese learners!",
   url = "https://www.journal-ai.cloud",
   className = ""
 }) => {

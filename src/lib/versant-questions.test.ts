@@ -6,7 +6,7 @@ import {
   getQuestionsByPart,
   getQuestionById,
 } from './versant-questions';
-import { VERSANT } from './constants';
+import { PRACTICE } from './constants';
 
 describe('versant-questions', () => {
   describe('partEQuestions', () => {
@@ -22,13 +22,13 @@ describe('versant-questions', () => {
 
     it('all questions have correct time limit', () => {
       for (const q of partEQuestions) {
-        expect(q.timeLimit).toBe(VERSANT.PART_E.TIME_LIMIT);
+        expect(q.timeLimit).toBe(PRACTICE.PART_E.TIME_LIMIT);
       }
     });
 
-    it('all questions have a CEFR level', () => {
+    it('all questions have a JLPT level', () => {
       for (const q of partEQuestions) {
-        expect(q.cefrLevel).toBeDefined();
+        expect(q.jlptLevel).toBeDefined();
       }
     });
 
@@ -57,7 +57,7 @@ describe('versant-questions', () => {
 
     it('all questions have correct time limit', () => {
       for (const q of partFQuestions) {
-        expect(q.timeLimit).toBe(VERSANT.PART_F.TIME_LIMIT);
+        expect(q.timeLimit).toBe(PRACTICE.PART_F.TIME_LIMIT);
       }
     });
 
@@ -78,11 +78,11 @@ describe('versant-questions', () => {
       expect(q.part).toBe('F');
     });
 
-    it('filters by CEFR level for Part E', () => {
-      const q = getRandomQuestion('E', 'A1');
+    it('filters by JLPT level for Part E', () => {
+      const q = getRandomQuestion('E', 'N5');
       expect(q.part).toBe('E');
-      // A1 level should get A1 questions
-      expect(q.cefrLevel).toBe('A1');
+      // N5 level should get N5 questions
+      expect(q.jlptLevel).toBe('N5');
     });
 
     it('excludes specified question ID', () => {

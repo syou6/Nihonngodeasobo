@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
-import { generateVersantFeedback, generateVersantSampleAnswer } from '../lib/gemini-feedback';
-import { DEFAULT_CEFR_LEVEL, VERSANT, API, DATA_LIMITS } from '../lib/constants';
-import type { CEFRLevel } from '../lib/constants';
+import { generatePracticeFeedback, generatePracticeSampleAnswer } from '../lib/gemini-feedback';
+import { DEFAULT_JLPT_LEVEL, PRACTICE, API, DATA_LIMITS } from '../lib/constants';
+import type { JLPTLevel } from '../lib/constants';
 import type { VersantQuestion } from '../lib/versant-questions';
 
 export interface VersantFeedback {
-  cefrLevel: CEFRLevel;
+  jlptLevel: JLPTLevel;
   score: number;
   advice: string;
   sampleAnswer: string;
@@ -92,22 +92,22 @@ export const useVersantStore = create<VersantStore>((set, get) => ({
       let feedback: VersantFeedback | undefined;
 
       if (transcribedText.trim()) {
-        let userCefrLevel: CEFRLevel = DEFAULT_CEFR_LEVEL;
+        let userJlptLevel: JLPTLevel = DEFAULT_JLPT_LEVEL;
         try {
-          // Get user's CEFR level
+          // Get user's JLPT level (DB column is cefr_level for backward compatibility)
           if (user) {
             const { data: profile } = await supabase
               .from('users')
               .select('cefr_level')
               .eq('id', user.id)
               .single();
-            userCefrLevel = profile?.cefr_level || DEFAULT_CEFR_LEVEL;
+            userJlptLevel = (profile?.cefr_level as JLPTLevel) || DEFAULT_JLPT_LEVEL;
           }
 
           // Generate feedback based on the question type
           const feedbackPrompt = currentQuestion.part === 'E'
-            ? `The user was asked to summarize the following passage:\n"${currentQuestion.text}"\n\nTheir summary was:\n"${transcribedText}"`
-            : `The user was asked: "${currentQuestion.text}"\n\nTheir response was:\n"${transcribedText}"`;
+            ? `ユーザーは次の文章を要約するよう求められました:\n「${currentQuestion.text}」\n\nユーザーの要約:\n「${transcribedText}」`
+            : `ユーザーは次の質問に答えるよう求められました: 「${currentQuestion.text}」\n\nユーザーの回答:\n「${transcribedText}」`;
 
           // Timeout wrapper for API calls
           const withTimeout = <T>(promise: Promise<T>, timeoutMs: number, fallback: T): Promise<T> => {
@@ -121,29 +121,29 @@ export const useVersantStore = create<VersantStore>((set, get) => ({
 
           // Default fallback values
           const defaultFeedback = {
-            cefrLevel: userCefrLevel,
-            targetLevel: userCefrLevel,
-            markdownContent: '## 💪 Encouragement\nGreat effort! Keep practicing your English speaking skills.'
+            jlptLevel: userJlptLevel,
+            targetLevel: userJlptLevel,
+            markdownContent: '## 💪 励まし\nよく頑張りました！日本語スピーキングの練習を続けましょう。'
           };
           const defaultSampleAnswer = currentQuestion.part === 'E'
-            ? 'The passage discusses the main topic and provides key information. The speaker mentions several important points that support the central idea.'
-            : 'In my opinion, this is an important topic. I believe we should consider multiple perspectives. First, there are benefits to consider. Additionally, there may be challenges. Overall, it depends on individual circumstances.';
+            ? 'この文章は主なテーマについて述べており、重要な情報が含まれています。話者はいくつかの重要なポイントを挙げています。'
+            : 'この質問について、私はいくつかの観点から考えました。まず、メリットがあります。また、課題もあります。全体的には、状況によって異なると思います。';
 
           // Generate feedback and sample answer in parallel with timeout
           const [aiFeedback, sampleAnswer] = await Promise.all([
-            withTimeout(generateVersantFeedback(feedbackPrompt, currentQuestion.part, userCefrLevel), API.TIMEOUT_MS, defaultFeedback),
-            withTimeout(generateVersantSampleAnswer(currentQuestion.text, currentQuestion.part, userCefrLevel), API.TIMEOUT_MS, defaultSampleAnswer)
+            withTimeout(generatePracticeFeedback(feedbackPrompt, currentQuestion.part, userJlptLevel), API.TIMEOUT_MS, defaultFeedback),
+            withTimeout(generatePracticeSampleAnswer(currentQuestion.text, currentQuestion.part, userJlptLevel), API.TIMEOUT_MS, defaultSampleAnswer)
           ]);
 
-          // Parse markdown content for Versant-specific feedback
-          const encouragementMatch = aiFeedback.markdownContent.match(/## 💪 Encouragement\n([\s\S]*?)(?=##|$)/);
+          // Parse markdown content for feedback
+          const encouragementMatch = aiFeedback.markdownContent.match(/## 💪 励まし\n([\s\S]*?)(?=##|$)/);
           const advice = encouragementMatch
             ? encouragementMatch[1].trim()
-            : 'Keep practicing! Your English is improving.';
+            : '練習を続けましょう！日本語が上達しています。';
 
           feedback = {
-            cefrLevel: aiFeedback.cefrLevel,
-            score: VERSANT.DEFAULT_SCORE,
+            jlptLevel: aiFeedback.jlptLevel as JLPTLevel,
+            score: PRACTICE.DEFAULT_SCORE,
             advice,
             sampleAnswer,
             grammarNotes: [],
@@ -152,12 +152,12 @@ export const useVersantStore = create<VersantStore>((set, get) => ({
         } catch (feedbackError) {
           console.error('Failed to generate feedback:', feedbackError);
           feedback = {
-            cefrLevel: userCefrLevel,
-            score: VERSANT.DEFAULT_SCORE,
-            advice: 'Great effort! Keep practicing your English speaking skills.',
+            jlptLevel: userJlptLevel,
+            score: PRACTICE.DEFAULT_SCORE,
+            advice: 'よく頑張りました！日本語スピーキングの練習を続けましょう。',
             sampleAnswer: currentQuestion.part === 'E'
-              ? 'The passage discusses the main topic and provides key information.'
-              : 'In my opinion, this is an important topic to consider.',
+              ? 'この文章は主なテーマについて述べており、重要な情報が含まれています。'
+              : 'この質問は重要なテーマだと思います。いくつかの観点から考えることが大切です。',
             grammarNotes: [],
             vocabularyTips: []
           };
@@ -247,7 +247,7 @@ export const useVersantStore = create<VersantStore>((set, get) => ({
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(DATA_LIMITS.VERSANT_HISTORY_FETCH);
+        .limit(DATA_LIMITS.JLPT_HISTORY_FETCH);
 
       if (error) throw error;
 
@@ -259,7 +259,7 @@ export const useVersantStore = create<VersantStore>((set, get) => ({
           id: row.question_id,
           part: row.part as 'E' | 'F',
           text: '',
-          timeLimit: row.part === 'E' ? VERSANT.PART_E.TIME_LIMIT : VERSANT.PART_F.TIME_LIMIT
+          timeLimit: row.part === 'E' ? PRACTICE.PART_E.TIME_LIMIT : PRACTICE.PART_F.TIME_LIMIT
         },
         transcribedText: row.transcribed_text,
         audioUrl: row.audio_url,

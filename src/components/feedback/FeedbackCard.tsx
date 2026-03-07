@@ -2,27 +2,22 @@ import React, { useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
 import { Award, Target } from 'lucide-react';
-import type { EnglishFeedback } from '../../types';
+import type { JapaneseFeedback } from '../../types';
 
 interface FeedbackCardProps {
-  feedback: EnglishFeedback;
+  feedback: JapaneseFeedback;
 }
 
 export const FeedbackCard: React.FC<FeedbackCardProps> = ({ feedback }) => {
   const h2CountRef = useRef(0);
 
-  const getCefrColor = (level: string) => {
+  const getJlptColor = (level: string) => {
     const colors: Record<string, string> = {
-      'A1': 'bg-gray-100 text-gray-700',
-      'A1+': 'bg-gray-200 text-gray-800',
-      'A2': 'bg-blue-100 text-blue-700',
-      'A2+': 'bg-blue-200 text-blue-800',
-      'B1': 'bg-green-100 text-green-700',
-      'B1+': 'bg-green-200 text-green-800',
-      'B2': 'bg-yellow-100 text-yellow-700',
-      'B2+': 'bg-yellow-200 text-yellow-800',
-      'C1': 'bg-orange-100 text-orange-700',
-      'C1+': 'bg-purple-100 text-purple-700'
+      'N5': 'bg-gray-100 text-gray-700',
+      'N4': 'bg-blue-100 text-blue-700',
+      'N3': 'bg-green-100 text-green-700',
+      'N2': 'bg-yellow-100 text-yellow-700',
+      'N1': 'bg-purple-100 text-purple-700',
     };
     return colors[level] || 'bg-gray-100 text-gray-700';
   };
@@ -63,13 +58,13 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({ feedback }) => {
           <div>
             <h3 className="text-lg font-bold text-gray-900">AI Feedback</h3>
             <div className="flex items-center gap-2">
-              <span className={`inline-block px-2 py-0.5 rounded-full text-sm font-medium ${getCefrColor(feedback.cefrLevel)}`}>
-                {feedback.cefrLevel}
+              <span className={`inline-block px-2 py-0.5 rounded-full text-sm font-medium ${getJlptColor(feedback.jlptLevel)}`}>
+                {feedback.jlptLevel}
               </span>
               {feedback.targetLevel && (
                 <>
                   <Target className="w-3 h-3 text-gray-400" />
-                  <span className={`inline-block px-2 py-0.5 rounded-full text-sm font-medium ${getCefrColor(feedback.targetLevel)}`}>
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-sm font-medium ${getJlptColor(feedback.targetLevel)}`}>
                     → {feedback.targetLevel}
                   </span>
                 </>

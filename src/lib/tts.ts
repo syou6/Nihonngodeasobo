@@ -43,28 +43,25 @@ class TextToSpeech {
   }
 
   /**
-   * Get available English voices
+   * Get available Japanese voices
    */
-  getEnglishVoices(): SpeechSynthesisVoice[] {
+  getJapaneseVoices(): SpeechSynthesisVoice[] {
     return this.voices.filter(voice =>
-      voice.lang.startsWith('en-') || voice.lang === 'en'
+      voice.lang.startsWith('ja-') || voice.lang === 'ja'
     );
   }
 
   /**
-   * Get preferred English voice (US or UK)
+   * Get preferred Japanese voice (ja-JP preferred)
    */
   getPreferredVoice(): SpeechSynthesisVoice | null {
-    const englishVoices = this.getEnglishVoices();
+    const japaneseVoices = this.getJapaneseVoices();
 
-    // Priority: US English > UK English > any English
-    const usVoice = englishVoices.find(v => v.lang === 'en-US');
-    if (usVoice) return usVoice;
+    // Priority: ja-JP > any Japanese voice
+    const jaJpVoice = japaneseVoices.find(v => v.lang === 'ja-JP');
+    if (jaJpVoice) return jaJpVoice;
 
-    const ukVoice = englishVoices.find(v => v.lang === 'en-GB');
-    if (ukVoice) return ukVoice;
-
-    return englishVoices[0] || null;
+    return japaneseVoices[0] || null;
   }
 
   /**
@@ -86,7 +83,7 @@ class TextToSpeech {
       utterance.rate = options.rate ?? 0.9; // Slightly slower for learners
       utterance.pitch = options.pitch ?? 1;
       utterance.volume = options.volume ?? 1;
-      utterance.lang = 'en-US';
+      utterance.lang = 'ja-JP';
 
       // Set voice
       if (options.voice) {

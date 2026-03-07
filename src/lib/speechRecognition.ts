@@ -63,7 +63,7 @@ export class VoiceTranscriber {
       // 設定
       this.recognition.continuous = true;  // 継続的に音声を認識
       this.recognition.interimResults = true;  // 途中結果も取得
-      this.recognition.lang = 'en-US';  // English
+      this.recognition.lang = 'ja-JP';  // Japanese
       this.recognition.maxAlternatives = 1;
 
       // イベントハンドラ

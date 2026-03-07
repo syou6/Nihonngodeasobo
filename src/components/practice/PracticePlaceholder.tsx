@@ -19,7 +19,7 @@ export const PracticePlaceholder: React.FC = () => {
             {EN.nav.practice}
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Practice speaking English with Versant-style exercises.
+            Practice speaking Japanese with JLPT-style exercises.
             Improve your fluency and test preparation.
           </p>
         </div>

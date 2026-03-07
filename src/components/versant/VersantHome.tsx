@@ -6,7 +6,7 @@ import { PartEPractice } from './PartEPractice';
 import { PartFPractice } from './PartFPractice';
 import { TestHistory } from './TestHistory';
 import { EN } from '../../i18n/en';
-import { VERSANT } from '../../lib/constants';
+import { PRACTICE } from '../../lib/constants';
 
 type ViewMode = 'home' | 'partE' | 'partF' | 'history';
 
@@ -68,7 +68,7 @@ export const VersantHome: React.FC = () => {
             </p>
             <div className="flex items-center gap-4 text-sm">
               <span className="px-3 py-1 bg-indigo-200 text-indigo-800 rounded-full font-medium">
-                {VERSANT.PART_E.TIME_LIMIT} {EN.versant.seconds}
+                {PRACTICE.PART_E.TIME_LIMIT} {EN.versant.seconds}
               </span>
             </div>
           </motion.div>
@@ -94,7 +94,7 @@ export const VersantHome: React.FC = () => {
             </p>
             <div className="flex items-center gap-4 text-sm">
               <span className="px-3 py-1 bg-purple-200 text-purple-800 rounded-full font-medium">
-                {VERSANT.PART_F.TIME_LIMIT} {EN.versant.seconds}
+                {PRACTICE.PART_F.TIME_LIMIT} {EN.versant.seconds}
               </span>
             </div>
           </motion.div>

@@ -38,19 +38,14 @@ export const TestHistory: React.FC<TestHistoryProps> = ({ onBack }) => {
     }
   };
 
-  const getCefrColor = (level?: string) => {
+  const getJlptColor = (level?: string) => {
     if (!level) return 'bg-gray-100 text-gray-700';
     const colors: Record<string, string> = {
-      'A1': 'bg-gray-100 text-gray-700',
-      'A1+': 'bg-gray-200 text-gray-800',
-      'A2': 'bg-blue-100 text-blue-700',
-      'A2+': 'bg-blue-200 text-blue-800',
-      'B1': 'bg-green-100 text-green-700',
-      'B1+': 'bg-green-200 text-green-800',
-      'B2': 'bg-yellow-100 text-yellow-700',
-      'B2+': 'bg-yellow-200 text-yellow-800',
-      'C1': 'bg-orange-100 text-orange-700',
-      'C1+': 'bg-purple-100 text-purple-700'
+      'N5': 'bg-gray-100 text-gray-700',
+      'N4': 'bg-blue-100 text-blue-700',
+      'N3': 'bg-green-100 text-green-700',
+      'N2': 'bg-yellow-100 text-yellow-700',
+      'N1': 'bg-purple-100 text-purple-700',
     };
     return colors[level] || 'bg-gray-100 text-gray-700';
   };
@@ -130,8 +125,8 @@ export const TestHistory: React.FC<TestHistoryProps> = ({ onBack }) => {
                   {/* Score badge */}
                   {answer.feedback && (
                     <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 rounded-full text-sm font-bold ${getCefrColor(answer.feedback.cefrLevel)}`}>
-                        {answer.feedback.cefrLevel}
+                      <span className={`px-2 py-1 rounded-full text-sm font-bold ${getJlptColor(answer.feedback.jlptLevel)}`}>
+                        {answer.feedback.jlptLevel}
                       </span>
                       <span className="px-2 py-1 bg-gray-100 rounded-full text-sm font-bold text-gray-700">
                         {answer.feedback.score}

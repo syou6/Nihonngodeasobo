@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { EN } from '../../i18n/en';
-import { getScoreColor, getCefrColor } from '../../lib/constants';
+import { getScoreColor, getJlptColor } from '../../lib/constants';
 import type { VersantAnswer } from '../../stores/versantStore';
 
 interface ResultDisplayProps {
@@ -72,8 +72,8 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
             </div>
             <div className="text-left">
               <p className="text-gray-600 text-sm">{EN.versant.cefrLevel}</p>
-              <span className={`inline-block px-3 py-1 rounded-full text-lg font-bold ${getCefrColor(answer.feedback.cefrLevel)}`}>
-                {answer.feedback.cefrLevel}
+              <span className={`inline-block px-3 py-1 rounded-full text-lg font-bold ${getJlptColor(answer.feedback.jlptLevel)}`}>
+                {answer.feedback.jlptLevel}
               </span>
             </div>
           </div>

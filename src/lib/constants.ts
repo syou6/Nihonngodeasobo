@@ -3,32 +3,27 @@
  * Centralized configuration to avoid hardcoded values throughout the codebase.
  */
 
-// --- CEFR Level ---
+// --- JLPT Level ---
 
-export type CEFRLevel = 'A1' | 'A1+' | 'A2' | 'A2+' | 'B1' | 'B1+' | 'B2' | 'B2+' | 'C1' | 'C1+';
+export type JLPTLevel = 'N5' | 'N4' | 'N3' | 'N2' | 'N1';
 
-export const DEFAULT_CEFR_LEVEL: CEFRLevel = 'B1';
+export const DEFAULT_JLPT_LEVEL: JLPTLevel = 'N4';
 
-export const CEFR_LEVEL_PROGRESSION: Record<CEFRLevel, CEFRLevel> = {
-  'A1': 'A1+',
-  'A1+': 'A2',
-  'A2': 'A2+',
-  'A2+': 'B1',
-  'B1': 'B1+',
-  'B1+': 'B2',
-  'B2': 'B2+',
-  'B2+': 'C1',
-  'C1': 'C1+',
-  'C1+': 'C1+'
+export const JLPT_LEVEL_PROGRESSION: Record<JLPTLevel, JLPTLevel> = {
+  'N5': 'N4',
+  'N4': 'N3',
+  'N3': 'N2',
+  'N2': 'N1',
+  'N1': 'N1',
 };
 
-export function getNextCefrLevel(level: CEFRLevel): CEFRLevel {
-  return CEFR_LEVEL_PROGRESSION[level] || 'B1+';
+export function getNextJlptLevel(level: JLPTLevel): JLPTLevel {
+  return JLPT_LEVEL_PROGRESSION[level] || 'N3';
 }
 
-// --- Versant Practice ---
+// --- JLPT Practice ---
 
-export const VERSANT = {
+export const PRACTICE = {
   PART_E: {
     TIME_LIMIT: 30,
     TTS_RATE: 0.85,
@@ -63,17 +58,12 @@ export const SCORE_THRESHOLDS = {
   MEDIUM: 60,
 } as const;
 
-export const CEFR_COLORS: Record<string, string> = {
-  'A1': 'bg-gray-100 text-gray-700',
-  'A1+': 'bg-gray-200 text-gray-800',
-  'A2': 'bg-blue-100 text-blue-700',
-  'A2+': 'bg-blue-200 text-blue-800',
-  'B1': 'bg-green-100 text-green-700',
-  'B1+': 'bg-green-200 text-green-800',
-  'B2': 'bg-yellow-100 text-yellow-700',
-  'B2+': 'bg-yellow-200 text-yellow-800',
-  'C1': 'bg-orange-100 text-orange-700',
-  'C1+': 'bg-purple-100 text-purple-700',
+export const JLPT_COLORS: Record<string, string> = {
+  'N5': 'bg-gray-100 text-gray-700',
+  'N4': 'bg-blue-100 text-blue-700',
+  'N3': 'bg-green-100 text-green-700',
+  'N2': 'bg-yellow-100 text-yellow-700',
+  'N1': 'bg-purple-100 text-purple-700',
 };
 
 export function getScoreColor(score: number): string {
@@ -82,8 +72,8 @@ export function getScoreColor(score: number): string {
   return 'text-red-600 bg-red-100';
 }
 
-export function getCefrColor(level: string): string {
-  return CEFR_COLORS[level] || 'bg-gray-100 text-gray-700';
+export function getJlptColor(level: string): string {
+  return JLPT_COLORS[level] || 'bg-gray-100 text-gray-700';
 }
 
 // --- Storage ---
@@ -100,7 +90,7 @@ export const STORAGE = {
 export const DATA_LIMITS = {
   INITIAL_DIARY_FETCH: 10,
   EXTENDED_DIARY_FETCH: 50,
-  VERSANT_HISTORY_FETCH: 50,
+  JLPT_HISTORY_FETCH: 50,
   MAX_KEYWORDS: 3,
   DEFAULT_HEALTH_SCORE: 75,
 } as const;

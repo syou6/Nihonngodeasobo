@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 import type { User } from '../types';
+import type { JLPTLevel } from '../lib/constants';
 
 // Module-level variable to track auth subscription (prevents duplicate listeners)
 let authSubscription: { unsubscribe: () => void } | null = null;
@@ -13,7 +14,7 @@ interface AuthStore {
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   initialize: () => Promise<void>;
-  updateCefrLevel: (level: User['cefr_level']) => Promise<void>;
+  updateJlptLevel: (level: JLPTLevel) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
@@ -272,7 +273,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     }
   },
 
-  updateCefrLevel: async (level: User['cefr_level']) => {
+  updateJlptLevel: async (level: JLPTLevel) => {
     const user = get().user;
     if (!user) return;
 
@@ -284,9 +285,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
       if (error) throw error;
 
-      set({ user: { ...user, cefr_level: level } });
+      set({ user: { ...user, jlpt_level: level } });
     } catch (error) {
-      console.error('Failed to update CEFR level:', error);
+      console.error('Failed to update JLPT level:', error);
       throw error;
     }
   },

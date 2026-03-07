@@ -3,19 +3,21 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 const GEMINI_MODEL = 'gemini-2.0-flash'
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
 
-const DEFAULT_CEFR_LEVEL = 'B1'
+const DEFAULT_JLPT_LEVEL = 'N4'
 
-const CEFR_LEVEL_PROGRESSION: Record<string, string> = {
-  'A1': 'A1+', 'A1+': 'A2', 'A2': 'A2+', 'A2+': 'B1',
-  'B1': 'B1+', 'B1+': 'B2', 'B2': 'B2+', 'B2+': 'C1',
-  'C1': 'C1+', 'C1+': 'C1+'
+const JLPT_LEVEL_PROGRESSION: Record<string, string> = {
+  'N5': 'N4',
+  'N4': 'N3',
+  'N3': 'N2',
+  'N2': 'N1',
+  'N1': 'N1',
 }
 
-function getNextCefrLevel(level: string): string {
-  return CEFR_LEVEL_PROGRESSION[level] || 'B1+'
+function getNextJlptLevel(level: string): string {
+  return JLPT_LEVEL_PROGRESSION[level] || 'N3'
 }
 
-const VERSANT_CONFIG = {
+const PRACTICE_CONFIG = {
   PART_E: { TIME_LIMIT: 30, WORD_COUNT: '60-80' },
   PART_F: { TIME_LIMIT: 40, WORD_COUNT: '80-100' },
   DEFAULT_HEALTH_SCORE: 75,
@@ -78,201 +80,206 @@ ${content}
 要約（100文字以内）：`
 }
 
-function buildFeedbackPrompt(content: string, cefrLevel: string): string {
-  const targetLevel = getNextCefrLevel(cefrLevel)
+function buildFeedbackPrompt(content: string, jlptLevel: string): string {
+  const targetLevel = getNextJlptLevel(jlptLevel)
 
   return `# Role
-You are an expert English language coach designed to help users improve their English skills through their diary entries.
+You are an expert Japanese language teacher helping foreign learners improve their Japanese skills through their diary entries.
 
 # Inputs provided by the system
-1. **User Level:** ${cefrLevel} (CEFR)
+1. **User Level:** ${jlptLevel} (JLPT)
 2. **Diary Transcript:**
 ${content}
 
 # Your Task
-Analyze the diary transcript and provide output in two main sections.
+Analyze the diary transcript and provide output in two main sections. All explanations must be written in **English** so the learner can clearly understand.
 
 ## Section 1: Feedback & Level Up
-Analyze the English based on the user's level.
+Analyze the Japanese based on the user's level.
 - **Tone:** Encouraging, empathetic, and professional.
-- **Language:** Explain the feedback in **Japanese** so the user clearly understands, but show English examples.
-- **Constraint:** The advice must be aimed at **one level slightly higher** than the User Level (i+1 = ${targetLevel}).
+- **Language:** Explain all feedback in **English**, but show Japanese examples alongside.
+- **Constraint:** The advice must be aimed at **one level higher** than the User Level (i+1 = ${targetLevel}).
 
 **Analysis points:**
-1. **Grammar & Phrasing:** Correct unnatural phrasing. If the user uses simple grammar, suggest a more sophisticated structure appropriate for the next level.
-2. **Vocabulary:** Identify basic words used and suggest more precise or academic synonyms.
-3. **Pronunciation Advice:** Identify 2-3 words in the user's text that are typically difficult to pronounce. Provide phonetics or tips.
+1. **Grammar (文法):** Identify grammatical errors or unnatural phrasing. If the user uses simple grammar, suggest a more sophisticated structure appropriate for the next level.
+2. **Vocabulary (語彙):** Identify basic words used and suggest more precise or level-appropriate alternatives with readings and English meanings.
+3. **Pronunciation / Reading (発音・読み方):** Identify 2-3 words or kanji in the user's text that are typically difficult to read or pronounce. Provide furigana and pronunciation tips.
 
 ## Section 2: Topic Extension (Reading Material)
 Based on the content of the diary:
 1. **Identify the Main Topic:** Extract the core theme.
-2. **Generate an Article:** Write an engaging article (approx. 150-200 words) about this topic.
-   - **Difficulty:** The English level must be **slightly higher (i+1 = ${targetLevel})** than the User Level.
-   - **Content:** Include enough rich vocabulary to support the extraction of 10 key items.
-3. **Vocabulary List:** Extract **10 key words or phrases** from this generated article that are valuable for the user to learn.
+2. **Generate a Reading Passage:** Write an engaging Japanese passage (approx. 150-200 characters) about this topic.
+   - **Difficulty:** The Japanese level must be **slightly higher (i+1 = ${targetLevel})** than the User Level.
+   - **Content:** Include rich vocabulary to support the extraction of 10 key vocabulary items.
+3. **Vocabulary List:** Extract **10 key words or phrases** from this generated passage that are valuable for the user to learn.
 
 # Output Format (Markdown)
 
 ## 📊 Feedback & Corrections
-(Provide corrections, grammar explanations in Japanese, and better vocabulary suggestions here)
+(Provide corrections and grammar explanations in **English**, with Japanese examples and better vocabulary suggestions)
 
-## 🗣️ Pronunciation Tips
-(List tricky words from the user's text and tips on how to say them)
+## 🗣️ Pronunciation / Reading Tips
+(List tricky words or kanji from the user's text with furigana and tips on how to read/pronounce them)
 
 ## 📖 Recommended Reading: [Insert Topic Name]
-(Insert the generated English article here)
+(Insert the generated Japanese passage here)
 
-## 🇯🇵 Summary
-(Brief summary of the article in Japanese)
+## 🌐 English Summary
+(Brief summary of the passage in English so the learner can verify comprehension)
 
 ## 🗝️ Key Vocabulary & Phrases
-(List **10** important words/phrases from the "Recommended Reading" article above. Use the format below:)
-- **[Word/Phrase]** \`[IPA Pronunciation]\` : [Japanese Meaning]
+(List **10** important words/phrases from the "Recommended Reading" passage above. Use the format below:)
+- **[Word/Phrase]** \`[Reading (furigana)]\` : [English Meaning]
 
 ## 💪 Encouragement
-(Write a personalized encouraging message in Japanese, praising specific good points and suggesting next steps)`
+(Write a personalized encouraging message in **English**, praising specific good points and suggesting next steps)`
 }
 
-function buildVersantFeedbackPrompt(content: string, cefrLevel: string, part: 'E' | 'F'): string {
-  const targetLevel = getNextCefrLevel(cefrLevel)
+function buildPracticeFeedbackPrompt(content: string, jlptLevel: string, part: 'E' | 'F'): string {
+  const targetLevel = getNextJlptLevel(jlptLevel)
 
   const taskDescription = part === 'E'
-    ? 'summarizing a passage (Versant Part E: Story Retelling)'
-    : 'giving an opinion on a question (Versant Part F: Open Questions)'
+    ? 'summarizing a Japanese passage (JLPT Speaking Practice Part E: Passage Retelling)'
+    : 'giving an opinion on a question in Japanese (JLPT Speaking Practice Part F: Open Questions)'
 
   const scoringFocus = part === 'E'
-    ? `- **Content Coverage:** Did the user cover the main points of the passage?
+    ? `- **Content Coverage:** Did the user cover the main points of the passage in Japanese?
 - **Organization:** Is the summary logically structured (beginning, middle, end)?
-- **Paraphrasing:** Did the user use their own words instead of memorizing the original?`
-    : `- **Opinion Clarity:** Did the user clearly state their opinion?
+- **Paraphrasing:** Did the user use natural Japanese instead of simply memorizing the original?`
+    : `- **Opinion Clarity:** Did the user clearly state their opinion in Japanese?
 - **Reasoning & Examples:** Did the user support their opinion with reasons and examples?
 - **Structure:** Did the answer follow a clear structure (opinion → reasons → conclusion)?`
 
   return `# Role
-You are an expert English speaking test coach. Your job is to help users improve their spoken English responses for the Versant Speaking Test.
+You are an expert Japanese speaking test coach. Your job is to help foreign learners improve their spoken Japanese responses.
 
 # Important
-- This is a SPEAKING TEST practice, NOT a diary.
-- Focus ONLY on how to improve the quality of the spoken response.
-- Do NOT mention diaries, diary writing, or journaling.
+- This is a JAPANESE SPEAKING PRACTICE session, NOT an English exercise.
+- Focus ONLY on how to improve the quality of the Japanese spoken response.
+- All feedback must be written in **English** so the learner can clearly understand.
 
 # Inputs
-1. **User Level:** ${cefrLevel} (CEFR)
+1. **User Level:** ${jlptLevel} (JLPT)
 2. **Task Type:** ${taskDescription}
 3. **User's Response Transcript:**
 ${content}
 
 # Your Task
-Analyze the user's spoken response and provide actionable feedback to improve their score.
+Analyze the user's spoken Japanese response and provide actionable feedback to improve their performance.
 
 ## Section 1: Response Quality Analysis
-Evaluate the response based on Versant scoring criteria:
+Evaluate the response based on Japanese speaking criteria:
 ${scoringFocus}
-- **Fluency:** Was the speech natural and smooth?
-- **Grammar Accuracy:** Were there grammar errors that affect comprehension?
-- **Vocabulary Range:** Was the vocabulary appropriate for the level?
+- **Fluency (流暢さ):** Was the speech natural and smooth?
+- **Grammar Accuracy (文法):** Were there grammar errors that affect comprehension?
+- **Vocabulary Range (語彙):** Was the vocabulary appropriate for the JLPT level?
 
 ## Section 2: Specific Improvements
 - **Tone:** Encouraging but focused on concrete improvements.
-- **Language:** Explain feedback in **Japanese** so the user clearly understands, but show English examples.
+- **Language:** Explain all feedback in **English**, but show Japanese examples.
 - **Constraint:** Suggestions must target **one level higher** than User Level (i+1 = ${targetLevel}).
 
 **Analysis points:**
-1. **Grammar & Sentence Structure:** Correct unnatural phrasing. Suggest more sophisticated structures appropriate for ${targetLevel}.
-2. **Vocabulary Enhancement:** Identify basic words and suggest more precise alternatives that would score higher.
-3. **Pronunciation Tips:** Identify 2-3 words that are typically difficult to pronounce. Provide phonetics or tips.
+1. **Grammar & Sentence Structure (文法・文構造):** Correct unnatural phrasing. Suggest more sophisticated structures appropriate for ${targetLevel}.
+2. **Vocabulary Enhancement (語彙強化):** Identify basic words and suggest more precise alternatives with readings and English meanings.
+3. **Pronunciation / Reading Tips (発音・読み方):** Identify 2-3 words or kanji that are typically difficult to pronounce. Provide furigana and tips.
 
 # Output Format (Markdown)
 
 ## 📊 Response Analysis
-(Evaluate the response quality: what was good, what needs improvement based on the scoring criteria above)
+(Evaluate the response quality in **English**: what was good, what needs improvement)
 
 ## ✍️ Grammar & Vocabulary Improvements
-(Specific corrections and better alternatives, explained in Japanese with English examples)
+(Specific corrections and better Japanese alternatives, explained in **English** with Japanese examples)
 
-## 🗣️ Pronunciation Tips
-(List tricky words from the user's response and tips on how to say them)
+## 🗣️ Pronunciation / Reading Tips
+(List tricky words or kanji from the user's response with furigana and pronunciation tips)
 
 ## 💪 Encouragement
-(Write a personalized encouraging message in Japanese. Focus on praising specific good points in their RESPONSE and suggest concrete next steps to improve their SPEAKING score. Do NOT mention diaries or diary writing.)`
+(Write a personalized encouraging message in **English**. Praise specific good points in their response and suggest concrete next steps to improve their Japanese speaking.)`
 }
 
 const QUESTION_CATEGORIES = [
-  'Daily Life', 'Work', 'Education', 'Technology', 'Health',
-  'Environment', 'Travel', 'Food', 'Entertainment', 'Relationships',
-  'Shopping', 'Sports', 'Culture', 'Finance', 'Science'
+  'Daily Life (日常生活)', 'Work (仕事)', 'Shopping (買い物)', 'Travel (旅行)',
+  'Japanese Culture (日本文化)', 'Food (食べ物)', 'Hobbies (趣味)', 'Seasons & Weather (季節・天気)',
+  'Family (家族)', 'School (学校)', 'Health (健康)', 'Technology (テクノロジー)',
+  'Nature (自然)', 'Festivals (祭り)', 'Transportation (交通)',
 ]
 
-function buildVersantQuestionPrompt(part: 'E' | 'F', cefrLevel: string, category?: string): string {
+function buildPracticeQuestionPrompt(part: 'E' | 'F', jlptLevel: string, category?: string): string {
   const chosenCategory = category || QUESTION_CATEGORIES[Math.floor(Math.random() * QUESTION_CATEGORIES.length)]
 
   if (part === 'E') {
-    return `You are a Versant speaking test question generator.
+    return `You are a Japanese language practice passage generator for foreign learners.
 
-**Task:** Generate a short passage for a Story Retelling exercise.
+**Task:** Generate a short Japanese passage for a Passage Retelling exercise.
 
 **Requirements:**
-- CEFR Level: ${cefrLevel}
+- JLPT Level: ${jlptLevel}
 - Category: ${chosenCategory}
 - Length: 3-5 sentences (appropriate for a 30-second summary response)
 - The passage should tell a short story or describe a situation with clear main points
-- Use vocabulary and grammar appropriate for ${cefrLevel} level
-- Make it interesting and relatable
+- Use vocabulary and grammar appropriate for ${jlptLevel} level
+- Include furigana only for kanji beyond ${jlptLevel} level
+- Make it interesting and relatable for foreign learners of Japanese
 - Do NOT include any instructions, labels, or metadata
 
-**Output:** Only the passage text, nothing else.`
+**Output:** Only the Japanese passage text, nothing else.`
   }
 
-  return `You are a Versant speaking test question generator.
+  return `You are a Japanese language speaking practice question generator for foreign learners.
 
-**Task:** Generate an opinion question for a speaking test.
+**Task:** Generate a Japanese opinion question for a speaking practice session.
 
 **Requirements:**
+- JLPT Level: ${jlptLevel}
 - Category: ${chosenCategory}
-- The question should ask for the user's opinion on a topic
+- The question should ask for the user's opinion on a topic in Japanese
 - It should be open-ended, allowing for multiple perspectives
 - Keep it to 1-2 sentences
-- Use clear, natural English
+- Use clear, natural Japanese appropriate for ${jlptLevel} level
 - Do NOT include any instructions, labels, or metadata
 
-**Output:** Only the question text, nothing else.`
+**Output:** Only the Japanese question text, nothing else.`
 }
 
-function buildVersantSamplePrompt(question: string, part: 'E' | 'F', cefrLevel: string): string {
-  const targetLevel = getNextCefrLevel(cefrLevel)
-  const config = part === 'E' ? VERSANT_CONFIG.PART_E : VERSANT_CONFIG.PART_F
+function buildPracticeSamplePrompt(question: string, part: 'E' | 'F', jlptLevel: string): string {
+  const targetLevel = getNextJlptLevel(jlptLevel)
+  const config = part === 'E' ? PRACTICE_CONFIG.PART_E : PRACTICE_CONFIG.PART_F
   const timeLimit = config.TIME_LIMIT
   const wordCount = config.WORD_COUNT
 
   if (part === 'E') {
-    return `You are an English speaking test sample answer generator.
+    return `You are a Japanese speaking practice sample answer generator for foreign learners.
 
-**Task:** Generate a model summary answer for this passage:
+**Task:** Generate a model Japanese summary answer for this passage:
 "${question}"
 
 **Requirements:**
-- CEFR Level: ${targetLevel} (target level for the learner)
-- Length: ${wordCount} words (speakable within ${timeLimit} seconds)
+- JLPT Level: ${targetLevel} (target level for the learner)
+- Length: approximately ${wordCount} characters (speakable within ${timeLimit} seconds)
 - Include: Main idea, key supporting points, conclusion
-- Tone: Clear, organized, natural spoken English
-- Use appropriate transition words (First, Additionally, In conclusion, etc.)
+- Tone: Clear, organized, natural spoken Japanese
+- Use appropriate transition expressions (まず、それから、最後に、など)
+- Avoid kanji beyond ${targetLevel} level, or add furigana where needed
 
-**Output:** Only the sample answer text, no explanations or labels.`
+**Output:** Only the Japanese sample answer text, no explanations or labels.`
   }
 
-  return `You are an English speaking test sample answer generator.
+  return `You are a Japanese speaking practice sample answer generator for foreign learners.
 
-**Task:** Generate a model opinion answer for this question:
+**Task:** Generate a model Japanese opinion answer for this question:
 "${question}"
 
 **Requirements:**
-- CEFR Level: ${targetLevel} (target level for the learner)
-- Length: ${wordCount} words (speakable within ${timeLimit} seconds)
+- JLPT Level: ${targetLevel} (target level for the learner)
+- Length: approximately ${wordCount} characters (speakable within ${timeLimit} seconds)
 - Structure: State opinion → Give 2-3 reasons with examples → Conclude
-- Tone: Natural spoken English, conversational but organized
-- Use appropriate phrases: "In my opinion", "I believe that", "For example", "Furthermore", "To sum up"
+- Tone: Natural spoken Japanese, conversational but organized
+- Use appropriate phrases: 「私は〜と思います」「なぜなら〜」「例えば〜」「また〜」「まとめると〜」
+- Avoid kanji beyond ${targetLevel} level, or add furigana where needed
 
-**Output:** Only the sample answer text, no explanations or labels.`
+**Output:** Only the Japanese sample answer text, no explanations or labels.`
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -316,8 +323,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         result = {
           summary: analysis.summary || body.content.substring(0, 50),
           emotion: analysis.emotion || '普通',
-          health_score: Math.min(100, Math.max(0, analysis.health_score || VERSANT_CONFIG.DEFAULT_HEALTH_SCORE)),
-          keywords: Array.isArray(analysis.keywords) ? analysis.keywords.slice(0, VERSANT_CONFIG.MAX_KEYWORDS) : []
+          health_score: Math.min(100, Math.max(0, analysis.health_score || PRACTICE_CONFIG.DEFAULT_HEALTH_SCORE)),
+          keywords: Array.isArray(analysis.keywords) ? analysis.keywords.slice(0, PRACTICE_CONFIG.MAX_KEYWORDS) : []
         }
         break
       }
@@ -336,13 +343,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (!body.content) {
           throw new Error('content is required for feedback')
         }
-        const cefrLevel = body.cefrLevel || DEFAULT_CEFR_LEVEL
-        const prompt = buildFeedbackPrompt(body.content, cefrLevel)
+        const jlptLevel = body.cefrLevel || DEFAULT_JLPT_LEVEL
+        const prompt = buildFeedbackPrompt(body.content, jlptLevel)
         const responseText = await callGemini(apiKey, prompt)
 
         result = {
-          cefrLevel,
-          targetLevel: getNextCefrLevel(cefrLevel),
+          cefrLevel: jlptLevel,
+          targetLevel: getNextJlptLevel(jlptLevel),
           markdownContent: responseText
         }
         break
@@ -352,13 +359,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (!body.content || !body.part) {
           throw new Error('content and part are required for versant-feedback')
         }
-        const cefrLevel = body.cefrLevel || DEFAULT_CEFR_LEVEL
-        const prompt = buildVersantFeedbackPrompt(body.content, cefrLevel, body.part)
+        const jlptLevel = body.cefrLevel || DEFAULT_JLPT_LEVEL
+        const prompt = buildPracticeFeedbackPrompt(body.content, jlptLevel, body.part)
         const responseText = await callGemini(apiKey, prompt)
 
         result = {
-          cefrLevel,
-          targetLevel: getNextCefrLevel(cefrLevel),
+          cefrLevel: jlptLevel,
+          targetLevel: getNextJlptLevel(jlptLevel),
           markdownContent: responseText
         }
         break
@@ -368,10 +375,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (!body.part) {
           throw new Error('part is required for versant-question')
         }
-        const cefrLevel = body.cefrLevel || DEFAULT_CEFR_LEVEL
-        const prompt = buildVersantQuestionPrompt(body.part, cefrLevel, body.category)
+        const jlptLevel = body.cefrLevel || DEFAULT_JLPT_LEVEL
+        const prompt = buildPracticeQuestionPrompt(body.part, jlptLevel, body.category)
         const responseText = await callGemini(apiKey, prompt)
-        const config = body.part === 'E' ? VERSANT_CONFIG.PART_E : VERSANT_CONFIG.PART_F
+        const config = body.part === 'E' ? PRACTICE_CONFIG.PART_E : PRACTICE_CONFIG.PART_F
         result = {
           text: responseText.trim(),
           part: body.part,
@@ -384,8 +391,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (!body.question || !body.part) {
           throw new Error('question and part are required for versant-sample')
         }
-        const cefrLevel = body.cefrLevel || DEFAULT_CEFR_LEVEL
-        const prompt = buildVersantSamplePrompt(body.question, body.part, cefrLevel)
+        const jlptLevel = body.cefrLevel || DEFAULT_JLPT_LEVEL
+        const prompt = buildPracticeSamplePrompt(body.question, body.part, jlptLevel)
         const responseText = await callGemini(apiKey, prompt)
         result = { sampleAnswer: responseText.trim() }
         break

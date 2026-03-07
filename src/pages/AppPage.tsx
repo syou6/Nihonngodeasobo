@@ -6,12 +6,9 @@ import { useAuthStore } from '../stores/authStore';
 import { useGuestStore } from '../stores/guestStore';
 import { AuthForm } from '../components/auth/AuthForm';
 import { Header } from '../components/navigation/Header';
-import { ElderlyNav } from '../components/navigation/ElderlyNav';
 import { ParentDashboard } from '../components/dashboard/ParentDashboard';
-import { ElderlyParentDashboard } from '../components/dashboard/ElderlyParentDashboard';
 import { VoiceRecorder } from '../components/recording/VoiceRecorder';
 import { DiaryList } from '../components/diary/DiaryList';
-import { ElderlyDiaryList } from '../components/diary/ElderlyDiaryList';
 import { FamilyManager } from '../components/family/FamilyManager';
 import { NotificationSettings } from '../components/settings/NotificationSettings';
 import { SettingsView } from '../components/settings/SettingsView';
@@ -266,11 +263,7 @@ export const AppPage: React.FC = () => {
   // メインアプリ
   return (
     <div className="min-h-screen bg-gray-100">
-      {user?.user_metadata?.is_elderly ? (
-        <ElderlyNav currentView={currentView} onViewChange={setCurrentView} />
-      ) : (
-        <Header currentView={currentView} onViewChange={setCurrentView} />
-      )}
+      <Header currentView={currentView} onViewChange={setCurrentView} />
       
       {isOffline && (
         <div className="bg-yellow-500 text-white text-center py-2 px-4 text-sm font-medium">
@@ -290,11 +283,7 @@ export const AppPage: React.FC = () => {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              {user?.user_metadata?.is_elderly ? (
-                <ElderlyParentDashboard />
-              ) : (
-                <ParentDashboard onViewChange={setCurrentView} />
-              )}
+              <ParentDashboard onViewChange={setCurrentView} />
             </motion.div>
           )}
           
@@ -318,11 +307,7 @@ export const AppPage: React.FC = () => {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              {user?.user_metadata?.is_elderly ? (
-                <ElderlyDiaryList />
-              ) : (
-                <DiaryList />
-              )}
+              <DiaryList />
             </motion.div>
           )}
           

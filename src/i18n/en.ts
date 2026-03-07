@@ -1,10 +1,10 @@
-// English text constants for English AI Diary
+// English text constants for Nihongo de Asobo
 
 export const EN = {
   // App name
   app: {
-    name: 'English AI Diary',
-    tagline: 'Speak English Every Day',
+    name: 'Nihongo de Asobo',
+    tagline: 'Learn Japanese Every Day',
   },
 
   // Navigation
@@ -19,7 +19,7 @@ export const EN = {
     homeDesc: 'Dashboard',
     recordDesc: 'Speak',
     diaryDesc: 'History',
-    practiceDesc: 'Versant',
+    practiceDesc: 'JLPT',
     settingsDesc: 'Config',
     // Active indicator
     active: 'Active',
@@ -37,13 +37,13 @@ export const EN = {
     alreadyRecorded: 'Already recorded today',
     greatJob: 'Great job!',
     viewDiary: 'View Diary',
-    practice: 'Practice Speaking',
+    practice: 'JLPT Speaking Practice',
     logout: 'Logout',
     logoutConfirm: 'Are you sure you want to logout?',
     // Tips
     tips: {
       title: "Today's Tips",
-      tip1: 'What did you eat today?',
+      tip1: 'What did you do today?',
       tip2: 'How are you feeling?',
       tip3: 'What made you happy?',
     },
@@ -52,7 +52,7 @@ export const EN = {
   // Recording
   recording: {
     title: 'Record Your Diary',
-    instruction: 'Press the microphone button and speak in English about your day',
+    instruction: 'Press the microphone button and speak in Japanese about your day',
     recording: 'Recording...',
     stopButton: 'Stop Recording',
     startButton: 'Start Recording',
@@ -69,7 +69,7 @@ export const EN = {
     saveTitle: 'Save Your Diary',
     transcribedText: 'Transcribed Text',
     additionalNotes: 'Additional Notes (Optional)',
-    notesPlaceholder: 'e.g., I went to the park with my friend today...',
+    notesPlaceholder: 'e.g., Today I went to the convenience store...',
     saving: 'Saving...',
     saveButton: 'Save',
     back: 'Back',
@@ -127,7 +127,7 @@ export const EN = {
   // Settings
   settings: {
     title: 'Settings',
-    cefrLevel: 'English Level (CEFR)',
+    cefrLevel: 'Japanese Level (JLPT)',
     cefrDescription: 'AI feedback will be based on this level',
     notifications: 'Notifications',
     notificationSettings: 'Notification Settings',
@@ -137,36 +137,31 @@ export const EN = {
     apiUsage: 'AI Usage Statistics',
   },
 
-  // CEFR levels (10 stages)
-  cefr: {
-    'A1': 'A1 - Beginner',
-    'A1+': 'A1+ - Beginner High',
-    'A2': 'A2 - Elementary',
-    'A2+': 'A2+ - Elementary High',
-    'B1': 'B1 - Intermediate',
-    'B1+': 'B1+ - Intermediate High',
-    'B2': 'B2 - Upper Intermediate',
-    'B2+': 'B2+ - Upper Intermediate High',
-    'C1': 'C1 - Advanced',
-    'C1+': 'C1+ - Proficient',
+  // JLPT levels
+  jlpt: {
+    'N5': 'N5 - Beginner',
+    'N4': 'N4 - Elementary',
+    'N3': 'N3 - Intermediate',
+    'N2': 'N2 - Advanced',
+    'N1': 'N1 - Proficient',
   },
 
   // Feedback
   feedback: {
     title: 'AI Feedback',
-    loading: 'Analyzing your English...',
+    loading: 'Analyzing your Japanese...',
     grammar: 'Grammar & Phrasing',
     vocabulary: 'Vocabulary',
     pronunciation: 'Pronunciation Tips',
-    reading: 'Recommended Reading',
-    summary: 'Summary (Japanese)',
+    reading: 'Recommended Study',
+    summary: 'Summary (English)',
     keyVocab: 'Key Vocabulary',
   },
 
-  // Versant Practice
+  // JLPT Speaking Practice
   versant: {
-    title: 'Speaking Practice',
-    subtitle: 'Practice speaking with Versant-style exercises',
+    title: 'JLPT Speaking Practice',
+    subtitle: 'Practice speaking with JLPT-style exercises',
     partE: {
       title: 'Part E: Summary',
       description: 'Listen to a short passage and summarize it in 30 seconds.',
@@ -215,7 +210,7 @@ export const EN = {
     yourResponseLabel: 'Your response:',
     analyzing: 'Analyzing your response...',
     // Result
-    cefrLevel: 'CEFR Level',
+    cefrLevel: 'JLPT Level',
     grammarNotes: 'Grammar Notes',
     vocabularyTips: 'Vocabulary Tips',
     playRecording: 'Play Recording',
@@ -337,7 +332,7 @@ export const EN = {
     step1: 'Tap the share button at the bottom of Safari',
     step2: 'Select "Add to Home Screen"',
     step3: 'Tap "Add" at the top right',
-    step4: 'Open "English AI Diary" from home screen',
+    step4: 'Open "Nihongo de Asobo" from home screen',
     iosNote: 'Requires iOS 16.4 or later',
     androidTip: 'For smartphone users',
     androidInstructions: 'Use Chrome/Edge browser, Menu → Add to Home Screen',
@@ -357,7 +352,7 @@ export const EN = {
   // Teacher Sharing
   family: {
     title: 'Teacher Connection',
-    addRecipient: 'Invite Your English Teacher',
+    addRecipient: 'Invite Your Japanese Teacher',
     addDescription: 'Enter your teacher\'s email address to share your diary for feedback',
     addButton: 'Invite',
     yourViewers: 'Your Teacher',
@@ -427,7 +422,7 @@ export const EN = {
   parentDashboard: {
     todayDate: 'Today is',
     weather: 'Sunny',
-    recordPrompt: 'Record your English diary',
+    recordPrompt: 'Record your Japanese diary',
     recordSubPrompt: '1-3 minutes is perfect!',
     topicIdeas: 'Topic ideas:',
     topics: {
@@ -448,27 +443,28 @@ export const EN = {
     sharePrompt: 'Connect with your teacher to get feedback',
     viewAllComments: 'View All Diaries & Comments',
   },
+
   // Onboarding/Welcome
   onboarding: {
     steps: [
       {
-        title: 'Practice English Every Day',
-        description: 'Record a short diary in English each day. Just 1-3 minutes of speaking practice helps you improve naturally.',
-        benefit: 'Build a daily English habit'
+        title: 'Practice Japanese Every Day',
+        description: 'Record a short diary in Japanese each day. Just 1-3 minutes of speaking practice helps you improve naturally.',
+        benefit: 'Build a daily Japanese habit'
       },
       {
         title: 'Just Speak - No Typing Required',
-        description: 'Press record and speak about your day. The app transcribes your speech automatically.',
+        description: 'Press record and speak about your day in Japanese. The app transcribes your speech automatically.',
         benefit: 'Perfect for busy learners'
       },
       {
         title: 'Get AI Feedback',
-        description: 'Receive personalized feedback on your grammar, vocabulary, and pronunciation from AI.',
+        description: 'Receive personalized feedback on your grammar, vocabulary, and pronunciation from AI — tailored to your JLPT level.',
         benefit: 'Learn from your mistakes'
       },
       {
         title: 'Track Your Progress',
-        description: 'Review past entries, see your CEFR level progress, and practice with Versant-style questions.',
+        description: 'Review past entries, see your JLPT level progress, and practice with JLPT Speaking Practice questions.',
         benefit: 'Measure your improvement'
       }
     ],
@@ -493,10 +489,10 @@ export const EN = {
     },
     recording: {
       title: 'Recording Screen',
-      description: 'Record your voice diary in English',
+      description: 'Record your voice diary in Japanese',
       tips: [
         'Press the record button to start',
-        'Speak in English for 1-3 minutes',
+        'Speak in Japanese for 1-3 minutes',
         'The volume meter shows if your voice is clear',
         'Review and save your recording when done'
       ]
@@ -514,7 +510,7 @@ export const EN = {
       title: 'Settings',
       description: 'Configure your preferences',
       tips: [
-        'Set your English level (CEFR)',
+        'Set your Japanese level (JLPT)',
         'Manage notifications',
         'View your account details'
       ]
@@ -536,7 +532,7 @@ export const EN = {
   pwa: {
     useAsApp: 'Use as App',
     install: 'Install App',
-    installDescription: 'Add English AI Diary to your home screen for the best experience. You\'ll also receive push notifications.',
+    installDescription: 'Add Nihongo de Asobo to your home screen for the best experience. You\'ll also receive push notifications.',
     iosInstructions: 'Add to home screen to enable push notifications',
     step1: 'Tap the share button below',
     step2: 'Select "Add to Home Screen"',
@@ -568,36 +564,6 @@ export const EN = {
     execute: 'OK',
     close: 'Close',
     showMore: 'Show more',
-  },
-
-  // Elderly mode (simplified navigation)
-  elderly: {
-    nav: {
-      home: 'Home',
-      homeDesc: 'Main',
-      record: 'Record',
-      recordDesc: 'Speak',
-      listen: 'Listen',
-      listenDesc: 'Playback',
-    },
-    guestMode: 'Guest Mode (Trial)',
-    diaryList: 'Diary List',
-    noDiaries: 'No diaries yet',
-    pleaseRecord: 'Please record',
-    loading: 'Loading...',
-    stop: 'Stop',
-    play: 'Play',
-    delete: 'Delete',
-    deleteConfirm: 'Delete this diary?',
-    deleteButton: 'Delete',
-    cancelButton: 'Cancel',
-    deleteMessage: 'Are you sure you want to delete this diary?',
-    deleted: 'Diary deleted',
-    deleteFailed: 'Failed to delete',
-    shared: 'Shared',
-    copyFailed: 'Failed to copy',
-    copiedToClipboard: 'Copied to clipboard',
-    playFailed: 'Failed to play audio',
   },
 
   // Subscription pages

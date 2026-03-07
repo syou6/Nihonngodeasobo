@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 import { analyzeText, generateFamilySummary, analyzeHealthScore } from '../lib/gemini';
-import { generateEnglishFeedback } from '../lib/gemini-feedback';
+import { generateJapaneseFeedback } from '../lib/gemini-feedback';
 import { toast } from 'sonner';
-import type { DiaryEntry, CEFRLevel } from '../types';
+import type { DiaryEntry, JLPTLevel } from '../types';
 
 // ファイルサイズのフォーマット関数（インライン定義）
 const formatFileSize = (bytes: number): string => {
@@ -268,32 +268,32 @@ export const useDiaryStore = create<DiaryStore>((set, get) => ({
           try {
             console.log('Background AI analysis started for diary:', diaryId);
 
-            // Get user's CEFR level
+            // Get user's JLPT level
             const { data: userProfile } = await supabase
               .from('users')
-              .select('cefr_level')
+              .select('jlpt_level')
               .eq('id', user.id)
               .single();
-            const cefrLevel: CEFRLevel = userProfile?.cefr_level || 'B1';
+            const jlptLevel: JLPTLevel = userProfile?.jlpt_level || 'N4';
 
             // Run all AI calls in parallel
-            const [analysisResult, aiSummary, healthScore, englishFeedback] = await Promise.allSettled([
+            const [analysisResult, aiSummary, healthScore, japaneseFeedback] = await Promise.allSettled([
               analyzeText(content),
               generateFamilySummary(content),
               analyzeHealthScore(content),
-              generateEnglishFeedback(content, cefrLevel),
+              generateJapaneseFeedback(content, jlptLevel),
             ]);
 
             const analysis = analysisResult.status === 'fulfilled' ? analysisResult.value : null;
             const summary = aiSummary.status === 'fulfilled' ? aiSummary.value : '';
             const health = healthScore.status === 'fulfilled' ? healthScore.value : 75;
-            const feedback = englishFeedback.status === 'fulfilled' ? englishFeedback.value : null;
+            const feedback = japaneseFeedback.status === 'fulfilled' ? japaneseFeedback.value : null;
 
             // Update diary with AI results
             await supabase
               .from('diaries')
               .update({
-                emotion: feedback?.cefrLevel ? 'neutral' : (analysis?.emotion || 'neutral'),
+                emotion: feedback?.jlptLevel ? 'neutral' : (analysis?.emotion || 'neutral'),
                 health_score: health,
                 ai_summary: feedback?.summary || summary || analysis?.summary || '',
                 ai_keywords: analysis?.keywords || [],
