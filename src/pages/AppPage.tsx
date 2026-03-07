@@ -69,11 +69,6 @@ export const AppPage: React.FC = () => {
       return;
     }
 
-    // 環境変数が設定されている場合のみ初期化
-    initialize().finally(() => {
-      setIsInitialized(true);
-    });
-    
     // URLパラメータをチェック
     const urlParams = new URLSearchParams(window.location.search);
     const isGuestParam = urlParams.get('guest') === 'true';
@@ -149,21 +144,19 @@ export const AppPage: React.FC = () => {
       console.log('AppPage.tsx - Valid config found, initializing auth');
       initialize().catch((error) => {
         console.error('認証初期化エラー:', error);
-        // エラーが発生した場合はゲストモードで開始
         console.log('AppPage.tsx - Auth init failed, falling back to guest mode');
         setGuestMode(true);
         setShowOnboarding(true);
       }).finally(() => {
         setIsInitialized(true);
       });
-      return;
+    } else {
+      // 環境変数が未設定の場合はゲストモードで開始
+      console.log('AppPage.tsx - No valid config, starting guest mode');
+      setGuestMode(true);
+      setShowOnboarding(true);
+      setIsInitialized(true);
     }
-    
-    // 環境変数が未設定の場合はゲストモードで開始
-    console.log('AppPage.tsx - No valid config, starting guest mode');
-    setGuestMode(true);
-    setShowOnboarding(true);
-    setIsInitialized(true);
     
     // 期限切れのゲスト日記をクリーンアップ
     cleanExpiredDiaries();

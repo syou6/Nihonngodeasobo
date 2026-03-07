@@ -61,11 +61,11 @@ export const useDiaryStore = create<DiaryStore>((set, get) => ({
       // 並列でクエリを実行
       const [relationshipsResult, initialDiariesResult] = await Promise.race([
         Promise.all([
-          // 家族関係を取得
+          // 家族関係を取得（teacherとしての関係のみ = parent_id）
           supabase
             .from('family_relationships')
             .select('parent_id, child_id')
-            .or(`parent_id.eq.${user.id},child_id.eq.${user.id}`)
+            .eq('parent_id', user.id)
             .eq('status', 'accepted'),
 
           // まず自分の日記だけを取得（高速表示用）
@@ -89,14 +89,13 @@ export const useDiaryStore = create<DiaryStore>((set, get) => ({
         set({ entries: initialDiariesResult.data });
       }
 
-      // 家族のIDリストを作成
+      // Teacher only: collect student IDs (one-directional viewing)
       const familyIds = new Set([user.id]);
       relationshipsResult.data?.forEach(rel => {
-        familyIds.add(rel.parent_id);
         familyIds.add(rel.child_id);
       });
 
-      // 家族が他にいる場合のみ、追加で取得
+      // teacherの場合のみ、生徒の日記を追加で取得
       if (familyIds.size > 1) {
         const { data, error } = await supabase
           .from('diaries')

@@ -11,8 +11,16 @@ import {
   GraduationCap,
   TrendingUp,
   MessageCircle,
-  Sun
+  Sun,
+  CloudSun,
+  Cloud,
+  CloudRain,
+  CloudLightning,
+  Snowflake,
+  CloudFog
 } from 'lucide-react';
+import { fetchWeather, getWeatherIconName } from '../../lib/weather';
+import type { WeatherData } from '../../lib/weather';
 import { format, formatDistanceToNow } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 
@@ -25,6 +33,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onViewChange }
   const [commentCount, setCommentCount] = useState(0);
   const [todayHealthScore, setTodayHealthScore] = useState<number | null>(null);
   const [todayEmotion, setTodayEmotion] = useState<string | null>(null);
+  const [weather, setWeather] = useState<WeatherData | null>(null);
   const { entries, fetchEntries } = useDiaryStore();
   const { user } = useAuthStore();
   const today = new Date();
@@ -41,6 +50,12 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onViewChange }
       fetchEntries();
     }
   }, [user, fetchEntries]);
+
+  useEffect(() => {
+    fetchWeather()
+      .then(setWeather)
+      .catch(() => setWeather({ temp: 25, description: 'Sunny', icon: '01d' }));
+  }, []);
 
   useEffect(() => {
     const userDiaries = entries.filter(entry => entry.user_id === user?.id);
@@ -101,10 +116,27 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onViewChange }
             </p>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <Sun className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 opacity-80" />
+            {(() => {
+              const iconName = weather ? getWeatherIconName(weather.icon) : 'Sun';
+              const iconClass = "w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 opacity-80";
+              const iconMap: Record<string, React.ReactNode> = {
+                Sun: <Sun className={iconClass} />,
+                CloudSun: <CloudSun className={iconClass} />,
+                Cloud: <Cloud className={iconClass} />,
+                CloudRain: <CloudRain className={iconClass} />,
+                CloudLightning: <CloudLightning className={iconClass} />,
+                Snowflake: <Snowflake className={iconClass} />,
+                CloudFog: <CloudFog className={iconClass} />,
+              };
+              return iconMap[iconName] || <Sun className={iconClass} />;
+            })()}
             <div className="text-right">
-              <div className="text-base sm:text-lg md:text-xl font-bold">{EN.parentDashboard.weather}</div>
-              <div className="text-sm sm:text-base md:text-lg opacity-80">25°C</div>
+              <div className="text-base sm:text-lg md:text-xl font-bold capitalize">
+                {weather ? weather.description : '...'}
+              </div>
+              <div className="text-sm sm:text-base md:text-lg opacity-80">
+                {weather ? `${weather.temp}°C` : '...'}
+              </div>
             </div>
           </div>
         </div>

@@ -2,6 +2,9 @@ import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 import type { User } from '../types';
 
+// Module-level variable to track auth subscription (prevents duplicate listeners)
+let authSubscription: { unsubscribe: () => void } | null = null;
+
 interface AuthStore {
   user: User | null;
   loading: boolean;
@@ -136,28 +139,34 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   signOut: async () => {
+    // Unsubscribe auth listener first to prevent interference
+    if (authSubscription) {
+      authSubscription.unsubscribe();
+      authSubscription = null;
+    }
+
     try {
-      console.log('ログアウト処理開始');
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error('ログアウトエラー:', error);
-        throw error;
-      }
-      
-      // ローカルステートをクリア
-      set({ user: null });
-      
-      // ページをリロードして完全にクリーンな状態にする
-      window.location.href = '/';
-      
-      console.log('ログアウト完了');
+      await supabase.auth.signOut({ scope: 'local' });
     } catch (error) {
       console.error('ログアウトエラー:', error);
-      // エラーが発生してもログアウト処理を続行
-      set({ user: null });
-      window.location.href = '/';
     }
+
+    // Always clear state and storage, regardless of signOut result
+    set({ user: null, loading: false });
+
+    try {
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('sb-') || key.startsWith('supabase')) {
+          localStorage.removeItem(key);
+        }
+      });
+      sessionStorage.clear();
+    } catch (e) {
+      // Storage operations might fail in some environments
+    }
+
+    // Force full page reload to clear any in-memory state
+    window.location.replace('/');
   },
 
   initialize: async () => {
@@ -218,7 +227,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         set({ user: null, loading: false });
       }
 
-      supabase.auth.onAuthStateChange(async (event, session) => {
+      // Unsubscribe previous listener to prevent duplicates
+      if (authSubscription) {
+        authSubscription.unsubscribe();
+        authSubscription = null;
+      }
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
         if (session?.user) {
           const { data: userProfile, error } = await supabase
             .from('users')
@@ -249,6 +264,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           set({ user: null });
         }
       });
+      authSubscription = subscription;
     } catch (error) {
       console.error('Auth初期化エラー:', error);
       set({ user: null, loading: false });
