@@ -26,6 +26,7 @@ import { EN } from '../i18n/en';
 export const AppPage: React.FC = () => {
   const [currentView, setCurrentView] = useState('home');
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showAuthFormState, setShowAuthFormState] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
   useEffect(() => {
@@ -71,11 +72,10 @@ export const AppPage: React.FC = () => {
     
     // サインアップパラメータがある場合
     if (isSignupParam) {
-      sessionStorage.setItem('showAuthForm', 'true');
       sessionStorage.setItem('showSignupForm', 'true');
+      setShowAuthFormState(true);
       setGuestMode(false);
       setIsInitialized(true);
-      // URLからパラメータを削除
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.delete('signup');
       window.history.replaceState({}, '', newUrl.toString());
@@ -84,11 +84,10 @@ export const AppPage: React.FC = () => {
 
     // ログインパラメータがある場合
     if (isLoginParam) {
-      sessionStorage.setItem('showAuthForm', 'true');
       sessionStorage.removeItem('showSignupForm');
+      setShowAuthFormState(true);
       setGuestMode(false);
       setIsInitialized(true);
-      // URLからパラメータを削除
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.delete('login');
       window.history.replaceState({}, '', newUrl.toString());
@@ -116,10 +115,10 @@ export const AppPage: React.FC = () => {
     }
     
     // 認証フォーム表示フラグをチェック（最優先）
-    const showAuthForm = sessionStorage.getItem('showAuthForm') === 'true';
-    if (showAuthForm) {
-      setGuestMode(false);
+    if (sessionStorage.getItem('showAuthForm') === 'true') {
       sessionStorage.removeItem('showAuthForm');
+      setShowAuthFormState(true);
+      setGuestMode(false);
       setIsInitialized(true);
       return;
     }
@@ -178,9 +177,7 @@ export const AppPage: React.FC = () => {
   }
 
   // 認証フォーム表示（loadingより優先）
-  const showAuthForm = sessionStorage.getItem('showAuthForm') === 'true';
-
-  if (showAuthForm || (isInitialized && !loading && !user && !isGuestMode)) {
+  if (showAuthFormState || (isInitialized && !loading && !user && !isGuestMode)) {
     return (
       <div className="min-h-screen bg-gray-50">
         <AuthForm />
