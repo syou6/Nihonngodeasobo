@@ -12,12 +12,49 @@ const jlptProgression: Record<string, string> = {
 }
 
 interface GeminiRequest {
-  type: 'analyze' | 'summary' | 'feedback' | 'versant-feedback' | 'versant-sample' | 'versant-question'
+  type: 'analyze' | 'summary' | 'feedback' | 'versant-feedback' | 'versant-sample' | 'versant-question' | 'pitch-accent'
   content?: string
   jlptLevel?: string
   cefrLevel?: string  // kept for backwards compatibility
   question?: string
   part?: 'E' | 'F'
+  audioBase64?: string
+  mimeType?: string
+  transcribedText?: string
+  targetWord?: string
+  expectedPattern?: number[]
+}
+
+async function callGeminiWithAudio(
+  apiKey: string,
+  audioBase64: string,
+  mimeType: string,
+  prompt: string
+): Promise<string> {
+  const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{
+        parts: [
+          { inlineData: { data: audioBase64, mimeType } },
+          { text: prompt }
+        ]
+      }],
+    }),
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Gemini API error (${response.status}): ${errorText}`)
+  }
+
+  const data = await response.json()
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
+  if (!text) {
+    throw new Error('No text in Gemini response')
+  }
+  return text
 }
 
 async function callGemini(apiKey: string, prompt: string): Promise<string> {
@@ -294,6 +331,58 @@ Write ONLY in Japanese. Output ONLY the question text, no labels or instructions
           text: responseText.trim(),
           part: body.part,
           timeLimit
+        }
+        break
+      }
+
+      case 'pitch-accent': {
+        if (!body.audioBase64 || !body.mimeType || !body.transcribedText) {
+          throw new Error('audioBase64, mimeType, and transcribedText are required for pitch-accent')
+        }
+
+        const targetWordSection = body.targetWord
+          ? `\n- Target word being practiced: "${body.targetWord}"`
+          : ''
+        const expectedPatternSection = body.expectedPattern && body.expectedPattern.length > 0
+          ? `\n- Expected pitch pattern (0=low, 1=high): [${body.expectedPattern.join(', ')}]`
+          : ''
+
+        const prompt = `You are a Japanese pitch accent expert and pronunciation coach for foreign learners.
+
+Listen to the audio recording and evaluate the speaker's Japanese pitch accent.
+
+Context:
+- Transcribed speech: "${body.transcribedText}"${targetWordSection}${expectedPatternSection}
+
+Analyze the pitch accent in the audio and return ONLY the following JSON (no explanations, no markdown code blocks):
+{
+  "naturalness": <integer 0-100, how natural the pitch accent sounds to a native Japanese speaker>,
+  "pitchAccuracyScore": <integer 0-100, accuracy vs standard Tokyo pitch accent>,
+  "patternDetected": <string describing the detected pattern, e.g. "平板型 (flat)", "頭高型 (initial high)", "中高型 (middle high)", "尾高型 (final high)">,
+  "issues": [<array of specific pitch accent issues detected, in English, empty array if none>],
+  "feedback": <string, 1-2 sentences of encouraging feedback in English explaining the main pitch accent point>,
+  "nextStep": <string, one specific actionable practice tip in English>
+}`
+
+        const responseText = await callGeminiWithAudio(
+          apiKey,
+          body.audioBase64,
+          body.mimeType,
+          prompt
+        )
+
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/)
+        if (!jsonMatch) {
+          throw new Error('No JSON found in Gemini pitch-accent response')
+        }
+        const parsed = JSON.parse(jsonMatch[0])
+        result = {
+          naturalness: Math.min(100, Math.max(0, parsed.naturalness ?? 50)),
+          pitchAccuracyScore: Math.min(100, Math.max(0, parsed.pitchAccuracyScore ?? 50)),
+          patternDetected: parsed.patternDetected || 'Unknown',
+          issues: Array.isArray(parsed.issues) ? parsed.issues : [],
+          feedback: parsed.feedback || '',
+          nextStep: parsed.nextStep || ''
         }
         break
       }

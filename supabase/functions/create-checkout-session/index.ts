@@ -21,12 +21,13 @@ serve(async (req) => {
       mode: 'subscription',
       success_url: successUrl,
       cancel_url: cancelUrl,
+      allow_promotion_codes: true,
       metadata: { userId },
       subscription_data: { metadata: { userId } },
     })
 
     return new Response(
-      JSON.stringify({ sessionId: session.id }),
+      JSON.stringify({ url: session.url, sessionId: session.id }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
