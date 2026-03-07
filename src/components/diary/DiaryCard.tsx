@@ -8,6 +8,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { useDiaryStore } from '../../stores/diaryStore';
 import { useSubscription } from '../../hooks/useSubscription';
 import { supabase } from '../../lib/supabase';
+import { commentLimiter } from '../../lib/rate-limiter';
 import { EN } from '../../i18n/en';
 import type { DiaryEntry } from '../../types';
 import {
@@ -115,6 +116,12 @@ export const DiaryCard: React.FC<DiaryCardProps> = ({ entry }) => {
   const handleSubmitComment = async () => {
     if (!newComment.trim()) return;
 
+    if (!commentLimiter.canProceed()) {
+      const cooldown = Math.ceil(commentLimiter.getRemainingCooldown() / 1000);
+      toast.error(`コメント制限中です。${cooldown}秒後にもう一度お試しください。`);
+      return;
+    }
+
     setIsSubmittingComment(true);
     try {
       const { error } = await supabase
@@ -126,6 +133,8 @@ export const DiaryCard: React.FC<DiaryCardProps> = ({ entry }) => {
         });
 
       if (error) throw error;
+
+      commentLimiter.recordAction();
 
       // Send notification to diary owner (if not self)
       if (!isOwner) {

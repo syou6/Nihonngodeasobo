@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 import type { User } from '../types';
 import type { JLPTLevel } from '../lib/constants';
+import { signupLimiter } from '../lib/rate-limiter';
 
 // Module-level variable to track auth subscription (prevents duplicate listeners)
 let authSubscription: { unsubscribe: () => void } | null = null;
@@ -23,6 +24,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   signUp: async (email: string, password: string, userData: Partial<User>) => {
     try {
+      if (!signupLimiter.canProceed()) {
+        const cooldown = Math.ceil(signupLimiter.getRemainingCooldown() / 60000);
+        throw new Error(`アカウント作成の制限中です。${cooldown}分後にもう一度お試しください。`);
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -48,6 +54,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
         if (profileError) {
         }
+
+        signupLimiter.recordAction();
       }
     } catch (error) {
       throw error;

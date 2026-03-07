@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { diaryLimiter } from '../lib/rate-limiter';
 
 interface GuestDiary {
   id: string;
@@ -45,6 +46,10 @@ export const useGuestStore = create<GuestStore>()(
         
         if (usageCount >= maxDiaries) {
           throw new Error('ゲスト利用の上限に達しました。ログインしてください。');
+        }
+
+        if (!diaryLimiter.canProceed()) {
+          throw new Error('投稿制限中です。しばらくしてからもう一度お試しください。');
         }
 
         // 音声データをBase64に変換（30秒制限）
@@ -97,6 +102,7 @@ export const useGuestStore = create<GuestStore>()(
           diaries: [newDiary, ...state.diaries],
           usageCount: state.usageCount + 1
         }));
+        diaryLimiter.recordAction();
       },
 
       deleteGuestDiary: (id: string) => {
