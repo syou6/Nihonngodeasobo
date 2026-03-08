@@ -149,19 +149,14 @@ export const SubscriptionManager: React.FC = () => {
             )}
 
             {subscription?.status === 'active' && (
-              <div className="flex gap-3">
-                <Button
-                  onClick={handleManageSubscription}
-                  disabled={processing === 'manage'}
-                  variant="outline"
-                  className="flex-1 sm:flex-none"
-                >
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  {processing === 'manage' ? EN.subscription.processing : 'Payment Settings'}
-                </Button>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 px-3 py-1.5 rounded-full">
+                  <Check className="w-4 h-4" />
+                  <span className="font-medium">Premium Active</span>
+                </div>
                 <button
                   onClick={() => { setShowCancelWarning(true); setCancelStep(0); }}
-                  className="text-sm text-gray-400 hover:text-gray-500 underline underline-offset-2"
+                  className="text-xs text-gray-300 hover:text-gray-400"
                 >
                   Cancel plan
                 </button>
