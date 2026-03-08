@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, MessageSquare, Mic, History, ChevronRight } from 'lucide-react';
+import { BookOpen, MessageSquare, Mic, History, ChevronRight, Crown, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { PartEPractice } from './PartEPractice';
 import { PartFPractice } from './PartFPractice';
@@ -12,9 +12,14 @@ import toast from 'react-hot-toast';
 
 type ViewMode = 'home' | 'partE' | 'partF' | 'history';
 
-export const VersantHome: React.FC = () => {
+interface VersantHomeProps {
+  onViewChange?: (view: string) => void;
+}
+
+export const VersantHome: React.FC<VersantHomeProps> = ({ onViewChange }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('home');
-  const { checkAction } = useSubscription();
+  const [showPostSessionUpsell, setShowPostSessionUpsell] = useState(false);
+  const { checkAction, isPremium, usage, limits } = useSubscription();
 
   const handleStartPractice = async (part: 'partE' | 'partF') => {
     const canPractice = await checkAction('speaking_practice');
@@ -25,12 +30,19 @@ export const VersantHome: React.FC = () => {
     setViewMode(part);
   };
 
+  const handleBackFromPractice = () => {
+    setViewMode('home');
+    if (!isPremium) {
+      setShowPostSessionUpsell(true);
+    }
+  };
+
   if (viewMode === 'partE') {
-    return <PartEPractice onBack={() => setViewMode('home')} />;
+    return <PartEPractice onBack={handleBackFromPractice} />;
   }
 
   if (viewMode === 'partF') {
-    return <PartFPractice onBack={() => setViewMode('home')} />;
+    return <PartFPractice onBack={handleBackFromPractice} />;
   }
 
   if (viewMode === 'history') {
@@ -44,6 +56,72 @@ export const VersantHome: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-6"
       >
+        {/* Post-session upsell */}
+        {showPostSessionUpsell && !isPremium && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-brand-500 to-purple-600 rounded-2xl p-5 text-white mb-2"
+          >
+            <div className="flex items-start gap-3">
+              <Crown className="w-6 h-6 text-amber-300 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-bold text-lg mb-1">Great practice session!</h3>
+                <p className="text-sm text-white/85 mb-3">
+                  Want unlimited JLPT speaking practice every day? Upgrade to Premium and never hit a limit again.
+                </p>
+                <div className="flex gap-2">
+                  {onViewChange && (
+                    <button
+                      onClick={() => { setShowPostSessionUpsell(false); onViewChange('pricing'); }}
+                      className="px-4 py-2 bg-white text-brand-700 text-sm font-bold rounded-xl hover:bg-gray-50 transition-colors"
+                    >
+                      Upgrade to Premium →
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowPostSessionUpsell(false)}
+                    className="px-4 py-2 bg-white/20 text-white text-sm font-medium rounded-xl hover:bg-white/30 transition-colors"
+                  >
+                    Maybe later
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Free practice limit banner */}
+        {!isPremium && !showPostSessionUpsell && limits.speakingPracticeLimit !== Infinity && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className={`flex items-center justify-between gap-3 px-4 py-3 rounded-xl border mb-2 ${
+              usage.speakingPracticeCount >= (limits.speakingPracticeLimit as number)
+                ? 'bg-red-50 border-red-200'
+                : 'bg-amber-50 border-amber-200'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <AlertCircle className={`w-4 h-4 flex-shrink-0 ${usage.speakingPracticeCount >= (limits.speakingPracticeLimit as number) ? 'text-red-500' : 'text-amber-600'}`} />
+              <span className={`text-sm font-semibold ${usage.speakingPracticeCount >= (limits.speakingPracticeLimit as number) ? 'text-red-700' : 'text-amber-800'}`}>
+                {usage.speakingPracticeCount >= (limits.speakingPracticeLimit as number)
+                  ? 'Daily practice limit reached'
+                  : `${limits.speakingPracticeLimit} free practice/day — ${(limits.speakingPracticeLimit as number) - usage.speakingPracticeCount} remaining`}
+              </span>
+            </div>
+            {onViewChange && (
+              <button
+                onClick={() => onViewChange('pricing')}
+                className="flex items-center gap-1 text-xs font-bold text-brand-600 hover:text-brand-700 flex-shrink-0"
+              >
+                <Crown className="w-3 h-3" />
+                Upgrade
+              </button>
+            )}
+          </motion.div>
+        )}
+
         {/* Header */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">

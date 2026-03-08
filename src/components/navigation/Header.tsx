@@ -78,13 +78,24 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
           <div className="flex items-center gap-2 flex-shrink-0">
             {/* Upgrade button for free users */}
             {!isPremium && !isGuestMode && (
-              <button
-                onClick={() => onViewChange('pricing')}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-brand-500 to-purple-500 text-white text-sm font-medium rounded-lg hover:from-brand-600 hover:to-purple-600 transition-all"
-              >
-                <Crown className="w-3.5 h-3.5" />
-                Upgrade
-              </button>
+              <>
+                {/* Desktop */}
+                <button
+                  onClick={() => onViewChange('pricing')}
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-brand-500 to-purple-500 text-white text-sm font-medium rounded-lg hover:from-brand-600 hover:to-purple-600 transition-all shadow-md animate-pulse hover:animate-none"
+                >
+                  <Crown className="w-3.5 h-3.5 text-amber-300" />
+                  Upgrade
+                </button>
+                {/* Mobile: crown icon only, pulsing glow */}
+                <button
+                  onClick={() => onViewChange('pricing')}
+                  className="sm:hidden flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-purple-500 shadow-lg shadow-purple-300/60 animate-pulse hover:animate-none"
+                  title="Upgrade to Premium"
+                >
+                  <Crown className="w-4 h-4 text-amber-300" />
+                </button>
+              </>
             )}
 
             <div className="hidden lg:flex items-center gap-2">

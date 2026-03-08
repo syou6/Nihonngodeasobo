@@ -10,7 +10,9 @@ import { GuestDiaryCard } from '../guest/GuestDiaryCard';
 import { StudentListView } from './StudentListView';
 import type { StudentInfo } from './StudentListView';
 import { EN } from '../../i18n/en';
-import { Calendar, List, Plus, ArrowLeft } from 'lucide-react';
+import { Calendar, List, Plus, ArrowLeft, Crown, Lock, Clock } from 'lucide-react';
+import { useSubscription } from '../../hooks/useSubscription';
+import { differenceInDays } from 'date-fns';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isSameMonth } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import type { DiaryEntry } from '../../types';
@@ -19,9 +21,10 @@ type ViewMode = 'list' | 'calendar';
 
 interface DiaryListProps {
   isGuest?: boolean;
+  onViewChange?: (view: string) => void;
 }
 
-export const DiaryList: React.FC<DiaryListProps> = ({ isGuest }) => {
+export const DiaryList: React.FC<DiaryListProps> = ({ isGuest, onViewChange }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showRecorder, setShowRecorder] = useState(false);
@@ -37,6 +40,7 @@ export const DiaryList: React.FC<DiaryListProps> = ({ isGuest }) => {
   const { entries, loading, fetchEntries } = useDiaryStore();
   const { user } = useAuthStore();
   const { diaries: guestDiaries } = useGuestStore();
+  const { isPremium, limits } = useSubscription();
 
   useEffect(() => {
     if (!isGuest) {
@@ -422,19 +426,91 @@ export const DiaryList: React.FC<DiaryListProps> = ({ isGuest }) => {
         </div>
       </div>
 
+      {/* Storage warning banner for free users */}
+      {!isGuest && !isPremium && !isTeacher && onViewChange && limits.storageRetentionDays !== null && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 flex items-center justify-between gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl"
+        >
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
+            <span className="text-sm font-medium text-amber-800">
+              Free diaries are deleted after {limits.storageRetentionDays} days
+            </span>
+          </div>
+          <button
+            onClick={() => onViewChange('pricing')}
+            className="flex items-center gap-1 text-xs font-bold text-brand-600 hover:text-brand-700 flex-shrink-0"
+          >
+            <Lock className="w-3 h-3" />
+            Unlock unlimited storage
+          </button>
+        </motion.div>
+      )}
+
       {/* Content */}
       {viewMode === 'calendar' ? (
         renderCalendarView()
       ) : (
         <div className="space-y-6">
           {ownEntries.length > 0 ? (
-            ownEntries.map(entry => (
-              isGuest ? (
+            ownEntries.map((entry, index) => {
+              const card = isGuest ? (
                 <GuestDiaryCard key={entry.id} diary={entry} />
               ) : (
                 <DiaryCard key={entry.id} entry={entry} />
-              )
-            ))
+              );
+
+              // Show expiry warning badge on entries approaching 7-day limit
+              const daysOld = differenceInDays(new Date(), new Date(entry.created_at));
+              const isExpiringSoon = !isGuest && !isPremium && limits.storageRetentionDays !== null && daysOld >= limits.storageRetentionDays - 2;
+
+              const cardWithBadge = isExpiringSoon ? (
+                <div key={entry.id} className="relative">
+                  {card}
+                  <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 bg-orange-100 border border-orange-300 rounded-full text-xs font-semibold text-orange-700">
+                    <Clock className="w-3 h-3" />
+                    Expires soon
+                  </div>
+                </div>
+              ) : card;
+
+              // Insert premium teaser card after first entry for free users
+              if (!isGuest && !isPremium && index === 0 && ownEntries.length >= 1 && onViewChange) {
+                return (
+                  <React.Fragment key={`${entry.id}-with-teaser`}>
+                    {cardWithBadge}
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.97 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="relative overflow-hidden rounded-2xl border-2 border-dashed border-purple-300 bg-gradient-to-br from-purple-50 to-brand-50 p-5"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-brand-500 to-purple-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                          <Crown className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-gray-900 mb-1">Unlock your full learning potential</h3>
+                          <p className="text-sm text-gray-600 mb-3">
+                            Premium gives you unlimited diaries, detailed AI grammar feedback, and your entries are kept forever.
+                          </p>
+                          <button
+                            onClick={() => onViewChange('pricing')}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-500 to-purple-500 text-white text-sm font-bold rounded-xl hover:from-brand-600 hover:to-purple-600 transition-all shadow-md"
+                          >
+                            <Crown className="w-4 h-4" />
+                            Upgrade to Premium — ¥980/month
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </React.Fragment>
+                );
+              }
+
+              return cardWithBadge;
+            })
           ) : (
             <motion.div
               initial={{ opacity: 0, y: 20 }}

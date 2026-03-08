@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useGuestStore } from '../../stores/guestStore';
-import { Play, Pause, Trash2, AlertCircle, LogIn } from 'lucide-react';
+import { Play, Pause, Trash2, AlertCircle, LogIn, Crown, Zap, Mic, Calendar, MessageCircle } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
@@ -54,26 +54,56 @@ export const GuestDiaryList: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-2xl shadow-lg p-8 text-center"
+          className="bg-white rounded-2xl shadow-lg p-8"
         >
-          <AlertCircle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            {EN.guestMode.limitReached}
-          </h2>
-          <p className="text-gray-600 mb-6">
-            {EN.guestMode.limitMessage}
-          </p>
-          <Button
-            onClick={() => {
-              setGuestMode(false);
-              window.location.reload();
-            }}
-            size="lg"
-            className="mx-auto"
-          >
-            <LogIn className="w-5 h-5" />
-            {EN.guestMode.createAccount}
-          </Button>
+          <div className="text-center mb-6">
+            <AlertCircle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+              {EN.guestMode.limitReached}
+            </h2>
+            <p className="text-gray-600 mb-2">
+              {EN.guestMode.limitMessage}
+            </p>
+            <p className="text-sm font-semibold text-brand-600">
+              Sign up free — then get 50% OFF your first month of Premium!
+            </p>
+          </div>
+
+          {/* Premium benefits */}
+          <div className="mb-6 bg-gradient-to-br from-purple-50 to-brand-50 rounded-xl p-4 border border-purple-200">
+            <div className="flex items-center gap-2 mb-3">
+              <Crown className="w-5 h-5 text-amber-500" />
+              <span className="font-bold text-gray-900">What you unlock with Premium:</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {[
+                { icon: Mic, label: 'Unlimited diary recordings' },
+                { icon: Zap, label: 'Detailed AI grammar corrections' },
+                { icon: Calendar, label: 'Diary entries kept forever' },
+                { icon: MessageCircle, label: 'Teacher sharing & feedback' },
+              ].map(({ icon: Icon, label }) => (
+                <div key={label} className="flex items-center gap-2 text-sm text-gray-700">
+                  <Icon className="w-4 h-4 text-brand-500 flex-shrink-0" />
+                  <span>{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <Button
+              onClick={() => {
+                setGuestMode(false);
+                window.location.reload();
+              }}
+              size="lg"
+              className="w-full bg-gradient-to-r from-brand-500 to-purple-500 hover:from-brand-600 hover:to-purple-600"
+            >
+              <LogIn className="w-5 h-5" />
+              {EN.guestMode.createAccount}
+            </Button>
+            <p className="text-center text-xs text-gray-500">Free to sign up · No credit card required</p>
+          </div>
         </motion.div>
       </div>
     );
@@ -103,29 +133,34 @@ export const GuestDiaryList: React.FC = () => {
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6"
+              className="bg-gradient-to-r from-brand-50 to-purple-50 border border-brand-200 rounded-xl p-5 mb-6"
             >
-              <div className="flex items-center gap-3">
-                <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+              <div className="flex items-start gap-3 mb-4">
+                <Crown className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-orange-800 font-medium">
+                  <p className="text-gray-900 font-bold">
                     {EN.guestMode.limitReached}
                   </p>
-                  <p className="text-orange-700 text-sm mt-1">
+                  <p className="text-gray-600 text-sm mt-1">
                     {EN.guestMode.limitMessage}
                   </p>
+                  <p className="text-brand-600 text-sm font-semibold mt-1">
+                    Sign up free — then 50% OFF your first Premium month!
+                  </p>
                 </div>
-                <Button
-                  onClick={() => {
-                    setGuestMode(false);
-                    window.location.reload();
-                  }}
-                  size="sm"
-                  variant="primary"
-                >
-                  {EN.guestMode.login}
-                </Button>
               </div>
+              <Button
+                onClick={() => {
+                  setGuestMode(false);
+                  window.location.reload();
+                }}
+                size="sm"
+                variant="primary"
+                className="w-full bg-gradient-to-r from-brand-500 to-purple-500 hover:from-brand-600 hover:to-purple-600"
+              >
+                <LogIn className="w-4 h-4" />
+                {EN.guestMode.createAccount}
+              </Button>
             </motion.div>
           )}
 

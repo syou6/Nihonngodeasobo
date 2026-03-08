@@ -10,6 +10,10 @@ import {
   Heart,
   TrendingUp,
   MessageCircle,
+  Crown,
+  Lock,
+  Zap,
+  AlertTriangle,
 } from 'lucide-react';
 import { useSubscription } from '../../hooks/useSubscription';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -198,42 +202,130 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
       </div>
 
       {/* Usage & Upgrade Banner (free users only) */}
+      {!isPremium && (() => {
+        const diaryPct = limits.diaryLimit === Infinity ? 0 : usage.diaryCount / (limits.diaryLimit as number);
+        const isAtLimit = usage.diaryCount >= (limits.diaryLimit as number);
+        const isNearLimit = !isAtLimit && diaryPct >= 0.6;
+
+        const bannerBg = isAtLimit
+          ? 'bg-gradient-to-r from-red-50 to-orange-50 border-red-300'
+          : isNearLimit
+            ? 'bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-300'
+            : 'bg-gradient-to-r from-brand-50 to-purple-50 border-brand-200';
+
+        const labelColor = isAtLimit ? 'text-red-700' : isNearLimit ? 'text-orange-700' : 'text-gray-700';
+
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.12 }}
+            className={`rounded-xl border p-4 ${bannerBg}`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5">
+                {isAtLimit && <AlertTriangle className="w-4 h-4 text-red-600" />}
+                {isNearLimit && <AlertTriangle className="w-4 h-4 text-orange-500" />}
+                <span className={`text-sm font-semibold ${labelColor}`}>
+                  {isAtLimit
+                    ? "You've hit your limit!"
+                    : isNearLimit
+                      ? 'Running low on free recordings'
+                      : 'Monthly Usage'}
+                </span>
+              </div>
+              <button
+                onClick={() => onViewChange('pricing')}
+                className="text-xs font-bold text-brand-600 hover:text-brand-700 underline underline-offset-2"
+              >
+                Upgrade →
+              </button>
+            </div>
+
+            {isAtLimit && (
+              <p className="text-xs text-red-600 mb-3 font-medium">
+                You cannot record any more diaries this month. Upgrade to Premium for unlimited recordings.
+              </p>
+            )}
+
+            <div className="flex gap-3">
+              <div className={`flex-1 rounded-lg px-3 py-2 ${isAtLimit ? 'bg-red-100/80' : 'bg-white/80'}`}>
+                <div className="text-xs text-gray-500">Diaries</div>
+                <div className={`text-sm font-bold ${isAtLimit ? 'text-red-700' : isNearLimit ? 'text-orange-700' : 'text-gray-900'}`}>
+                  {usage.diaryCount}/{limits.diaryLimit === Infinity ? '∞' : limits.diaryLimit}
+                </div>
+              </div>
+              <div className="flex-1 bg-white/80 rounded-lg px-3 py-2">
+                <div className="text-xs text-gray-500">AI Feedback</div>
+                <div className="text-sm font-bold text-gray-900">
+                  {usage.aiFeedbackCount}/{limits.aiAnalysisLimit === Infinity ? '∞' : limits.aiAnalysisLimit}
+                </div>
+              </div>
+              <div className="flex-1 bg-white/80 rounded-lg px-3 py-2">
+                <div className="text-xs text-gray-500">Practice</div>
+                <div className="text-sm font-bold text-gray-900">
+                  {usage.speakingPracticeCount}/{limits.speakingPracticeLimit === Infinity ? '∞' : limits.speakingPracticeLimit}
+                </div>
+              </div>
+            </div>
+
+            {(isAtLimit || isNearLimit) && (
+              <button
+                onClick={() => onViewChange('pricing')}
+                className="mt-3 w-full py-2 rounded-lg bg-gradient-to-r from-brand-500 to-purple-500 text-white text-sm font-bold hover:from-brand-600 hover:to-purple-600 transition-all flex items-center justify-center gap-2"
+              >
+                <Crown className="w-4 h-4" />
+                Upgrade to Premium — ¥980/month
+              </button>
+            )}
+          </motion.div>
+        );
+      })()}
+
+      {/* Premium features you're missing (free users only) */}
       {!isPremium && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.12 }}
-          className="bg-gradient-to-r from-brand-50 to-purple-50 rounded-xl border border-brand-200 p-4"
+          transition={{ delay: 0.18 }}
+          className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">Monthly Usage</span>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Crown className="w-5 h-5 text-amber-500" />
+              <h3 className="font-semibold text-gray-900">Premium features you're missing</h3>
+            </div>
             <button
               onClick={() => onViewChange('pricing')}
-              className="text-xs font-semibold text-brand-600 hover:text-brand-700"
+              className="text-xs font-bold text-brand-600 hover:text-brand-700"
             >
-              Upgrade for unlimited →
+              See plans →
             </button>
           </div>
-          <div className="flex gap-3">
-            <div className="flex-1 bg-white/80 rounded-lg px-3 py-2">
-              <div className="text-xs text-gray-500">Diaries</div>
-              <div className="text-sm font-bold text-gray-900">
-                {usage.diaryCount}/{limits.diaryLimit === Infinity ? '∞' : limits.diaryLimit}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {[
+              { icon: Mic, label: 'Unlimited diary recordings' },
+              { icon: Zap, label: 'Detailed AI grammar corrections' },
+              { icon: TrendingUp, label: 'JLPT speaking practice (unlimited)' },
+              { icon: MessageCircle, label: 'Teacher sharing & feedback' },
+              { icon: Calendar, label: 'Unlimited diary storage' },
+            ].map(({ icon: Icon, label }) => (
+              <div key={label} className="flex items-center gap-2.5 text-sm text-gray-500">
+                <div className="relative flex-shrink-0">
+                  <Icon className="w-4 h-4 text-gray-300" />
+                  <Lock className="w-2.5 h-2.5 text-gray-400 absolute -bottom-0.5 -right-0.5" />
+                </div>
+                <span>{label}</span>
               </div>
-            </div>
-            <div className="flex-1 bg-white/80 rounded-lg px-3 py-2">
-              <div className="text-xs text-gray-500">AI Feedback</div>
-              <div className="text-sm font-bold text-gray-900">
-                {usage.aiFeedbackCount}/{limits.aiAnalysisLimit === Infinity ? '∞' : limits.aiAnalysisLimit}
-              </div>
-            </div>
-            <div className="flex-1 bg-white/80 rounded-lg px-3 py-2">
-              <div className="text-xs text-gray-500">Practice</div>
-              <div className="text-sm font-bold text-gray-900">
-                {usage.speakingPracticeCount}/{limits.speakingPracticeLimit === Infinity ? '∞' : limits.speakingPracticeLimit}
-              </div>
-            </div>
+            ))}
           </div>
+          <button
+            onClick={() => onViewChange('pricing')}
+            className="mt-4 w-full py-2.5 rounded-xl bg-gradient-to-r from-brand-500 to-purple-500 text-white text-sm font-bold hover:from-brand-600 hover:to-purple-600 transition-all flex items-center justify-center gap-2 shadow-md"
+          >
+            <Crown className="w-4 h-4" />
+            Unlock Premium — ¥980/month
+          </button>
         </motion.div>
       )}
 

@@ -8,7 +8,7 @@ import { VolumeIndicator } from '../audio/VolumeIndicator';
 import { colors } from '../../styles/colorPalette';
 import { EN } from '../../i18n/en';
 import { useSubscription } from '../../hooks/useSubscription';
-import { Mic, MicOff, Play, Pause, Save, X, Trash2, Home, AlertCircle } from 'lucide-react';
+import { Mic, MicOff, Play, Pause, Save, X, Trash2, Home, AlertCircle, Crown } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface VoiceRecorderProps {
@@ -43,7 +43,8 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onViewChange, isGu
   } = useDiaryStore();
 
   const { createGuestDiary, canCreateMore } = useGuestStore();
-  const { checkAction, trackUsage, isPremium } = useSubscription();
+  const { checkAction, trackUsage, isPremium, usage, limits } = useSubscription();
+  const [showUpgradeNudge, setShowUpgradeNudge] = useState(false);
 
   const maxSeconds = isGuest
     ? MAX_RECORDING_SECONDS.guest
@@ -276,8 +277,15 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onViewChange, isGu
         setAdditionalText('');
         setTranscribedText('');
 
-        // Navigate to diary to show AI feedback
-        if (onViewChange) {
+        // Show upgrade nudge for free authenticated users
+        if (!isGuest && !isPremium) {
+          setShowUpgradeNudge(true);
+          setTimeout(() => {
+            setShowUpgradeNudge(false);
+            if (onViewChange) onViewChange('diary');
+          }, 6000);
+        } else if (onViewChange) {
+          // Navigate to diary to show AI feedback
           setTimeout(() => {
             onViewChange('diary');
           }, 500);
@@ -475,6 +483,59 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onViewChange, isGu
             </motion.div>
           )}
         </div>
+
+        {/* Post-save upgrade nudge (free users) */}
+        <AnimatePresence>
+          {showUpgradeNudge && !isPremium && !isGuest && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="mt-6 rounded-2xl bg-gradient-to-r from-brand-500 to-purple-600 p-6 text-white text-center"
+            >
+              <Crown className="w-8 h-8 mx-auto mb-2 text-amber-300" />
+              <h3 className="text-xl font-bold mb-1">Want detailed grammar corrections?</h3>
+              <p className="text-sm text-white/80 mb-4">
+                Premium gives you in-depth AI feedback, unlimited recordings, and JLPT practice.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  onClick={() => { setShowUpgradeNudge(false); if (onViewChange) onViewChange('pricing'); }}
+                  className="px-6 py-2.5 bg-white text-brand-700 font-bold rounded-xl hover:bg-gray-50 transition-colors text-sm"
+                >
+                  Upgrade to Premium →
+                </button>
+                <button
+                  onClick={() => { setShowUpgradeNudge(false); if (onViewChange) onViewChange('diary'); }}
+                  className="px-6 py-2.5 bg-white/20 text-white font-medium rounded-xl hover:bg-white/30 transition-colors text-sm"
+                >
+                  See my diary
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Remaining recordings indicator (free users, before recording) */}
+        {!isGuest && !isPremium && !isRecording && !currentAudio && !showUpgradeNudge && limits.diaryLimit !== Infinity && (
+          <div className="mt-4 text-center">
+            {usage.diaryCount >= (limits.diaryLimit as number) ? (
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-full">
+                <AlertCircle className="w-4 h-4 text-red-600" />
+                <span className="text-sm font-semibold text-red-700">
+                  Monthly limit reached — <button onClick={() => onViewChange?.('pricing')} className="underline">Upgrade</button> to record more
+                </span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-full">
+                <AlertCircle className="w-4 h-4 text-amber-600" />
+                <span className="text-sm font-medium text-amber-700">
+                  {(limits.diaryLimit as number) - usage.diaryCount} free {(limits.diaryLimit as number) - usage.diaryCount === 1 ? 'recording' : 'recordings'} left this month
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Save Dialog */}
         <AnimatePresence>
