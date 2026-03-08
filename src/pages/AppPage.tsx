@@ -106,6 +106,7 @@ export const AppPage: React.FC = () => {
     if (isGuestParam) {
       setGuestMode(true);
       setShowOnboarding(true);
+      setIsInitialized(true);
       // URLからパラメータを削除
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.delete('guest');
