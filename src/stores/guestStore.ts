@@ -132,9 +132,7 @@ export const useGuestStore = create<GuestStore>()(
       clearGuestData: () => {
         set({
           diaries: [],
-          usageCount: 0,
           isGuestMode: false,
-          aiUsageCount: 0
         });
       },
 
