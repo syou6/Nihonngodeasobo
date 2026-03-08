@@ -261,7 +261,8 @@ export const AppPage: React.FC = () => {
   }
 
   // Check if first-time logged-in user needs onboarding
-  const needsOnboarding = user && !localStorage.getItem('onboardingCompleted');
+  const [onboardingDone, setOnboardingDone] = useState(() => !!localStorage.getItem('onboardingCompleted'));
+  const needsOnboarding = user && !onboardingDone;
 
   if (needsOnboarding) {
     return (
@@ -269,6 +270,7 @@ export const AppPage: React.FC = () => {
         <OnboardingFlow
           onComplete={(data) => {
             localStorage.setItem('onboardingCompleted', 'true');
+            setOnboardingDone(true);
             if (data.jlptLevel) {
               localStorage.setItem('jlptLevel', data.jlptLevel);
             }

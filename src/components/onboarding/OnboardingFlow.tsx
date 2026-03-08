@@ -528,19 +528,21 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, show
   const handleCheckout = async () => {
     const premiumPlan = pricingPlans.find((p) => p.id === 'premium');
     if (!premiumPlan?.stripePriceId || !user?.id) {
+      // No Stripe config or no user session — complete onboarding without checkout
       handleFinish();
       return;
     }
     setCheckoutLoading(true);
     try {
+      // Save onboarding data BEFORE redirect so returning from Stripe won't re-show onboarding
+      handleFinish();
       await StripeService.createCheckoutSession(
         premiumPlan.stripePriceId,
         user.id,
         ONBOARDING_COUPON_ID || undefined
       );
     } catch {
-      handleFinish();
-    } finally {
+      // Checkout failed but onboarding is already completed — user lands on dashboard
       setCheckoutLoading(false);
     }
   };
