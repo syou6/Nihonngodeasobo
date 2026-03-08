@@ -16,6 +16,7 @@ interface AuthStore {
   signOut: () => Promise<void>;
   initialize: () => Promise<void>;
   updateJlptLevel: (level: JLPTLevel) => Promise<void>;
+  updateName: (name: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
@@ -272,5 +273,22 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     } catch (error) {
       throw error;
     }
+  },
+
+  updateName: async (name: string) => {
+    const user = get().user;
+    if (!user) return;
+
+    const trimmedName = name.trim();
+    if (!trimmedName) return;
+
+    const { error } = await supabase
+      .from('users')
+      .update({ name: trimmedName })
+      .eq('id', user.id);
+
+    if (error) throw error;
+
+    set({ user: { ...user, name: trimmedName } });
   },
 }));

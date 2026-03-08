@@ -177,7 +177,7 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-              {greeting()}!
+              {greeting()}{user?.name ? `, ${user.name}` : ''}!
             </h1>
             <p className="text-sm text-gray-500 mt-1">
               {format(today, 'EEEE, MMMM d', { locale: enUS })}

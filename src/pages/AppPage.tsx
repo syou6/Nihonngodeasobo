@@ -42,7 +42,7 @@ export const AppPage: React.FC = () => {
   }, []);
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-  const { user, loading, initialize } = useAuthStore();
+  const { user, loading, initialize, updateName } = useAuthStore();
   const { isGuestMode, cleanExpiredDiaries, setGuestMode } = useGuestStore();
 
   // ログイン済みユーザーがいる場合、ゲストモードをリセット
@@ -271,6 +271,11 @@ export const AppPage: React.FC = () => {
             localStorage.setItem('onboardingCompleted', 'true');
             if (data.jlptLevel) {
               localStorage.setItem('jlptLevel', data.jlptLevel);
+            }
+            if (data.name) {
+              updateName(data.name).catch(() => {
+                // Non-fatal: name save failed, user can update in settings later
+              });
             }
           }}
           show={true}
