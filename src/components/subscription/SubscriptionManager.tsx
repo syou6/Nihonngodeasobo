@@ -94,21 +94,11 @@ export const SubscriptionManager: React.FC = () => {
   const currentPlan = getCurrentPlan();
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            {EN.subscription.title}
-          </h1>
-          <p className="text-xl text-gray-600">
-            {EN.subscription.subtitle}
-          </p>
-        </div>
-
+    <div>
+      <div>
         {/* Current Plan */}
-        <div className="mb-12">
-          <div className="bg-white rounded-2xl shadow-lg p-8 border-2 border-indigo-100">
+        <div className="mb-6">
+          <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-indigo-100 rounded-xl text-indigo-600">
@@ -165,93 +155,6 @@ export const SubscriptionManager: React.FC = () => {
           </div>
         </div>
 
-        {/* Plan List */}
-        <div className="grid md:grid-cols-2 gap-8">
-          {pricingPlans.map((plan) => {
-            const isCurrentPlan = plan.id === currentPlan.id;
-            const isPopular = plan.id === 'premium';
-
-            return (
-              <motion.div
-                key={plan.id}
-                className={`relative bg-white rounded-2xl shadow-lg p-8 ${
-                  isPopular ? 'ring-2 ring-indigo-500 scale-105' : ''
-                } ${isCurrentPlan ? 'opacity-75' : ''}`}
-                whileHover={{ scale: isCurrentPlan ? 1 : 1.02 }}
-                transition={{ duration: 0.2 }}
-              >
-                {isPopular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-indigo-500 text-white px-4 py-1 rounded-full text-sm font-medium">
-                      {EN.subscription.popular}
-                    </span>
-                  </div>
-                )}
-
-                <div className="text-center mb-8">
-                  <div className="flex justify-center mb-4">
-                    <div className={`p-3 rounded-xl ${
-                      plan.id === 'free' ? 'bg-gray-100 text-gray-600' :
-                      'bg-indigo-100 text-indigo-600'
-                    }`}>
-                      {getPlanIcon(plan.id)}
-                    </div>
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                    {plan.name}
-                  </h3>
-                  <div className="text-4xl font-bold text-gray-900 mb-2">
-                    {'$'}{plan.price}
-                  </div>
-                  <div className="text-gray-600">
-                    {plan.interval === 'month' ? EN.subscription.perMonth : EN.subscription.perYear}
-                  </div>
-                </div>
-
-                <ul className="space-y-4 mb-8">
-                  {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Button
-                  onClick={() => handleSubscribe(plan)}
-                  disabled={isCurrentPlan || processing === plan.id || !plan.stripePriceId}
-                  variant={isPopular ? 'primary' : 'outline'}
-                  className="w-full"
-                >
-                  {isCurrentPlan ? EN.subscription.currentPlan :
-                   processing === plan.id ? EN.subscription.processing :
-                   plan.id === 'free' ? EN.subscription.startFree : EN.subscription.selectPlan}
-                </Button>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {/* Usage */}
-        <div className="mt-12 bg-white rounded-2xl shadow-lg p-8">
-          <h3 className="text-2xl font-bold text-gray-900 mb-6">
-            {EN.subscription.usage}
-          </h3>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-indigo-600 mb-2">0</div>
-              <div className="text-gray-600">{EN.subscription.recordings}</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-green-600 mb-2">0</div>
-              <div className="text-gray-600">{EN.subscription.savedDiaries}</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-purple-600 mb-2">0</div>
-              <div className="text-gray-600">{EN.subscription.sharedMembers}</div>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* ── Cancel Retention Modal ──────────────────────────────── */}

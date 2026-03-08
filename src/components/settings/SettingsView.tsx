@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CEFRSettings } from './CEFRSettings';
 import { FamilyManager } from '../family/FamilyManager';
 import { PricingCards } from '../subscription/PricingCards';
+import { SubscriptionManager } from '../subscription/SubscriptionManager';
 import { useAuthStore } from '../../stores/authStore';
 import { useSubscription } from '../../hooks/useSubscription';
 import { EN } from '../../i18n/en';
@@ -61,7 +62,11 @@ export const SettingsView: React.FC = () => {
         </div>
         {showSubscription && (
           <div className="px-6 pb-6">
-            <PricingCards currentPlan={isPremium ? 'premium' : 'free'} />
+            {isPremium ? (
+              <SubscriptionManager />
+            ) : (
+              <PricingCards currentPlan="free" />
+            )}
           </div>
         )}
       </div>
