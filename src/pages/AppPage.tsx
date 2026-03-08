@@ -42,6 +42,7 @@ export const AppPage: React.FC = () => {
   }, []);
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [onboardingDone, setOnboardingDone] = useState(() => !!localStorage.getItem('onboardingCompleted'));
   const { user, loading, initialize, updateName } = useAuthStore();
   const { isGuestMode, cleanExpiredDiaries, setGuestMode } = useGuestStore();
 
@@ -261,7 +262,6 @@ export const AppPage: React.FC = () => {
   }
 
   // Check if first-time logged-in user needs onboarding
-  const [onboardingDone, setOnboardingDone] = useState(() => !!localStorage.getItem('onboardingCompleted'));
   const needsOnboarding = user && !onboardingDone;
 
   if (needsOnboarding) {
