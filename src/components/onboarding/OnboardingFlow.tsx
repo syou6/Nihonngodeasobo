@@ -1578,7 +1578,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, show
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto px-6 pb-8">
+      <div className="flex-1 overflow-y-auto px-6 pb-24">
         <div className="max-w-md mx-auto pt-4">
           <AnimatePresence mode="wait">
             <motion.div
@@ -1594,6 +1594,34 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, show
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Sticky pricing bar - always visible except on paywall */}
+      {!['paywall', 'building-plan'].includes(currentStep) && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] z-50">
+          <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Crown className="w-4 h-4 text-brand-600" />
+              <div>
+                <span className="text-sm font-bold text-gray-900">Premium</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-gray-400 line-through">$9.99</span>
+                  <span className="text-sm font-bold text-brand-600">$4.99</span>
+                  <span className="text-xs text-gray-500">/mo</span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                const paywallIdx = STEPS.indexOf('paywall');
+                if (paywallIdx !== -1) setStepIndex(paywallIdx);
+              }}
+              className="bg-brand-500 hover:bg-brand-600 text-white text-sm font-bold px-5 py-2 rounded-full transition-colors"
+            >
+              50% OFF - Upgrade
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
