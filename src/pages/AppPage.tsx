@@ -17,6 +17,7 @@ import { PWAInstallPrompt } from '../components/PWAInstallPrompt';
 import { GuestBanner } from '../components/guest/GuestBanner';
 import { GuestDiaryList } from '../components/guest/GuestDiaryList';
 import { WelcomeGuide } from '../components/onboarding/WelcomeGuide';
+import { OnboardingFlow } from '../components/onboarding/OnboardingFlow';
 import { HelpButton } from '../components/help/HelpButton';
 import { SubscriptionSuccess } from './SubscriptionSuccess';
 import { SubscriptionCancel } from './SubscriptionCancel';
@@ -261,16 +262,18 @@ export const AppPage: React.FC = () => {
   // Check if first-time logged-in user needs onboarding
   const needsOnboarding = user && !localStorage.getItem('onboardingCompleted');
 
-  if (needsOnboarding && showOnboarding !== false) {
+  if (needsOnboarding) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <WelcomeGuide onComplete={(level) => {
-          setShowOnboarding(false);
-          if (level) {
-            // Save JLPT level preference
-            localStorage.setItem('jlptLevel', level);
-          }
-        }} />
+        <OnboardingFlow
+          onComplete={(data) => {
+            localStorage.setItem('onboardingCompleted', 'true');
+            if (data.jlptLevel) {
+              localStorage.setItem('jlptLevel', data.jlptLevel);
+            }
+          }}
+          show={true}
+        />
         <Toaster position="top-center" />
       </div>
     );
