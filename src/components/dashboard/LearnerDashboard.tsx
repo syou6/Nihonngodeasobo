@@ -10,16 +10,7 @@ import {
   Heart,
   TrendingUp,
   MessageCircle,
-  Sun,
-  CloudSun,
-  Cloud,
-  CloudRain,
-  CloudLightning,
-  Snowflake,
-  CloudFog
 } from 'lucide-react';
-import { fetchWeather, getWeatherIconName } from '../../lib/weather';
-import type { WeatherData } from '../../lib/weather';
 import { useSubscription } from '../../hooks/useSubscription';
 import { format, formatDistanceToNow } from 'date-fns';
 import { enUS } from 'date-fns/locale';
@@ -33,7 +24,6 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
   const [commentCount, setCommentCount] = useState(0);
   const [todayLanguageScore, setTodayLanguageScore] = useState<number | null>(null);
   const [todayEmotion, setTodayEmotion] = useState<string | null>(null);
-  const [weather, setWeather] = useState<WeatherData | null>(null);
   const { entries, fetchEntries } = useDiaryStore();
   const { user } = useAuthStore();
   const { isPremium, usage, limits } = useSubscription();
@@ -51,12 +41,6 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
       fetchEntries();
     }
   }, [user, fetchEntries]);
-
-  useEffect(() => {
-    fetchWeather()
-      .then(setWeather)
-      .catch(() => setWeather({ temp: 25, description: 'Sunny', icon: '01d' }));
-  }, []);
 
   useEffect(() => {
     const userDiaries = entries.filter(entry => entry.user_id === user?.id);
@@ -100,20 +84,6 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
     setRecentComments(sortedComments);
     setCommentCount(allComments.length);
   }, [entries, user]);
-
-  const WeatherIcon: React.FC<{ icon: string; className?: string }> = ({ icon, className }) => {
-    const iconName = getWeatherIconName(icon);
-    const iconMap: Record<string, React.ReactNode> = {
-      Sun: <Sun className={className} />,
-      CloudSun: <CloudSun className={className} />,
-      Cloud: <Cloud className={className} />,
-      CloudRain: <CloudRain className={className} />,
-      CloudLightning: <CloudLightning className={className} />,
-      Snowflake: <Snowflake className={className} />,
-      CloudFog: <CloudFog className={className} />,
-    };
-    return <>{iconMap[iconName] || <Sun className={className} />}</>;
-  };
 
   const userDiaryCount = entries.filter(entry => entry.user_id === user?.id).length;
   const isFirstTime = userDiaryCount === 0;
@@ -183,12 +153,6 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
               {format(today, 'EEEE, MMMM d', { locale: enUS })}
             </p>
           </div>
-          {weather && (
-            <div className="flex items-center gap-2 text-gray-500">
-              <WeatherIcon icon={weather.icon} className="w-6 h-6" />
-              <span className="text-sm">{weather.temp}°C</span>
-            </div>
-          )}
         </div>
       </motion.div>
 

@@ -411,7 +411,6 @@ export const EN = {
   // Dashboard / ダッシュボード（親画面）
   parentDashboard: {
     todayDate: 'Today is',               // 今日は
-    weather: 'Sunny',                    // 晴れ
     recordPrompt: 'Record your Japanese diary', // 日本語日記を録音
     recordSubPrompt: '1-3 minutes is perfect!', // 1〜3分でOK！
     topicIdeas: 'Topic ideas:',          // トピックのアイデア:

@@ -27,7 +27,7 @@ export interface DiaryEntry {
   duration?: number;
   emotion?: string;
   health_score?: number;
-  weather?: string;
+
   tags: string[];
   visibility: 'private' | 'family' | 'custom';
   ai_summary?: string;

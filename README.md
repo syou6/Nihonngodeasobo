@@ -36,8 +36,6 @@ npm run dev
 |--------|------|
 | `VITE_SUPABASE_URL` | Supabase プロジェクト URL |
 | `VITE_SUPABASE_ANON_KEY` | Supabase Anon Key |
-| `VITE_WEATHER_API_KEY` | OpenWeatherMap API Key |
-
 Gemini API キーは Supabase Edge Function 側で管理:
 ```bash
 supabase secrets set GEMINI_API_KEY=your_key
