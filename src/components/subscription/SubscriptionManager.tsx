@@ -23,6 +23,7 @@ export const SubscriptionManager: React.FC = () => {
   const [processing, setProcessing] = useState<string | null>(null);
   const [showCancelWarning, setShowCancelWarning] = useState(false);
   const [cancelStep, setCancelStep] = useState(0);
+  const [cancelConfirmText, setCancelConfirmText] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -401,13 +402,62 @@ export const SubscriptionManager: React.FC = () => {
                   </Button>
 
                   <button
-                    onClick={() => {
-                      setShowCancelWarning(false);
-                      handleManageSubscription();
-                    }}
+                    onClick={() => setCancelStep(3)}
                     className="w-full text-center text-xs text-gray-400 hover:text-gray-500 py-2"
                   >
-                    No thanks, proceed to cancel
+                    No thanks, I want to cancel
+                  </button>
+                </div>
+              )}
+
+              {cancelStep === 3 && (
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                      <AlertCircle className="w-6 h-6 text-red-600" />
+                    </div>
+                    <button onClick={() => setShowCancelWarning(false)} className="text-gray-400 hover:text-gray-600">
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Final confirmation</h3>
+                  <p className="text-gray-600 text-sm mb-2">
+                    This will cancel your Premium at the end of your billing period. You will lose:
+                  </p>
+                  <ul className="text-sm text-red-600 space-y-1 mb-4 list-disc list-inside">
+                    <li>Unlimited recordings → limited to 3/month</li>
+                    <li>AI grammar feedback → basic only</li>
+                    <li>Diary storage → deleted after 7 days</li>
+                    <li>JLPT practice → 1/day</li>
+                  </ul>
+                  <p className="text-sm text-gray-700 font-medium mb-2">
+                    Type <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-red-600">CANCEL</span> to confirm:
+                  </p>
+                  <input
+                    type="text"
+                    value={cancelConfirmText}
+                    onChange={(e) => setCancelConfirmText(e.target.value)}
+                    placeholder="Type CANCEL here"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-300"
+                  />
+
+                  <button
+                    onClick={() => {
+                      setShowCancelWarning(false);
+                      setCancelConfirmText('');
+                      handleManageSubscription();
+                    }}
+                    disabled={cancelConfirmText !== 'CANCEL'}
+                    className="w-full py-2.5 rounded-lg text-sm font-medium transition-colors disabled:bg-gray-100 disabled:text-gray-300 disabled:cursor-not-allowed bg-red-600 text-white hover:bg-red-700"
+                  >
+                    Cancel my subscription
+                  </button>
+
+                  <button
+                    onClick={() => { setShowCancelWarning(false); setCancelConfirmText(''); }}
+                    className="w-full text-center text-sm text-brand-600 font-medium py-3 mt-2"
+                  >
+                    I changed my mind — keep Premium!
                   </button>
                 </div>
               )}
