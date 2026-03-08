@@ -528,22 +528,27 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, show
   const handleCheckout = async () => {
     const premiumPlan = pricingPlans.find((p) => p.id === 'premium');
     if (!premiumPlan?.stripePriceId || !user?.id) {
-      // No Stripe config or no user session — complete onboarding without checkout
       handleFinish();
       return;
     }
     setCheckoutLoading(true);
     try {
-      // Save onboarding data BEFORE redirect so returning from Stripe won't re-show onboarding
-      handleFinish();
+      // Save to localStorage ONLY (no React state change) so the component stays mounted for redirect
+      localStorage.setItem('onboardingCompleted', 'true');
+      localStorage.setItem('onboardingData', JSON.stringify({
+        name: userName || '', jlptLevel: jlptLevel || 'N4',
+        motivation, studyDuration: studyDuration || '', struggles,
+        dailyTime: dailyTime || '', learningStyle,
+        targetLevel: targetLevel || jlptLevel || 'N3', timeline: timeline || '6months',
+      }));
       await StripeService.createCheckoutSession(
         premiumPlan.stripePriceId,
         user.id,
         ONBOARDING_COUPON_ID || undefined
       );
     } catch {
-      // Checkout failed but onboarding is already completed — user lands on dashboard
-      setCheckoutLoading(false);
+      // Checkout failed — complete onboarding normally and go to dashboard
+      handleFinish();
     }
   };
 
