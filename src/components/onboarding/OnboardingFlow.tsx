@@ -950,14 +950,15 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, show
               {JLPT_LEVELS.filter((l) => {
                 const order = ['N5', 'N4', 'N3', 'N2', 'N1'];
                 const currentIdx = order.indexOf(jlptLevel || 'N5');
-                return order.indexOf(l.id) >= currentIdx;
+                // Show levels strictly above current, but always show at least N1
+                return order.indexOf(l.id) > currentIdx || (l.id === 'N1' && currentIdx <= order.indexOf('N1'));
               }).map((level) => (
                 <OptionCard
                   key={level.id}
                   selected={targetLevel === level.id}
                   onClick={() => setTargetLevel(level.id)}
-                  label={level.label}
-                  desc={level.desc}
+                  label={level.id === jlptLevel ? `${level.label} (Master it!)` : level.label}
+                  desc={level.id === jlptLevel ? 'Perfect your current level' : level.desc}
                 />
               ))}
             </div>
@@ -1163,7 +1164,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, show
                       Based on your assessment, we've built a custom path from{' '}
                       <span className="font-semibold text-purple-600">{jlptLevel || 'your current level'}</span>
                       {' '}to{' '}
-                      <span className="font-semibold text-green-600">{targetLevel || 'your goal'}</span>
+                      <span className="font-semibold text-green-600">{targetLevel && targetLevel !== jlptLevel ? targetLevel : jlptLevel === 'N1' ? 'N1 Mastery' : ({'N5':'N4','N4':'N3','N3':'N2','N2':'N1'} as Record<string,string>)[jlptLevel || 'N5'] || 'your goal'}</span>
                       {' '}— tailored just for {displayName}.
                     </p>
                   </div>
@@ -1191,7 +1192,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, show
               </p>
               <div className="inline-block bg-white/90 rounded-xl px-6 py-2 border-2 border-dashed border-yellow-600">
                 <span className="font-mono font-black text-orange-700 text-lg tracking-widest">
-                  NIHONGO_50OFF
+                  NIHONGO50OFF
                 </span>
               </div>
               <p className="text-yellow-900/70 text-xs mt-2 font-medium">
