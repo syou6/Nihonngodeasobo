@@ -70,17 +70,11 @@ type StepType =
   | 'diagnosis'
   | 'pain-point'
   | 'stats-fear'
-  | 'solution'
-  | 'how-it-works-1'
-  | 'how-it-works-2'
-  | 'how-it-works-3'
-  | 'social-proof'
   | 'target-level'
   | 'timeline'
   | 'commitment'
   | 'building-plan'
   | 'your-plan'
-  | 'before-after'
   | 'paywall';
 
 const STEPS: StepType[] = [
@@ -95,17 +89,11 @@ const STEPS: StepType[] = [
   'diagnosis',
   'pain-point',
   'stats-fear',
-  'solution',
-  'how-it-works-1',
-  'how-it-works-2',
-  'how-it-works-3',
-  'social-proof',
   'target-level',
   'timeline',
   'commitment',
   'building-plan',
   'your-plan',
-  'before-after',
   'paywall',
 ];
 
@@ -947,190 +935,6 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, show
         );
 
       // ── SOLUTION ─────────────────────────────────────────────────────────
-      case 'solution':
-        return (
-          <>
-            <IconBadge icon={Sparkles} bg="bg-brand-50" color="text-brand-600" />
-            <StepHeading
-              title="NihonGo: Your AI Japanese Speaking Coach"
-              subtitle="Daily voice diary + instant AI feedback = real progress"
-            />
-            <div className="space-y-3 mb-6">
-              {[
-                { title: 'Speak every day, effortlessly', desc: 'Just talk about your day — no prep needed' },
-                { title: 'Get instant AI corrections', desc: 'Grammar, vocabulary, and natural expressions — tailored to your JLPT level' },
-                { title: 'Track visible progress', desc: 'Watch your JLPT level score improve week by week' },
-              ].map((item, i) => (
-                <div key={i} className="bg-green-50 rounded-xl p-4 flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">{item.title}</p>
-                    <p className="text-xs text-gray-500">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <Button variant="primary" size="lg" onClick={handleNext} className="w-full">
-              See how it works
-              <ChevronRight className="w-5 h-5 ml-1" />
-            </Button>
-          </>
-        );
-
-      // ── HOW IT WORKS 1: Record ───────────────────────────────────────────
-      case 'how-it-works-1':
-        return (
-          <>
-            <div className="text-center mb-2">
-              <span className="text-xs font-semibold text-brand-600 bg-brand-50 px-3 py-1 rounded-full">
-                Step 1 of 3
-              </span>
-            </div>
-            <IconBadge icon={Mic} bg="bg-red-50" color="text-red-500" />
-            <StepHeading title="Record a Voice Diary" subtitle="Just 1-2 minutes about your day" />
-            <div className="bg-gray-50 rounded-xl p-4 mb-6">
-              <p className="text-sm text-gray-500 mb-3">Talk about anything:</p>
-              <div className="space-y-2">
-                {[
-                  { emoji: '\u2615', text: 'きょう カフェに いきました' },
-                  { emoji: '\uD83C\uDFAC', text: 'にほんの えいがを みました' },
-                  { emoji: '\uD83C\uDF5C', text: 'ラーメンを つくりました' },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <span className="text-base">{item.emoji}</span>
-                    <span className="text-sm text-gray-700 font-mono">{item.text}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <Button variant="primary" size="lg" onClick={handleNext} className="w-full">
-              Next <ChevronRight className="w-5 h-5 ml-1" />
-            </Button>
-          </>
-        );
-
-      // ── HOW IT WORKS 2: AI Feedback ──────────────────────────────────────
-      case 'how-it-works-2':
-        return (
-          <>
-            <div className="text-center mb-2">
-              <span className="text-xs font-semibold text-brand-600 bg-brand-50 px-3 py-1 rounded-full">
-                Step 2 of 3
-              </span>
-            </div>
-            <IconBadge icon={Brain} bg="bg-brand-50" color="text-brand-600" />
-            <StepHeading
-              title="AI Tells You Why & How to Fix"
-              subtitle="Not just 'wrong' — detailed explanations"
-            />
-            <div className="bg-gray-50 rounded-xl p-4 mb-6 space-y-3">
-              <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase mb-1">You said:</p>
-                <p className="text-sm text-gray-700">
-                  友達<span className="text-red-500 line-through font-medium">に</span>会いました
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-green-600 uppercase mb-1">AI correction:</p>
-                <p className="text-sm text-gray-700">
-                  友達<span className="text-green-600 font-bold">と</span>会いました
-                </p>
-              </div>
-              <div className="border-t border-gray-200 pt-2">
-                <p className="text-xs text-gray-500">
-                  <strong>Why:</strong> Use と for mutual actions like meeting. に is for one-directional actions.
-                </p>
-              </div>
-            </div>
-            <Button variant="primary" size="lg" onClick={handleNext} className="w-full">
-              Next <ChevronRight className="w-5 h-5 ml-1" />
-            </Button>
-          </>
-        );
-
-      // ── HOW IT WORKS 3: Progress ─────────────────────────────────────────
-      case 'how-it-works-3':
-        return (
-          <>
-            <div className="text-center mb-2">
-              <span className="text-xs font-semibold text-brand-600 bg-brand-50 px-3 py-1 rounded-full">
-                Step 3 of 3
-              </span>
-            </div>
-            <IconBadge icon={TrendingUp} bg="bg-green-50" color="text-green-500" />
-            <StepHeading title="Level Up Your Japanese" subtitle="Track your JLPT level progress over time" />
-            <div className="bg-gray-50 rounded-xl p-4 mb-6">
-              <div className="flex items-center justify-around">
-                <div className="text-center">
-                  <div className="text-2xl font-black text-brand-600">{jlptLevel || 'N4'}</div>
-                  <div className="text-xs text-gray-500">JLPT Level</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-black text-green-600">78%</div>
-                  <div className="text-xs text-gray-500">Grammar</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-black text-purple-600">12</div>
-                  <div className="text-xs text-gray-500">Day Streak</div>
-                </div>
-              </div>
-            </div>
-            <div className="bg-brand-50 rounded-xl p-4 mb-6">
-              <p className="text-sm text-brand-700 text-center font-medium">
-                JLPT Speaking Practice with timed exercises helps you prepare for the real exam
-              </p>
-            </div>
-            <Button variant="primary" size="lg" onClick={handleNext} className="w-full">
-              Next <ChevronRight className="w-5 h-5 ml-1" />
-            </Button>
-          </>
-        );
-
-      // ── SOCIAL PROOF ─────────────────────────────────────────────────────
-      case 'social-proof':
-        return (
-          <>
-            <IconBadge icon={Users} bg="bg-blue-50" color="text-blue-500" />
-            <StepHeading title="Join learners making real progress" />
-            <div className="space-y-3 mb-6">
-              {[
-                {
-                  quote: 'After 3 months of daily voice diaries, I passed JLPT N3. The AI feedback caught mistakes I never noticed.',
-                  name: 'Alex K.',
-                  detail: 'N4 \u2192 N3 in 3 months',
-                },
-                {
-                  quote: "I was too shy to speak Japanese with anyone. Recording a diary felt safe, and now I can hold conversations!",
-                  name: 'Maria L.',
-                  detail: 'N5 \u2192 N4 in 4 months',
-                },
-                {
-                  quote: "The grammar corrections are incredibly detailed. It's like having a private tutor available 24/7.",
-                  name: 'Thomas R.',
-                  detail: 'Studying for N2',
-                },
-              ].map((t, i) => (
-                <div key={i} className="bg-white border border-gray-200 rounded-xl p-4">
-                  <div className="flex gap-1 mb-2">
-                    {Array.from({ length: 5 }).map((_, j) => (
-                      <Star key={j} className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
-                    ))}
-                  </div>
-                  <p className="text-sm text-gray-700 italic mb-2">"{t.quote}"</p>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold text-gray-900">{t.name}</p>
-                    <p className="text-xs text-gray-400">{t.detail}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <Button variant="primary" size="lg" onClick={handleNext} className="w-full">
-              Set my goal
-              <ChevronRight className="w-5 h-5 ml-1" />
-            </Button>
-          </>
-        );
-
       // ── TARGET LEVEL ─────────────────────────────────────────────────────
       case 'target-level':
         return (
@@ -1313,116 +1117,6 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, show
             <Button variant="primary" size="lg" onClick={handleNext} className="w-full">
               Continue
               <ChevronRight className="w-5 h-5 ml-1" />
-            </Button>
-          </>
-        );
-      }
-
-      // ── BEFORE / AFTER ───────────────────────────────────────────────────
-      case 'before-after': {
-        const currentNum = getLevelNumber(jlptLevel || 'N4');
-        const targetNum = getLevelNumber(targetLevel || 'N3');
-
-        const beforeItems = [
-          'Freeze when speaking to native speakers',
-          'Repeat the same grammar mistakes',
-          'Can\'t understand fast conversations',
-          'Plateau with no clear improvement',
-        ];
-        const afterItems = [
-          'Speak confidently in daily situations',
-          'Correct grammar patterns naturally',
-          'Follow conversations at natural speed',
-          `Reach ${targetLevel || 'N3'} level with clear proof`,
-        ];
-
-        return (
-          <>
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-1">
-                {displayName}'s Transformation
-              </h2>
-              <p className="text-sm text-gray-500">What changes with daily practice</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              {/* BEFORE */}
-              <div>
-                <div className="text-center mb-3">
-                  <span className="text-xs font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded">
-                    NOW
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  {beforeItems.map((item, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.2 }}
-                      className="bg-red-50 rounded-lg p-2.5"
-                    >
-                      <p className="text-xs text-red-700">{item}</p>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-
-              {/* AFTER */}
-              <div>
-                <div className="text-center mb-3">
-                  <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded">
-                    AFTER
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  {afterItems.map((item, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: 10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.2 + 0.1 }}
-                      className="bg-green-50 rounded-lg p-2.5"
-                    >
-                      <p className="text-xs text-green-700">{item}</p>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Level progression bar */}
-            <div className="bg-gray-50 rounded-xl p-4 mb-6">
-              <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
-                <span>N5</span>
-                <span>N4</span>
-                <span>N3</span>
-                <span>N2</span>
-                <span>N1</span>
-              </div>
-              <div className="relative h-3 bg-gray-200 rounded-full overflow-hidden">
-                {/* Current level */}
-                <div
-                  className="absolute top-0 left-0 h-full bg-brand-300 rounded-full"
-                  style={{ width: `${(currentNum / 5) * 100}%` }}
-                />
-                {/* Target level (animated) */}
-                <motion.div
-                  className="absolute top-0 left-0 h-full bg-green-500 rounded-full"
-                  initial={{ width: `${(currentNum / 5) * 100}%` }}
-                  animate={{ width: `${(targetNum / 5) * 100}%` }}
-                  transition={{ duration: 1.5, delay: 0.5, ease: 'easeOut' }}
-                />
-              </div>
-              <div className="flex items-center justify-between mt-2">
-                <span className="text-xs font-bold text-brand-600">You: {jlptLevel || 'N4'}</span>
-                <span className="text-xs font-bold text-green-600">Goal: {targetLevel || 'N3'}</span>
-              </div>
-            </div>
-
-            <Button variant="primary" size="lg" onClick={handleNext} className="w-full">
-              Let's make it happen
-              <Sparkles className="w-5 h-5 ml-1" />
             </Button>
           </>
         );
