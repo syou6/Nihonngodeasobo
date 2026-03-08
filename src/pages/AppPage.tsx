@@ -44,6 +44,13 @@ export const AppPage: React.FC = () => {
   const { user, loading, initialize } = useAuthStore();
   const { isGuestMode, cleanExpiredDiaries, setGuestMode } = useGuestStore();
 
+  // ログイン済みユーザーがいる場合、ゲストモードをリセット
+  useEffect(() => {
+    if (user && isGuestMode) {
+      setGuestMode(false);
+    }
+  }, [user, isGuestMode, setGuestMode]);
+
   useEffect(() => {
     // アプリを使用したことを記録
     localStorage.setItem('hasUsedApp', 'true');
@@ -238,7 +245,7 @@ export const AppPage: React.FC = () => {
                         <p className="text-sm text-gray-500">Speak in Japanese — AI will give you feedback</p>
                       </div>
                     </div>
-                    <VoiceRecorder />
+                    <VoiceRecorder isGuest />
                   </div>
                   <GuestDiaryList />
                 </div>

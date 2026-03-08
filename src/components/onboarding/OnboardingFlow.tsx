@@ -35,7 +35,7 @@ import {
   ArrowRight,
   BarChart3,
 } from 'lucide-react';
-import { pricingPlans } from '../../lib/stripe';
+import { pricingPlans, ONBOARDING_COUPON_ID } from '../../lib/stripe';
 import StripeService from '../../lib/stripe';
 import { useAuthStore } from '../../stores/authStore';
 
@@ -545,7 +545,11 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, show
     }
     setCheckoutLoading(true);
     try {
-      await StripeService.createCheckoutSession(premiumPlan.stripePriceId, user.id);
+      await StripeService.createCheckoutSession(
+        premiumPlan.stripePriceId,
+        user.id,
+        ONBOARDING_COUPON_ID || undefined
+      );
     } catch {
       handleFinish();
     } finally {
@@ -1453,12 +1457,27 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, show
               <div className="flex items-center justify-between mb-1 mt-1">
                 <h3 className="font-bold text-gray-900">Premium Plan</h3>
                 <div className="text-right">
+                  {premiumPlan?.originalPrice && (
+                    <span className="text-sm text-gray-400 line-through mr-1">
+                      ${premiumPlan.originalPrice}
+                    </span>
+                  )}
                   <span className="text-2xl font-bold text-brand-600">
                     ${premiumPlan?.price || '4.99'}
                   </span>
                   <span className="text-sm text-gray-500">/mo</span>
                 </div>
               </div>
+              {premiumPlan?.originalPrice && (
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs font-bold text-white bg-red-500 px-2 py-0.5 rounded-full">
+                    {Math.round((1 - (premiumPlan.price / premiumPlan.originalPrice)) * 100)}% OFF
+                  </span>
+                  <span className="text-xs text-red-600 font-semibold">
+                    Limited-time onboarding offer
+                  </span>
+                </div>
+              )}
               <p className="text-xs text-green-600 font-semibold mb-3">
                 Unlimited everything — reach {targetLevel || 'N3'} faster
               </p>

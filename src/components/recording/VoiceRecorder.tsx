@@ -16,6 +16,8 @@ interface VoiceRecorderProps {
   isGuest?: boolean;
 }
 
+const MAX_RECORDING_SECONDS = { guest: 30, free: 120, premium: 300 } as const;
+
 export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onViewChange, isGuest }) => {
   const [recordingTime, setRecordingTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -41,19 +43,32 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onViewChange, isGu
   } = useDiaryStore();
 
   const { createGuestDiary, canCreateMore } = useGuestStore();
-  const { checkAction, trackUsage } = useSubscription();
+  const { checkAction, trackUsage, isPremium } = useSubscription();
+
+  const maxSeconds = isGuest
+    ? MAX_RECORDING_SECONDS.guest
+    : isPremium
+      ? MAX_RECORDING_SECONDS.premium
+      : MAX_RECORDING_SECONDS.free;
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isRecording) {
       interval = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
+        setRecordingTime(prev => {
+          const next = prev + 1;
+          if (next >= maxSeconds) {
+            stopRecording();
+            toast.success(`Recording stopped — ${isGuest ? '30s' : isPremium ? '5 min' : '2 min'} limit reached.`);
+          }
+          return next;
+        });
       }, 1000);
     } else {
       setRecordingTime(0);
     }
     return () => clearInterval(interval);
-  }, [isRecording]);
+  }, [isRecording, maxSeconds, stopRecording, isGuest, isPremium]);
 
   useEffect(() => {
     if (currentAudio && !isRecording) {
@@ -341,6 +356,9 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onViewChange, isGu
                   </div>
                   <div className="text-4xl font-bold text-gray-800">
                     {formatTime(recordingTime)}
+                  </div>
+                  <div className={`text-sm mt-1 ${maxSeconds - recordingTime <= 10 ? 'text-red-500 font-semibold' : 'text-gray-400'}`}>
+                    {formatTime(maxSeconds - recordingTime)} remaining
                   </div>
 
                   {/* Real-time speech recognition display */}

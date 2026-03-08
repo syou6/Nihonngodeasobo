@@ -7,10 +7,10 @@ import { useSubscription } from '../../hooks/useSubscription';
 import { EN } from '../../i18n/en';
 import type { JLPTLevel } from '../../types';
 import toast from 'react-hot-toast';
-import { ChevronDown, ChevronUp, Crown } from 'lucide-react';
+import { ChevronDown, ChevronUp, Crown, LogOut } from 'lucide-react';
 
 export const SettingsView: React.FC = () => {
-  const { user, updateJlptLevel } = useAuthStore();
+  const { user, updateJlptLevel, signOut } = useAuthStore();
   const { isPremium } = useSubscription();
   const [showSubscription, setShowSubscription] = useState(false);
 
@@ -68,6 +68,15 @@ export const SettingsView: React.FC = () => {
 
       {/* Teacher Connection */}
       <FamilyManager />
+
+      {/* Logout */}
+      <button
+        onClick={signOut}
+        className="w-full bg-white rounded-xl shadow-sm border border-gray-200 px-6 py-4 flex items-center gap-3 hover:bg-red-50 hover:border-red-200 transition-colors"
+      >
+        <LogOut className="w-5 h-5 text-red-500" />
+        <span className="font-medium text-red-600">Log Out</span>
+      </button>
     </div>
   );
 };

@@ -9,10 +9,14 @@ export interface PricingPlan {
   id: string;
   name: string;
   price: number;
+  originalPrice?: number; // 定価（割引前）
   interval: 'month' | 'year';
   features: string[];
   stripePriceId?: string;
 }
+
+// Stripe coupon ID for onboarding discount (set in .env)
+export const ONBOARDING_COUPON_ID = import.meta.env.VITE_STRIPE_ONBOARDING_COUPON_ID || '';
 
 export const pricingPlans: PricingPlan[] = [
   {
@@ -31,6 +35,7 @@ export const pricingPlans: PricingPlan[] = [
     id: 'premium',
     name: 'Premium',
     price: 4.99,
+    originalPrice: 9.99,
     interval: 'month',
     stripePriceId: import.meta.env.VITE_STRIPE_PREMIUM_PRICE_ID,
     features: [
@@ -49,11 +54,12 @@ export class StripeService {
   /**
    * Stripeのチェックアウトセッションを作成
    */
-  static async createCheckoutSession(priceId: string, userId: string) {
+  static async createCheckoutSession(priceId: string, userId: string, couponId?: string) {
     const { data, error } = await supabase.functions.invoke('create-checkout-session', {
       body: {
         priceId,
         userId,
+        couponId,
         successUrl: `${window.location.origin}/app.html?view=subscription-success`,
         cancelUrl: `${window.location.origin}/app.html?view=subscription-cancel`
       }

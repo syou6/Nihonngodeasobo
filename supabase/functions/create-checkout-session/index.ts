@@ -33,18 +33,26 @@ serve(async (req) => {
 
   try {
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, { apiVersion: '2023-10-16' })
-    const { priceId, userId, successUrl, cancelUrl } = await req.json()
+    const { priceId, userId, successUrl, cancelUrl, couponId } = await req.json()
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams: any = {
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
       mode: 'subscription',
       success_url: successUrl,
       cancel_url: cancelUrl,
-      allow_promotion_codes: true,
       metadata: { userId },
       subscription_data: { metadata: { userId } },
-    })
+    }
+
+    // Apply coupon if provided, otherwise allow manual promo codes
+    if (couponId) {
+      sessionParams.discounts = [{ coupon: couponId }]
+    } else {
+      sessionParams.allow_promotion_codes = true
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams)
 
     return new Response(
       JSON.stringify({ url: session.url, sessionId: session.id }),

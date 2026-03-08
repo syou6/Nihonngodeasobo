@@ -158,7 +158,7 @@ export const useDiaryStore = create<DiaryStore>((set, get) => ({
           const uploadStartTime = performance.now();
           const fileName = `${user.id}/voice_${Date.now()}.webm`;
           
-          // タイムアウト付きアップロード (90秒 - 3分の録音に対応)
+          // タイムアウト付きアップロード (120秒 - 5分の録音に対応)
           toast.loading('Uploading audio...', { id: 'audio-upload' });
 
           const uploadPromise = supabase.storage
@@ -169,7 +169,7 @@ export const useDiaryStore = create<DiaryStore>((set, get) => ({
             });
 
           const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Upload timeout (90 seconds). Please try again with a shorter recording.')), 90000)
+            setTimeout(() => reject(new Error('Upload timeout (120 seconds). Please try again with a shorter recording.')), 120000)
           );
           
           const { data: uploadData, error: uploadError } = await Promise.race([

@@ -118,8 +118,16 @@ export const PricingCards: React.FC<PricingCardsProps> = ({ currentPlan = 'free'
             <h3 className="text-lg font-bold text-gray-900">{premiumPlan.name}</h3>
           </div>
           <div className="mb-4">
-            <span className="text-3xl font-bold text-gray-900">$4.99</span>
+            {premiumPlan.originalPrice && (
+              <span className="text-lg text-gray-400 line-through mr-2">${premiumPlan.originalPrice}</span>
+            )}
+            <span className="text-3xl font-bold text-gray-900">${premiumPlan.price}</span>
             <span className="text-gray-500 text-sm ml-1">/month</span>
+            {premiumPlan.originalPrice && (
+              <span className="ml-2 text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
+                {Math.round((1 - premiumPlan.price / premiumPlan.originalPrice) * 100)}% OFF
+              </span>
+            )}
           </div>
 
           <ul className="space-y-2.5 mb-6">
