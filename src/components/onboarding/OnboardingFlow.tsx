@@ -1432,128 +1432,270 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, show
       case 'paywall': {
         const premiumPlan = pricingPlans.find((p) => p.id === 'premium');
         const hasStripe = !!premiumPlan?.stripePriceId && !!user?.id;
+        const discountPct = premiumPlan?.originalPrice
+          ? Math.round((1 - premiumPlan.price / premiumPlan.originalPrice) * 100)
+          : 50;
 
         return (
-          <>
-            <div className="text-center mb-4">
-              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-100 to-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-semibold mb-3">
-                <Crown className="w-4 h-4" />
-                Special Onboarding Offer
+          // Negative margin to break out of the px-6 container padding and go edge-to-edge
+          <div className="-mx-6">
+
+            {/* ── 1. HERO ──────────────────────────────────────────────── */}
+            <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600 px-6 pt-10 pb-12 text-center">
+              <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-1.5 rounded-full text-xs font-semibold mb-5">
+                <Sparkles className="w-3.5 h-3.5" />
+                Special Onboarding Offer — Limited Time
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-1">
-                Unlock Your Full Potential
+              <h1 className="text-3xl font-black text-white mb-3 leading-tight">
+                Transform Your<br />Japanese!
+              </h1>
+              <p className="text-purple-100 text-sm leading-relaxed max-w-xs mx-auto">
+                Join 500+ learners mastering Japanese with our AI-powered system
+              </p>
+            </div>
+
+            {/* ── 2. PERSONALIZED OFFER CARD ───────────────────────────── */}
+            <div className="px-4 -mt-6 mb-4">
+              <div className="bg-white rounded-2xl shadow-lg p-5 border border-gray-100">
+                <div className="flex items-start gap-3">
+                  <span className="text-3xl">🎁</span>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-base leading-snug">
+                      Your Personalized Study Plan is Ready!
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1 leading-relaxed">
+                      Based on your assessment, we've built a custom path from{' '}
+                      <span className="font-semibold text-purple-600">{jlptLevel || 'your current level'}</span>
+                      {' '}to{' '}
+                      <span className="font-semibold text-green-600">{targetLevel || 'your goal'}</span>
+                      {' '}— tailored just for {displayName}.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── 3. COUNTDOWN TIMER ───────────────────────────────────── */}
+            <div className="mx-4 mb-4 rounded-2xl bg-gradient-to-r from-orange-500 to-red-500 px-5 py-4 text-center shadow-md">
+              <p className="text-white/80 text-xs font-semibold uppercase tracking-widest mb-2">
+                Special Price Offer Expires in:
+              </p>
+              <div className="flex items-center justify-center gap-2">
+                <Timer className="w-5 h-5 text-white" />
+                <span className="text-white font-mono font-black text-2xl tabular-nums">
+                  <CountdownTimer minutes={5} />
+                </span>
+              </div>
+            </div>
+
+            {/* ── 4. COUPON CODE ───────────────────────────────────────── */}
+            <div className="mx-4 mb-6 rounded-2xl bg-gradient-to-r from-yellow-400 to-orange-400 px-5 py-4 text-center shadow-md">
+              <p className="text-yellow-900 text-xs font-bold uppercase tracking-wider mb-2">
+                Your Personal Coupon Code Applied!
+              </p>
+              <div className="inline-block bg-white/90 rounded-xl px-6 py-2 border-2 border-dashed border-yellow-600">
+                <span className="font-mono font-black text-orange-700 text-lg tracking-widest">
+                  NIHONGO_50OFF
+                </span>
+              </div>
+              <p className="text-yellow-900/70 text-xs mt-2 font-medium">
+                50% discount automatically applied at checkout
+              </p>
+            </div>
+
+            {/* ── 5. TESTIMONIALS ──────────────────────────────────────── */}
+            <div className="px-4 mb-6">
+              <h2 className="text-center text-lg font-bold text-gray-900 mb-4">
+                What Our Community Says
               </h2>
-              <p className="text-sm text-gray-500 mb-3">
-                {displayName}, choose the plan that works for you
-              </p>
-              <CountdownTimer minutes={5} />
-            </div>
-
-            {/* Premium Plan (shown first - recommended) */}
-            <div className="border-2 border-brand-500 rounded-xl p-4 mb-3 relative bg-brand-50/30">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-500 text-white text-xs font-bold px-3 py-0.5 rounded-full">
-                RECOMMENDED
-              </div>
-              <div className="flex items-center justify-between mb-1 mt-1">
-                <h3 className="font-bold text-gray-900">Premium Plan</h3>
-                <div className="text-right">
-                  {premiumPlan?.originalPrice && (
-                    <span className="text-sm text-gray-400 line-through mr-1">
-                      ${premiumPlan.originalPrice}
-                    </span>
-                  )}
-                  <span className="text-2xl font-bold text-brand-600">
-                    ${premiumPlan?.price || '4.99'}
-                  </span>
-                  <span className="text-sm text-gray-500">/mo</span>
-                </div>
-              </div>
-              {premiumPlan?.originalPrice && (
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-bold text-white bg-red-500 px-2 py-0.5 rounded-full">
-                    {Math.round((1 - (premiumPlan.price / premiumPlan.originalPrice)) * 100)}% OFF
-                  </span>
-                  <span className="text-xs text-red-600 font-semibold">
-                    Limited-time onboarding offer
-                  </span>
-                </div>
-              )}
-              <p className="text-xs text-green-600 font-semibold mb-3">
-                Unlimited everything — reach {targetLevel || 'N3'} faster
-              </p>
-              <ul className="space-y-1.5 mb-4">
+              <div className="space-y-3">
                 {[
-                  'Unlimited diary recordings',
-                  'Detailed AI feedback on every entry',
-                  'Unlimited JLPT speaking practice',
-                  'Grammar & vocabulary corrections',
-                  'Share diary with your teacher',
-                  'Unlimited storage & history',
-                ].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm text-gray-700">
-                    <CheckCircle className="w-4 h-4 text-brand-500 flex-shrink-0" />
-                    {f}
-                  </li>
+                  {
+                    name: 'Sarah M.',
+                    quote: 'NihonGo transformed my Japanese practice! The AI feedback on my diary entries is incredibly detailed and helpful.',
+                    initials: 'SM',
+                    color: 'bg-purple-500',
+                  },
+                  {
+                    name: 'Marcus T.',
+                    quote: 'I went from barely reading hiragana to confidently speaking at N4 level. The voice diary feature is genius.',
+                    initials: 'MT',
+                    color: 'bg-pink-500',
+                  },
+                  {
+                    name: 'Yuki K.',
+                    quote: 'As a teacher, I love how I can track my student\'s progress. The AI corrections save me so much time.',
+                    initials: 'YK',
+                    color: 'bg-indigo-500',
+                  },
+                ].map((review) => (
+                  <div key={review.name} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                    <div className="flex items-center gap-0.5 mb-2">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                      ))}
+                    </div>
+                    <p className="text-sm text-gray-700 leading-relaxed mb-3">
+                      "{review.quote}"
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-8 h-8 rounded-full ${review.color} flex items-center justify-center flex-shrink-0`}>
+                        <span className="text-white text-xs font-bold">{review.initials}</span>
+                      </div>
+                      <span className="text-sm font-semibold text-gray-800">{review.name}</span>
+                    </div>
+                  </div>
                 ))}
-              </ul>
-              {hasStripe ? (
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={handleCheckout}
-                  className="w-full"
-                  disabled={checkoutLoading}
-                >
-                  {checkoutLoading ? (
-                    'Processing...'
-                  ) : (
-                    <>
-                      <Crown className="w-5 h-5 mr-1" />
-                      Start Premium
-                    </>
-                  )}
-                </Button>
-              ) : (
-                <Button variant="primary" size="lg" onClick={handleFinish} className="w-full">
-                  <Crown className="w-5 h-5 mr-1" />
-                  Start Premium
-                </Button>
-              )}
+              </div>
             </div>
 
-            {/* Free Plan */}
-            <div className="border border-gray-200 rounded-xl p-4 mb-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold text-gray-700">Free Plan</h3>
-                <span className="text-lg font-bold text-gray-500">$0</span>
-              </div>
-              <ul className="space-y-1 mb-3">
-                {['3 recordings/month', 'Basic AI analysis', '1 practice/day'].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-xs text-gray-500">
-                    <CheckCircle className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
-                    {f}
-                  </li>
+            {/* ── 6. FEATURES SECTION ──────────────────────────────────── */}
+            <div className="bg-gradient-to-br from-pink-50 to-purple-50 border-y border-purple-100 px-6 py-6 mb-6">
+              <h2 className="text-center text-lg font-bold text-gray-900 mb-5">
+                Everything You Need to Succeed
+              </h2>
+              <div className="space-y-4">
+                {[
+                  { icon: Brain, label: 'AI-Powered', desc: 'Personalized feedback on every entry', color: 'text-purple-600', bg: 'bg-purple-100' },
+                  { icon: Mic, label: 'Voice Diary', desc: 'Speak & improve daily with AI coaching', color: 'text-pink-600', bg: 'bg-pink-100' },
+                  { icon: Target, label: 'JLPT Practice', desc: 'Exam-ready training at your level', color: 'text-blue-600', bg: 'bg-blue-100' },
+                  { icon: Users, label: 'Teacher Connect', desc: 'Learn together with real teachers', color: 'text-green-600', bg: 'bg-green-100' },
+                ].map((feature) => (
+                  <div key={feature.label} className="flex items-center gap-4 bg-white rounded-xl p-4 shadow-sm border border-white">
+                    <div className={`w-12 h-12 ${feature.bg} rounded-xl flex items-center justify-center flex-shrink-0`}>
+                      <feature.icon className={`w-6 h-6 ${feature.color}`} />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900 text-sm">{feature.label}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{feature.desc}</p>
+                    </div>
+                  </div>
                 ))}
-              </ul>
+              </div>
+            </div>
+
+            {/* ── 7. CTA SECTION ───────────────────────────────────────── */}
+            <div className="bg-gradient-to-r from-purple-700 to-pink-600 px-6 py-8 mb-6 text-center">
+              <h2 className="text-xl font-black text-white mb-2 leading-tight">
+                Start Your Japanese Learning<br />Journey Today
+              </h2>
+              <p className="text-purple-100 text-sm">
+                No commitment. Cancel anytime. Full access to all features.
+              </p>
+            </div>
+
+            {/* ── 8. PREMIUM PLAN CARD ─────────────────────────────────── */}
+            <div className="px-4 mb-4">
+              <div className="relative bg-white rounded-2xl border-2 border-purple-500 shadow-xl overflow-hidden">
+                {/* RECOMMENDED badge */}
+                <div className="absolute top-0 left-0 right-0 flex justify-center">
+                  <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-black px-6 py-1.5 rounded-b-xl tracking-wider">
+                    RECOMMENDED
+                  </div>
+                </div>
+
+                <div className="pt-10 pb-6 px-6">
+                  {/* Pricing row */}
+                  <div className="text-center mb-5">
+                    <div className="flex items-center justify-center gap-2 mb-1">
+                      {premiumPlan?.originalPrice && (
+                        <span className="text-xl text-gray-400 line-through font-semibold">
+                          ${premiumPlan.originalPrice}
+                        </span>
+                      )}
+                      <span className="inline-flex items-center bg-red-500 text-white text-xs font-black px-2.5 py-1 rounded-full">
+                        {discountPct}% OFF
+                      </span>
+                    </div>
+                    <div className="flex items-end justify-center gap-1">
+                      <span className="text-5xl font-black text-purple-600">
+                        ${premiumPlan?.price || '4.99'}
+                      </span>
+                      <span className="text-gray-500 text-sm pb-2">/month</span>
+                    </div>
+                    <p className="text-xs text-green-600 font-semibold mt-1">
+                      Limited-time onboarding offer
+                    </p>
+                  </div>
+
+                  {/* Feature list */}
+                  <ul className="space-y-2.5 mb-6">
+                    {[
+                      'Unlimited diary recordings',
+                      'Detailed AI feedback on every entry',
+                      'Unlimited JLPT speaking practice',
+                      'Grammar & vocabulary corrections',
+                      'Share diary with your teacher',
+                      'Unlimited storage & history',
+                      `Reach ${targetLevel || 'N3'} faster with your custom plan`,
+                    ].map((f, i) => (
+                      <li key={i} className="flex items-center gap-3 text-sm text-gray-700">
+                        <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* CTA Button */}
+                  {hasStripe ? (
+                    <button
+                      onClick={handleCheckout}
+                      disabled={checkoutLoading}
+                      className="w-full py-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-black text-base shadow-lg disabled:opacity-60 flex items-center justify-center gap-2 transition-opacity"
+                    >
+                      {checkoutLoading ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <Crown className="w-5 h-5" />
+                          Start Premium — {discountPct}% OFF
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleFinish}
+                      className="w-full py-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-black text-base shadow-lg flex items-center justify-center gap-2"
+                    >
+                      <Crown className="w-5 h-5" />
+                      Start Premium — {discountPct}% OFF
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* ── 9. FREE PLAN ─────────────────────────────────────────── */}
+            <div className="px-4 mb-6 text-center">
               <button
                 onClick={handleFinish}
-                className="w-full text-center text-sm text-gray-400 hover:text-gray-600 py-2 transition-colors"
+                className="text-sm text-gray-400 hover:text-gray-600 underline underline-offset-2 transition-colors py-2"
               >
                 Continue with limited free plan
               </button>
+              <p className="text-xs text-gray-300 mt-1">3 recordings/month · Basic AI analysis · 1 practice/day</p>
             </div>
 
-            <div className="flex items-center justify-center gap-4 text-xs text-gray-400">
-              <div className="flex items-center gap-1">
-                <Shield className="w-3.5 h-3.5" />
+            {/* ── 10. TRUST SIGNALS ────────────────────────────────────── */}
+            <div className="px-4 pb-10 flex items-center justify-center gap-6 text-xs text-gray-400">
+              <div className="flex items-center gap-1.5">
+                <Shield className="w-4 h-4 text-gray-300" />
                 <span>Cancel anytime</span>
               </div>
-              <div className="flex items-center gap-1">
-                <Lock className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-1.5">
+                <Lock className="w-4 h-4 text-gray-300" />
                 <span>Secure payment</span>
               </div>
+              <div className="flex items-center gap-1.5">
+                <Zap className="w-4 h-4 text-gray-300" />
+                <span>Powered by Stripe</span>
+              </div>
             </div>
-          </>
+
+          </div>
         );
       }
 
