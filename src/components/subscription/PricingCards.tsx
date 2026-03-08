@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Check, Loader2, Crown, X, Sparkles } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useAuthStore } from '../../stores/authStore';
-import { pricingPlans, StripeService } from '../../lib/stripe';
+import { pricingPlans, StripeService, ONBOARDING_COUPON_ID } from '../../lib/stripe';
 import toast from 'react-hot-toast';
 
 interface PricingCardsProps {
@@ -28,7 +28,7 @@ export const PricingCards: React.FC<PricingCardsProps> = ({ currentPlan = 'free'
 
     setLoading(planId);
     try {
-      await StripeService.createCheckoutSession(priceId, user.id);
+      await StripeService.createCheckoutSession(priceId, user.id, ONBOARDING_COUPON_ID || undefined);
     } catch {
       toast.error('Something went wrong. Please try again.');
     } finally {
