@@ -6,6 +6,7 @@ import { StripeService, pricingPlans, PricingPlan } from '../../lib/stripe';
 import { useAuthStore } from '../../stores/authStore';
 import { useSubscription } from '../../hooks/useSubscription';
 import { EN } from '../../i18n/en';
+import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 
 interface SubscriptionStatus {
@@ -291,12 +292,25 @@ export const SubscriptionManager: React.FC = () => {
                   <Button
                     variant="primary"
                     className="w-full mb-3 bg-green-600 hover:bg-green-700"
-                    onClick={() => {
-                      setShowCancelWarning(false);
-                      toast.success('Your next month is free! Enjoy Premium.');
+                    disabled={processing === 'retention'}
+                    onClick={async () => {
+                      if (!user) return;
+                      setProcessing('retention');
+                      try {
+                        const { error } = await supabase.functions.invoke('apply-retention-coupon', {
+                          body: { userId: user.id },
+                        });
+                        if (error) throw error;
+                        setShowCancelWarning(false);
+                        toast.success('Your next month is free! Enjoy Premium.');
+                      } catch {
+                        toast.error('Failed to apply offer. Please try again.');
+                      } finally {
+                        setProcessing(null);
+                      }
                     }}
                   >
-                    Claim 1 Month Free & Stay
+                    {processing === 'retention' ? 'Applying...' : 'Claim 1 Month Free & Stay'}
                   </Button>
 
                   <button
