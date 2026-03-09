@@ -275,17 +275,17 @@ export const SubscriptionManager: React.FC = () => {
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">Special offer just for you!</h3>
                   <p className="text-gray-600 text-sm mb-4">
-                    We don't want you to lose your progress. How about <span className="font-bold text-green-600">50% off your next month</span>?
+                    We don't want you to lose your progress. How about <span className="font-bold text-green-600">your next month completely free</span>?
                   </p>
 
                   <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 mb-6 text-center">
                     <p className="text-xs text-green-600 font-bold uppercase tracking-wider mb-1">Stay & Save</p>
                     <div className="flex items-center justify-center gap-2">
-                      <span className="text-2xl text-gray-400 line-through">$9.99</span>
-                      <span className="text-3xl font-black text-green-600">$4.99</span>
-                      <span className="text-sm text-gray-500">/month</span>
+                      <span className="text-2xl text-gray-400 line-through">${currentPlan.price}</span>
+                      <span className="text-3xl font-black text-green-600">$0</span>
+                      <span className="text-sm text-gray-500">next month</span>
                     </div>
-                    <p className="text-xs text-green-600 mt-1">Applied automatically to your next billing</p>
+                    <p className="text-xs text-green-600 mt-1">1 month free — then back to your regular price</p>
                   </div>
 
                   <Button
@@ -293,10 +293,10 @@ export const SubscriptionManager: React.FC = () => {
                     className="w-full mb-3 bg-green-600 hover:bg-green-700"
                     onClick={() => {
                       setShowCancelWarning(false);
-                      toast.success('50% discount applied to your next billing!');
+                      toast.success('Your next month is free! Enjoy Premium.');
                     }}
                   >
-                    Claim 50% Off & Stay
+                    Claim 1 Month Free & Stay
                   </Button>
 
                   <button
