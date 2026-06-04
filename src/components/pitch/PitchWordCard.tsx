@@ -13,12 +13,12 @@ interface Props {
 function LoadingState({ compact }: { compact: boolean }): React.ReactElement {
   if (compact) {
     return (
-      <span className="text-xs text-gray-400 animate-pulse">読み込み中…</span>
+      <span className="text-xs text-gray-400 animate-pulse">Loading…</span>
     );
   }
   return (
     <div className="flex items-center justify-center h-20 text-sm text-gray-400 animate-pulse">
-      読み込み中…
+      Loading…
     </div>
   );
 }
@@ -27,13 +27,13 @@ function NotFoundState({ word, compact }: { word: string; compact: boolean }): R
   if (compact) {
     return (
       <span className="text-xs text-gray-400">
-        「{word}」のアクセントデータなし
+        No accent data for “{word}”
       </span>
     );
   }
   return (
     <div className="flex items-center justify-center h-20 text-sm text-gray-400">
-      「{word}」のアクセントデータが見つかりません
+      No pitch accent data found for “{word}”
     </div>
   );
 }

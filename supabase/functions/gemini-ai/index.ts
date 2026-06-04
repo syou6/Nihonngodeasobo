@@ -5,76 +5,47 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
+// NVIDIA NIM is OpenAI-compatible. Model is overridable via env for easy swaps.
+const NVIDIA_API_URL = 'https://integrate.api.nvidia.com/v1/chat/completions'
+const NVIDIA_MODEL = Deno.env.get('NVIDIA_MODEL') || 'qwen/qwen2.5-72b-instruct'
 
 const jlptProgression: Record<string, string> = {
   'N5': 'N4', 'N4': 'N3', 'N3': 'N2', 'N2': 'N1', 'N1': 'N1'
 }
 
 interface GeminiRequest {
-  type: 'analyze' | 'summary' | 'feedback' | 'versant-feedback' | 'versant-sample' | 'versant-question' | 'pitch-accent'
+  type: 'analyze' | 'summary' | 'feedback' | 'versant-feedback' | 'versant-sample' | 'versant-question'
   content?: string
   jlptLevel?: string
   cefrLevel?: string  // kept for backwards compatibility
   question?: string
   part?: 'E' | 'F'
-  audioBase64?: string
-  mimeType?: string
-  transcribedText?: string
-  targetWord?: string
-  expectedPattern?: number[]
 }
 
-async function callGeminiWithAudio(
-  apiKey: string,
-  audioBase64: string,
-  mimeType: string,
-  prompt: string
-): Promise<string> {
-  const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+async function callLLM(apiKey: string, prompt: string): Promise<string> {
+  const response = await fetch(NVIDIA_API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
     body: JSON.stringify({
-      contents: [{
-        parts: [
-          { inlineData: { data: audioBase64, mimeType } },
-          { text: prompt }
-        ]
-      }],
+      model: NVIDIA_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.4,
+      max_tokens: 2048,
     }),
   })
 
   if (!response.ok) {
     const errorText = await response.text()
-    throw new Error(`Gemini API error (${response.status}): ${errorText}`)
+    throw new Error(`NVIDIA API error (${response.status}): ${errorText}`)
   }
 
   const data = await response.json()
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
+  const text = data?.choices?.[0]?.message?.content
   if (!text) {
-    throw new Error('No text in Gemini response')
-  }
-  return text
-}
-
-async function callGemini(apiKey: string, prompt: string): Promise<string> {
-  const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-    }),
-  })
-
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`Gemini API error (${response.status}): ${errorText}`)
-  }
-
-  const data = await response.json()
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
-  if (!text) {
-    throw new Error('No text in Gemini response')
+    throw new Error('No text in NVIDIA response')
   }
   return text
 }
@@ -190,10 +161,80 @@ function buildVersantSamplePrompt(question: string, part: 'E' | 'F', jlptLevel: 
 **Output:** Only the sample answer text in Japanese, no explanations or labels.`
 }
 
-// Simple in-memory rate limiter (resets on cold start, which is fine for Edge Functions)
+// Burst guard: in-memory per-IP limiter (resets on cold start). This only blunts
+// rapid bursts; the durable, abuse-proof cap is the per-user daily quota below.
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT = 30; // requests per window
 const RATE_WINDOW = 60_000; // 1 minute
+
+// Durable per-user daily quotas (enforced atomically in Postgres).
+const DAILY_LIMIT_FREE = 50;
+const DAILY_LIMIT_PREMIUM = 500;
+
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
+const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+
+interface AuthedUser {
+  id: string;
+}
+
+// Resolve the caller from the bearer JWT. Returns null for anonymous/guest callers
+// (no session — Supabase forwards the anon key, which has no user).
+async function resolveUser(authHeader: string | null): Promise<AuthedUser | null> {
+  if (!authHeader || !SUPABASE_URL) return null;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { Authorization: authHeader, apikey: SERVICE_ROLE_KEY },
+    });
+    if (!res.ok) return null;
+    const user = await res.json();
+    return user?.id ? { id: user.id } : null;
+  } catch {
+    return null;
+  }
+}
+
+async function isPremium(userId: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/is_premium`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+      },
+      body: JSON.stringify({ check_user_id: userId }),
+    });
+    if (!res.ok) return false;
+    return (await res.json()) === true;
+  } catch {
+    return false;
+  }
+}
+
+// Atomically increment and check the caller's daily AI quota. Returns true if the
+// call is allowed (and was counted), false if the quota is exhausted.
+async function consumeDailyQuota(userId: string, limit: number): Promise<boolean> {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/check_and_increment_ai_usage`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+      },
+      body: JSON.stringify({ p_user_id: userId, p_limit: limit }),
+    });
+    if (!res.ok) {
+      // Fail closed: if the quota check itself errors, deny rather than risk overspend.
+      return false;
+    }
+    const result = await res.json();
+    return result?.allowed === true;
+  } catch {
+    return false;
+  }
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -215,10 +256,25 @@ serve(async (req) => {
     rateLimitMap.set(clientIp, { count: 1, resetAt: now + RATE_WINDOW });
   }
 
-  const apiKey = Deno.env.get('GEMINI_API_KEY')
+  // Durable per-user daily quota. Authenticated callers are capped in Postgres so a
+  // leaked anon key / scripted client cannot drain the Gemini budget. Anonymous
+  // (guest) callers fall back to the in-memory burst guard above.
+  const user = await resolveUser(req.headers.get('authorization'));
+  if (user) {
+    const limit = (await isPremium(user.id)) ? DAILY_LIMIT_PREMIUM : DAILY_LIMIT_FREE;
+    const allowed = await consumeDailyQuota(user.id, limit);
+    if (!allowed) {
+      return new Response(
+        JSON.stringify({ error: 'Daily AI usage limit reached. Please try again tomorrow or upgrade your plan.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 429 }
+      );
+    }
+  }
+
+  const apiKey = Deno.env.get('NVIDIA_API_KEY')
   if (!apiKey) {
     return new Response(
-      JSON.stringify({ error: 'GEMINI_API_KEY is not configured' }),
+      JSON.stringify({ error: 'NVIDIA_API_KEY is not configured' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     )
   }
@@ -238,7 +294,7 @@ serve(async (req) => {
           throw new Error('content is required for analyze')
         }
         const prompt = buildAnalyzePrompt(body.content)
-        const responseText = await callGemini(apiKey, prompt)
+        const responseText = await callLLM(apiKey, prompt)
 
         const jsonMatch = responseText.match(/\{[\s\S]*\}/)
         if (!jsonMatch) {
@@ -262,7 +318,7 @@ serve(async (req) => {
           throw new Error('content is required for summary')
         }
         const prompt = buildSummaryPrompt(body.content)
-        const responseText = await callGemini(apiKey, prompt)
+        const responseText = await callLLM(apiKey, prompt)
         result = { summary: responseText.trim() }
         break
       }
@@ -272,7 +328,7 @@ serve(async (req) => {
           throw new Error('content is required for feedback')
         }
         const prompt = buildFeedbackPrompt(body.content, jlptLevel)
-        const responseText = await callGemini(apiKey, prompt)
+        const responseText = await callLLM(apiKey, prompt)
 
         result = {
           jlptLevel,
@@ -313,7 +369,7 @@ Analyze the user's Japanese speaking response and provide feedback ENTIRELY IN E
 ## Score: [X]/100
 (Overall speaking readiness assessment based on accuracy, fluency, and vocabulary range)`
 
-        const responseText = await callGemini(apiKey, prompt)
+        const responseText = await callLLM(apiKey, prompt)
         result = {
           jlptLevel,
           targetLevel,
@@ -327,7 +383,7 @@ Analyze the user's Japanese speaking response and provide feedback ENTIRELY IN E
           throw new Error('question and part are required for versant-sample')
         }
         const prompt = buildVersantSamplePrompt(body.question, body.part, jlptLevel)
-        const responseText = await callGemini(apiKey, prompt)
+        const responseText = await callLLM(apiKey, prompt)
         result = { sampleAnswer: responseText.trim() }
         break
       }
@@ -346,7 +402,7 @@ Write ONLY in Japanese. Output ONLY the passage text, no labels or instructions.
 The question should be about an everyday topic that's easy to have an opinion on.
 Write ONLY in Japanese. Output ONLY the question text, no labels or instructions.`
 
-        const responseText = await callGemini(apiKey, prompt)
+        const responseText = await callLLM(apiKey, prompt)
         result = {
           text: responseText.trim(),
           part: body.part,
@@ -355,57 +411,11 @@ Write ONLY in Japanese. Output ONLY the question text, no labels or instructions
         break
       }
 
-      case 'pitch-accent': {
-        if (!body.audioBase64 || !body.mimeType || !body.transcribedText) {
-          throw new Error('audioBase64, mimeType, and transcribedText are required for pitch-accent')
-        }
-
-        const targetWordSection = body.targetWord
-          ? `\n- Target word being practiced: "${body.targetWord}"`
-          : ''
-        const expectedPatternSection = body.expectedPattern && body.expectedPattern.length > 0
-          ? `\n- Expected pitch pattern (0=low, 1=high): [${body.expectedPattern.join(', ')}]`
-          : ''
-
-        const prompt = `You are a Japanese pitch accent expert and pronunciation coach for foreign learners.
-
-Listen to the audio recording and evaluate the speaker's Japanese pitch accent.
-
-Context:
-- Transcribed speech: "${body.transcribedText}"${targetWordSection}${expectedPatternSection}
-
-Analyze the pitch accent in the audio and return ONLY the following JSON (no explanations, no markdown code blocks):
-{
-  "naturalness": <integer 0-100, how natural the pitch accent sounds to a native Japanese speaker>,
-  "pitchAccuracyScore": <integer 0-100, accuracy vs standard Tokyo pitch accent>,
-  "patternDetected": <string describing the detected pattern, e.g. "平板型 (flat)", "頭高型 (initial high)", "中高型 (middle high)", "尾高型 (final high)">,
-  "issues": [<array of specific pitch accent issues detected, in English, empty array if none>],
-  "feedback": <string, 1-2 sentences of encouraging feedback in English explaining the main pitch accent point>,
-  "nextStep": <string, one specific actionable practice tip in English>
-}`
-
-        const responseText = await callGeminiWithAudio(
-          apiKey,
-          body.audioBase64,
-          body.mimeType,
-          prompt
-        )
-
-        const jsonMatch = responseText.match(/\{[\s\S]*\}/)
-        if (!jsonMatch) {
-          throw new Error('No JSON found in Gemini pitch-accent response')
-        }
-        const parsed = JSON.parse(jsonMatch[0])
-        result = {
-          naturalness: Math.min(100, Math.max(0, parsed.naturalness ?? 50)),
-          pitchAccuracyScore: Math.min(100, Math.max(0, parsed.pitchAccuracyScore ?? 50)),
-          patternDetected: parsed.patternDetected || 'Unknown',
-          issues: Array.isArray(parsed.issues) ? parsed.issues : [],
-          feedback: parsed.feedback || '',
-          nextStep: parsed.nextStep || ''
-        }
-        break
-      }
+      // NOTE: pitch-accent evaluation requires listening to the audio waveform to
+      // judge the speaker's actual pitch contour — a text LLM (NVIDIA NIM) cannot do
+      // this. The live pitch feature already runs fully client-side via pitchy
+      // (F0 detection) + hatsuon (accent dictionary) in src/lib/pitch-analyzer.ts,
+      // so no server call is needed. The old audio-based case was already dead code.
 
       default:
         throw new Error(`Unknown type: ${type}`)

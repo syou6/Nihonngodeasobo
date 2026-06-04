@@ -1,13 +1,14 @@
 # 日本語であそぼ (AI Voice Journal)
 
-AI を活用した日本語学習アプリ。音声で日記を録音し、Gemini AI がフィードバックを提供します。
+AI を活用した日本語学習アプリ。音声で日記を録音し、NVIDIA NIM (LLM) がフィードバックを提供します。
 
 ## 技術スタック
 
 - **フロントエンド:** React 18 + TypeScript + Vite + Tailwind CSS
 - **状態管理:** Zustand
 - **バックエンド:** Supabase (認証・DB・Edge Functions)
-- **AI:** Gemini API (音声分析・フィードバック)
+- **AI:** NVIDIA NIM / qwen2.5-72b-instruct (テキストフィードバック)
+- **音声/ピッチ解析:** クライアント側 (pitchy + hatsuon)
 - **決済:** Stripe
 - **通知:** Firebase Cloud Messaging
 - **テスト:** Vitest + Playwright
@@ -36,9 +37,11 @@ npm run dev
 |--------|------|
 | `VITE_SUPABASE_URL` | Supabase プロジェクト URL |
 | `VITE_SUPABASE_ANON_KEY` | Supabase Anon Key |
-Gemini API キーは Supabase Edge Function 側で管理:
+NVIDIA NIM の API キーは Supabase Edge Function 側で管理:
 ```bash
-supabase secrets set GEMINI_API_KEY=your_key
+supabase secrets set NVIDIA_API_KEY=your_key
+# モデル変更は任意（既定: qwen/qwen2.5-72b-instruct）
+supabase secrets set NVIDIA_MODEL=qwen/qwen2.5-72b-instruct
 ```
 
 ## スクリプト

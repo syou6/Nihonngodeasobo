@@ -49,7 +49,7 @@ export function PitchAccentDisplay({
         viewBox={`0 0 ${viewBoxWidth} ${VIEWBOX_HEIGHT}`}
         width={viewBoxWidth}
         height={VIEWBOX_HEIGHT}
-        aria-label={`ピッチアクセン図: ${patternName}`}
+        aria-label={`Pitch accent diagram: ${patternName}`}
         role="img"
         style={{ maxWidth: '100%' }}
       >

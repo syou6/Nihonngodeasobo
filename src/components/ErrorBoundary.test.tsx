@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ErrorBoundary } from './ErrorBoundary';
+import { captureError } from '../lib/monitoring';
+
+vi.mock('../lib/monitoring', () => ({
+  captureError: vi.fn(),
+}));
 
 // Component that throws an error
 const ThrowingComponent = ({ shouldThrow }: { shouldThrow: boolean }) => {
@@ -11,11 +16,9 @@ const ThrowingComponent = ({ shouldThrow }: { shouldThrow: boolean }) => {
 };
 
 describe('ErrorBoundary', () => {
-  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
-
   beforeEach(() => {
     // Suppress React error boundary console.error noise
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   it('renders children when no error occurs', () => {
@@ -66,20 +69,17 @@ describe('ErrorBoundary', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('calls console.error via componentDidCatch', () => {
+  it('reports the error via monitoring in componentDidCatch', () => {
     render(
       <ErrorBoundary>
         <ThrowingComponent shouldThrow={true} />
       </ErrorBoundary>
     );
 
-    expect(consoleErrorSpy).toHaveBeenCalled();
-    // At least one call should be from our componentDidCatch
-    const calls = consoleErrorSpy.mock.calls;
-    const hasBoundaryCatch = calls.some(
-      (call) => call[0] === 'ErrorBoundary caught:'
-    );
-    expect(hasBoundaryCatch).toBe(true);
+    expect(captureError).toHaveBeenCalled();
+    const [reportedError] = vi.mocked(captureError).mock.calls[0];
+    expect(reportedError).toBeInstanceOf(Error);
+    expect((reportedError as Error).message).toBe('Test error');
   });
 
   it('resets state and reloads when refresh button is clicked', () => {

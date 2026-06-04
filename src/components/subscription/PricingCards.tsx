@@ -135,8 +135,16 @@ export const PricingCards: React.FC<PricingCardsProps> = ({ currentPlan = 'free'
             <div className="space-y-2">
               <div className="flex items-center justify-center gap-2 py-2.5 bg-green-50 text-green-700 rounded-lg text-sm font-medium">
                 <Check className="w-4 h-4" />
-                Your Current Plan
+                Current Plan
               </div>
+              <Button
+                variant="outline"
+                size="md"
+                className="w-full"
+                onClick={handleManageSubscription}
+              >
+                Manage Billing
+              </Button>
             </div>
           ) : (
             <Button

@@ -9,7 +9,6 @@ import { useDiaryStore } from '../../stores/diaryStore';
 import { useSubscription } from '../../hooks/useSubscription';
 import { supabase } from '../../lib/supabase';
 import { commentLimiter } from '../../lib/rate-limiter';
-import { EN } from '../../i18n/en';
 import type { DiaryEntry } from '../../types';
 import {
   Play,
@@ -118,7 +117,7 @@ export const DiaryCard: React.FC<DiaryCardProps> = ({ entry }) => {
 
     if (!commentLimiter.canProceed()) {
       const cooldown = Math.ceil(commentLimiter.getRemainingCooldown() / 1000);
-      toast.error(`コメント制限中です。${cooldown}秒後にもう一度お試しください。`);
+      toast.error(`Too many comments. Please try again in ${cooldown}s.`);
       return;
     }
 
