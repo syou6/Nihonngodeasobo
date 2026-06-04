@@ -254,7 +254,7 @@ describe('canPerformAction', () => {
 
   function setupMocks(subscription: any, usage: any) {
     // The function calls supabase.from twice - once for subscription, once for usage
-    let callCount = 0;
+    const callCount = 0;
     mockFrom.mockImplementation((table: string) => {
       if (table === 'subscriptions') {
         return {

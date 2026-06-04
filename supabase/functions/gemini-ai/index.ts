@@ -5,9 +5,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// NVIDIA NIM is OpenAI-compatible. Model is overridable via env for easy swaps.
+// NVIDIA NIM is OpenAI-compatible. Model is overridable via the NVIDIA_MODEL env.
+// Default is a small model confirmed available on the hosted free endpoint; set
+// NVIDIA_MODEL to a larger/Japanese-stronger model your account has access to.
 const NVIDIA_API_URL = 'https://integrate.api.nvidia.com/v1/chat/completions'
-const NVIDIA_MODEL = Deno.env.get('NVIDIA_MODEL') || 'qwen/qwen2.5-72b-instruct'
+const NVIDIA_MODEL = Deno.env.get('NVIDIA_MODEL') || 'meta/llama-3.1-8b-instruct'
 
 const jlptProgression: Record<string, string> = {
   'N5': 'N4', 'N4': 'N3', 'N3': 'N2', 'N2': 'N1', 'N1': 'N1'

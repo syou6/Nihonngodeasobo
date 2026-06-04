@@ -4,6 +4,7 @@ import { supabase } from './supabase';
 export interface AnalysisResult {
   summary: string;
   keywords: string[];
+  emotion?: string;
 }
 
 export async function callGeminiApi(body: Record<string, unknown>): Promise<any> {
@@ -25,10 +26,10 @@ export async function analyzeWithGemini(text: string): Promise<AnalysisResult> {
     return cachedResult;
   }
 
-  const { allowed, reason } = canCallApi();
+  const { allowed } = canCallApi();
   if (!allowed) {
     return {
-      summary: text.substring(0, 100) + '...(API制限により簡易分析)',
+      summary: text.substring(0, 100) + '... (simplified — AI limit reached)',
       keywords: []
     };
   }
@@ -44,7 +45,8 @@ export async function analyzeWithGemini(text: string): Promise<AnalysisResult> {
 
       const result = {
         summary: data.summary || text.substring(0, 50),
-        keywords: Array.isArray(data.keywords) ? data.keywords.slice(0, 5) : []
+        keywords: Array.isArray(data.keywords) ? data.keywords.slice(0, 5) : [],
+        emotion: data.emotion
       };
 
       const estimatedTokens = Math.ceil(text.length / 3) + 50;

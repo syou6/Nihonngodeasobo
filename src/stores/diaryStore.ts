@@ -42,7 +42,6 @@ export const useDiaryStore = create<DiaryStore>((set, get) => ({
 
   fetchEntries: async () => {
     set({ loading: true });
-    const startTime = performance.now();
 
     // Timeout to prevent infinite loading
     const timeout = new Promise<never>((_, reject) =>
@@ -115,9 +114,6 @@ export const useDiaryStore = create<DiaryStore>((set, get) => ({
           set({ entries: data });
         }
       }
-
-      const endTime = performance.now();
-
     } catch (error) {
       toast.error('Failed to load diary. Please try again.');
     } finally {
@@ -133,8 +129,7 @@ export const useDiaryStore = create<DiaryStore>((set, get) => ({
       }
 
       let voiceUrl = null;
-      let transcribedContent = content;
-      
+
       // Get user first
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (authError) {
@@ -155,7 +150,6 @@ export const useDiaryStore = create<DiaryStore>((set, get) => ({
             throw new Error(`File too large (${formatFileSize(audioSize)}). Please keep it under 50MB.`);
           }
           
-          const uploadStartTime = performance.now();
           const fileName = `${user.id}/voice_${Date.now()}.webm`;
           
           // タイムアウト付きアップロード (120秒 - 5分の録音に対応)
@@ -176,9 +170,6 @@ export const useDiaryStore = create<DiaryStore>((set, get) => ({
             uploadPromise,
             timeoutPromise
           ]).catch(err => ({ data: null, error: err })) as any;
-
-          const uploadEndTime = performance.now();
-          const uploadTime = Math.round(uploadEndTime - uploadStartTime);
 
           if (!uploadError && uploadData) {
             const { data: { publicUrl } } = supabase.storage
@@ -254,8 +245,8 @@ export const useDiaryStore = create<DiaryStore>((set, get) => ({
             await supabase
               .from('diaries')
               .update({
-                emotion: 'neutral',
-                ai_summary: feedback?.summary || summary || analysis?.summary || '',
+                emotion: analysis?.emotion || 'neutral',
+                ai_summary: summary || analysis?.summary || '',
                 ai_keywords: analysis?.keywords || [],
                 ai_feedback: feedback || null,
               })
@@ -294,12 +285,12 @@ export const useDiaryStore = create<DiaryStore>((set, get) => ({
 
   deleteEntry: async (id: string) => {
     try {
-      // Soft delete - ゴミ箱に移動（deleted_atを設定）
-      const { data, error } = await supabase
+      // Soft delete - move to trash (set deleted_at)
+      const { error } = await supabase
         .from('diaries')
         .update({
           deleted_at: new Date().toISOString(),
-          delete_after: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30日後
+          delete_after: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days later
         })
         .eq('id', id)
         .select();

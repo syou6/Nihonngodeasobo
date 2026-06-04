@@ -1,28 +1,38 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
 import toast from 'react-hot-toast';
+import { Loader2 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { useGuestStore } from '../stores/guestStore';
 import { AuthForm } from '../components/auth/AuthForm';
 import { Header } from '../components/navigation/Header';
 import { LearnerDashboard } from '../components/dashboard/LearnerDashboard';
 import { VoiceRecorder } from '../components/recording/VoiceRecorder';
-import { DiaryList } from '../components/diary/DiaryList';
-import { FamilyManager } from '../components/family/FamilyManager';
-import { SettingsView } from '../components/settings/SettingsView';
-import { PricingCards } from '../components/subscription/PricingCards';
-import { VersantHome } from '../components/versant/VersantHome';
 import { PWAInstallPrompt } from '../components/PWAInstallPrompt';
 import { GuestBanner } from '../components/guest/GuestBanner';
 import { GuestDiaryList } from '../components/guest/GuestDiaryList';
 import { WelcomeGuide } from '../components/onboarding/WelcomeGuide';
 import { OnboardingFlow } from '../components/onboarding/OnboardingFlow';
 import { HelpButton } from '../components/help/HelpButton';
-import { SubscriptionSuccess } from './SubscriptionSuccess';
-import { SubscriptionCancel } from './SubscriptionCancel';
 import { supabase } from '../lib/supabase';
 import { EN } from '../i18n/en';
+
+// Code-split the non-initial views so the first paint (home/record) ships a
+// smaller bundle. Each becomes its own chunk loaded on demand.
+const DiaryList = lazy(() => import('../components/diary/DiaryList').then((m) => ({ default: m.DiaryList })));
+const FamilyManager = lazy(() => import('../components/family/FamilyManager').then((m) => ({ default: m.FamilyManager })));
+const SettingsView = lazy(() => import('../components/settings/SettingsView').then((m) => ({ default: m.SettingsView })));
+const PricingCards = lazy(() => import('../components/subscription/PricingCards').then((m) => ({ default: m.PricingCards })));
+const VersantHome = lazy(() => import('../components/versant/VersantHome').then((m) => ({ default: m.VersantHome })));
+const SubscriptionSuccess = lazy(() => import('./SubscriptionSuccess').then((m) => ({ default: m.SubscriptionSuccess })));
+const SubscriptionCancel = lazy(() => import('./SubscriptionCancel').then((m) => ({ default: m.SubscriptionCancel })));
+
+const ViewFallback = () => (
+  <div className="flex justify-center py-20">
+    <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+  </div>
+);
 
 export const AppPage: React.FC = () => {
   const [currentView, setCurrentView] = useState('home');
@@ -301,6 +311,7 @@ export const AppPage: React.FC = () => {
         </div>
       )}
       <main className="container mx-auto px-4 py-8">
+        <Suspense fallback={<ViewFallback />}>
         <AnimatePresence mode="wait">
           {currentView === 'home' && (
             <motion.div
@@ -410,8 +421,9 @@ export const AppPage: React.FC = () => {
             </motion.div>
           )}
         </AnimatePresence>
+        </Suspense>
       </main>
-      
+
       <PWAInstallPrompt />
       <HelpButton />
       <Toaster position="top-center" />

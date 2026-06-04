@@ -83,7 +83,7 @@ describe('analyzeWithGemini', () => {
     mockCanCallApi.mockReturnValue({ allowed: false, reason: 'limit' });
 
     const result = await analyzeWithGemini('test text');
-    expect(result.summary).toContain('API制限により簡易分析');
+    expect(result.summary).toContain('AI limit reached');
     expect(result.keywords).toEqual([]);
   });
 

@@ -5,6 +5,7 @@ export interface TranscriptionResult {
   text: string;
   summary?: string;
   keywords?: string[];
+  emotion?: string;
 }
 
 /**
@@ -21,7 +22,8 @@ export async function analyzeText(text: string): Promise<TranscriptionResult> {
     return {
       text,
       summary: result.summary,
-      keywords: result.keywords
+      keywords: result.keywords,
+      emotion: result.emotion
     };
   } catch (error) {
     // 無料分析にフォールバック
