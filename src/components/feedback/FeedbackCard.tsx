@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { Components } from 'react-markdown';
 import { Award, Target } from 'lucide-react';
 import type { JapaneseFeedback } from '../../types';
@@ -45,6 +46,21 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({ feedback }) => {
         </h2>
       );
     },
+    // GFM tables (Vocabulary Builder) — render as a real, scrollable table.
+    table: ({ children }) => (
+      <div className="overflow-x-auto my-3">
+        <table className="w-full text-sm border-collapse">{children}</table>
+      </div>
+    ),
+    thead: ({ children }) => <thead className="bg-indigo-50">{children}</thead>,
+    th: ({ children }) => (
+      <th className="border border-gray-200 px-3 py-2 text-left font-semibold text-gray-800 whitespace-nowrap">
+        {children}
+      </th>
+    ),
+    td: ({ children }) => (
+      <td className="border border-gray-200 px-3 py-2 text-gray-700 align-top">{children}</td>
+    ),
   };
 
   return (
@@ -85,7 +101,7 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({ feedback }) => {
         prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-indigo-600 prose-code:text-sm
         prose-blockquote:border-l-4 prose-blockquote:border-indigo-300 prose-blockquote:bg-indigo-50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:my-3
       ">
-        <ReactMarkdown components={markdownComponents}>
+        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
           {feedback.markdownContent}
         </ReactMarkdown>
       </div>
