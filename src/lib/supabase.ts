@@ -18,9 +18,9 @@ if (hasValidConfig) {
     auth: {
       getUser: () => Promise.resolve({ data: { user: null }, error: null }),
       getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-      signInWithPassword: () => Promise.reject(new Error('認証機能は利用できません')),
-      signUp: () => Promise.reject(new Error('認証機能は利用できません')),
-      signInWithOAuth: () => Promise.reject(new Error('認証機能は利用できません')),
+      signInWithPassword: () => Promise.reject(new Error('Authentication is unavailable')),
+      signUp: () => Promise.reject(new Error('Authentication is unavailable')),
+      signInWithOAuth: () => Promise.reject(new Error('Authentication is unavailable')),
       signOut: () => Promise.resolve({ error: null }),
       onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
     },
@@ -32,12 +32,12 @@ if (hasValidConfig) {
     }),
     storage: {
       from: () => ({
-        upload: () => Promise.resolve({ data: null, error: new Error('ストレージ機能は利用できません') }),
+        upload: () => Promise.resolve({ data: null, error: new Error('Storage is unavailable') }),
         getPublicUrl: () => ({ data: { publicUrl: '' } })
       })
     },
     functions: {
-      invoke: () => Promise.resolve({ data: null, error: new Error('Edge Functionsは利用できません') })
+      invoke: () => Promise.resolve({ data: null, error: new Error('Edge Functions are unavailable') })
     }
   };
 }

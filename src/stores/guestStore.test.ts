@@ -170,7 +170,7 @@ describe('guestStore', () => {
 
       await expect(
         useGuestStore.getState().createGuestDiary('New diary')
-      ).rejects.toThrow('ゲスト利用の上限に達しました');
+      ).rejects.toThrow('Guest limit reached');
     });
 
     it('sets expiration to 30 minutes after creation', async () => {
@@ -215,7 +215,7 @@ describe('guestStore', () => {
 
       await expect(
         useGuestStore.getState().createGuestDiary('With audio', largeBlob)
-      ).rejects.toThrow('ゲストモードでは30秒までの録音が可能です');
+      ).rejects.toThrow('Guest mode allows recordings up to 30 seconds.');
     });
   });
 

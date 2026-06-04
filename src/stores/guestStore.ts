@@ -45,11 +45,11 @@ export const useGuestStore = create<GuestStore>()(
         const { usageCount, maxDiaries } = get();
         
         if (usageCount >= maxDiaries) {
-          throw new Error('ゲスト利用の上限に達しました。ログインしてください。');
+          throw new Error('Guest limit reached. Please log in to continue.');
         }
 
         if (!diaryLimiter.canProceed()) {
-          throw new Error('投稿制限中です。しばらくしてからもう一度お試しください。');
+          throw new Error('Posting is rate-limited. Please try again shortly.');
         }
 
         // 音声データをBase64に変換（30秒制限）
@@ -57,7 +57,7 @@ export const useGuestStore = create<GuestStore>()(
         if (audioBlob) {
           // 30秒制限（約300KB）
           if (audioBlob.size > 300000) {
-            throw new Error('ゲストモードでは30秒までの録音が可能です');
+            throw new Error('Guest mode allows recordings up to 30 seconds.');
           }
           const reader = new FileReader();
           voiceData = await new Promise((resolve) => {

@@ -27,7 +27,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     try {
       if (!signupLimiter.canProceed()) {
         const cooldown = Math.ceil(signupLimiter.getRemainingCooldown() / 60000);
-        throw new Error(`アカウント作成の制限中です。${cooldown}分後にもう一度お試しください。`);
+        throw new Error(`Sign-up is rate-limited. Please try again in ${cooldown} minute(s).`);
       }
 
       const { data, error } = await supabase.auth.signUp({
@@ -72,12 +72,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
-          throw new Error('メールアドレスまたはパスワードが正しくありません');
+          throw new Error('Incorrect email or password');
         }
         if (error.message.includes('Email not confirmed')) {
-          throw new Error('メールアドレスが確認されていません。メールを確認してください。');
+          throw new Error('Email not verified. Please check your inbox.');
         }
-        throw new Error(`ログインに失敗しました: ${error.message}`);
+        throw new Error(`Login failed: ${error.message}`);
       }
 
       // ログイン成功後、ユーザープロファイルが存在するか確認
@@ -116,9 +116,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
       if (error) {
         if (error.message?.includes('provider is not enabled')) {
-          throw new Error('Google認証が有効化されていません。管理者に連絡してください。');
+          throw new Error('Google sign-in is not enabled. Please contact the administrator.');
         }
-        throw new Error(`Googleログインに失敗しました: ${error.message}`);
+        throw new Error(`Google sign-in failed: ${error.message}`);
       }
     } catch (error: any) {
       throw error;

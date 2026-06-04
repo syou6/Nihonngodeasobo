@@ -181,7 +181,7 @@ describe('authStore', () => {
 
       await expect(
         useAuthStore.getState().signIn('bad@test.com', 'wrong')
-      ).rejects.toThrow('メールアドレスまたはパスワードが正しくありません');
+      ).rejects.toThrow('Incorrect email or password');
     });
 
     it('throws translated error for unconfirmed email', async () => {
@@ -192,7 +192,7 @@ describe('authStore', () => {
 
       await expect(
         useAuthStore.getState().signIn('bad@test.com', 'pass')
-      ).rejects.toThrow('メールアドレスが確認されていません');
+      ).rejects.toThrow('Email not verified');
     });
 
     it('throws generic error for other auth failures', async () => {
@@ -203,7 +203,7 @@ describe('authStore', () => {
 
       await expect(
         useAuthStore.getState().signIn('a@b.com', 'pw')
-      ).rejects.toThrow('ログインに失敗しました: Rate limit exceeded');
+      ).rejects.toThrow('Login failed: Rate limit exceeded');
     });
   });
 
@@ -229,7 +229,7 @@ describe('authStore', () => {
 
       await expect(
         useAuthStore.getState().signInWithGoogle()
-      ).rejects.toThrow('Google認証が有効化されていません');
+      ).rejects.toThrow('Google sign-in is not enabled');
     });
 
     it('throws generic error for other OAuth failures', async () => {
@@ -240,7 +240,7 @@ describe('authStore', () => {
 
       await expect(
         useAuthStore.getState().signInWithGoogle()
-      ).rejects.toThrow('Googleログインに失敗しました: Network error');
+      ).rejects.toThrow('Google sign-in failed: Network error');
     });
   });
 

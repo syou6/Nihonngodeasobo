@@ -129,7 +129,7 @@ export const useDiaryStore = create<DiaryStore>((set, get) => ({
     try {
       if (!diaryLimiter.canProceed()) {
         const cooldown = Math.ceil(diaryLimiter.getRemainingCooldown() / 60000);
-        throw new Error(`投稿制限中です。${cooldown}分後にもう一度お試しください。`);
+        throw new Error(`Posting is rate-limited. Please try again in ${cooldown} minute(s).`);
       }
 
       let voiceUrl = null;
@@ -138,10 +138,10 @@ export const useDiaryStore = create<DiaryStore>((set, get) => ({
       // Get user first
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (authError) {
-        throw new Error(`認証エラー: ${authError.message}`);
+        throw new Error(`Authentication error: ${authError.message}`);
       }
       if (!user) {
-        throw new Error('ログインが必要です');
+        throw new Error('Please log in first');
       }
       
       // If we have audio, upload it (but don't transcribe)
@@ -149,10 +149,10 @@ export const useDiaryStore = create<DiaryStore>((set, get) => ({
         try {
           const audioSize = audioBlob.size;
 
-          // ファイルサイズ制限 (50MB)
+          // File size limit (50MB)
           const MAX_FILE_SIZE = 50 * 1024 * 1024;
           if (audioSize > MAX_FILE_SIZE) {
-            throw new Error(`ファイルサイズが大きすぎます (${formatFileSize(audioSize)})。50MB以下にしてください。`);
+            throw new Error(`File too large (${formatFileSize(audioSize)}). Please keep it under 50MB.`);
           }
           
           const uploadStartTime = performance.now();
@@ -218,7 +218,7 @@ export const useDiaryStore = create<DiaryStore>((set, get) => ({
         .single();
 
       if (error) {
-        throw new Error(`日記の保存に失敗: ${error.message || '不明なエラー'}`);
+        throw new Error(`Failed to save diary: ${error.message || 'Unknown error'}`);
       }
 
       diaryLimiter.recordAction();
@@ -286,9 +286,9 @@ export const useDiaryStore = create<DiaryStore>((set, get) => ({
     } catch (error: any) {
       // より詳細なエラー情報を提供
       if (error.message) {
-        throw new Error(`日記の保存に失敗しました: ${error.message}`);
+        throw new Error(`Failed to save diary: ${error.message}`);
       }
-      throw new Error('日記の保存に失敗しました。ネットワーク接続を確認してください。');
+      throw new Error('Failed to save diary. Please check your network connection.');
     }
   },
 

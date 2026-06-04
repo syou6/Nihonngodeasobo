@@ -194,7 +194,7 @@ describe('diaryStore', () => {
 
       await expect(
         useDiaryStore.getState().createEntry('Hello')
-      ).rejects.toThrow('ログインが必要です');
+      ).rejects.toThrow('Please log in first');
     });
 
     it('throws when auth returns error', async () => {
@@ -205,7 +205,7 @@ describe('diaryStore', () => {
 
       await expect(
         useDiaryStore.getState().createEntry('Hello')
-      ).rejects.toThrow('認証エラー');
+      ).rejects.toThrow('Authentication error');
     });
 
     it('saves diary entry and returns inserted data', async () => {
@@ -235,7 +235,7 @@ describe('diaryStore', () => {
 
       await expect(
         useDiaryStore.getState().createEntry('Content')
-      ).rejects.toThrow('日記の保存に失敗');
+      ).rejects.toThrow('Failed to save diary');
     });
 
     it('truncates title to 50 characters', async () => {
