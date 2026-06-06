@@ -33,12 +33,16 @@ async function loadDict(): Promise<AccentDict> {
   return loadPromise;
 }
 
-function lookupWord(dict: AccentDict, word: string): PitchAccentResult | null {
+function lookupWord(dict: AccentDict, word: string, preferredReading?: string): PitchAccentResult | null {
   const entries = dict[word];
   if (!entries || entries.length === 0) return null;
 
-  // Use the first entry as the primary reading
-  const { r: reading, p: pitchNum } = entries[0];
+  // Dictionary entries are not ordered by commonness and may include rare or
+  // non-Japanese readings (e.g. 学生 → がくしょう before がくせい, 先生 → シーサン).
+  // When the caller knows the intended reading, pick that exact entry; otherwise
+  // fall back to the first entry.
+  const entry = (preferredReading && entries.find((e) => e.r === preferredReading)) || entries[0];
+  const { r: reading, p: pitchNum } = entry;
   const result = hatsuon({ reading, pitchNum, locale: 'JA' });
 
   return {
@@ -53,7 +57,10 @@ function lookupWord(dict: AccentDict, word: string): PitchAccentResult | null {
  * Lazily loads the pitch accent dictionary and looks up a word.
  * Returns null when loading or when the word is not found.
  */
-export function usePitchAccent(word: string | null): PitchAccentResult | null {
+export function usePitchAccent(
+  word: string | null,
+  preferredReading?: string,
+): PitchAccentResult | null {
   const [result, setResult] = useState<PitchAccentResult | null>(null);
 
   useEffect(() => {
@@ -67,7 +74,7 @@ export function usePitchAccent(word: string | null): PitchAccentResult | null {
     loadDict()
       .then((dict) => {
         if (!cancelled) {
-          setResult(lookupWord(dict, word));
+          setResult(lookupWord(dict, word, preferredReading));
         }
       })
       .catch(() => {
@@ -77,7 +84,7 @@ export function usePitchAccent(word: string | null): PitchAccentResult | null {
     return () => {
       cancelled = true;
     };
-  }, [word]);
+  }, [word, preferredReading]);
 
   return result;
 }

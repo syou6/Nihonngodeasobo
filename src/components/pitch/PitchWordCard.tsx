@@ -4,6 +4,8 @@ import { PitchAccentDisplay } from './PitchAccentDisplay';
 
 interface Props {
   word: string;
+  /** Intended reading so the dictionary lookup picks the correct entry. */
+  reading?: string;
   /** Per-mora correctness overlay passed through to PitchAccentDisplay */
   detectedPattern?: (boolean | null)[];
   /** Compact variant for inline use — smaller card, no border */
@@ -38,8 +40,8 @@ function NotFoundState({ word, compact }: { word: string; compact: boolean }): R
   );
 }
 
-export function PitchWordCard({ word, detectedPattern, compact = false }: Props): React.ReactElement {
-  const pitchData = usePitchAccent(word);
+export function PitchWordCard({ word, reading, detectedPattern, compact = false }: Props): React.ReactElement {
+  const pitchData = usePitchAccent(word, reading);
 
   // Still loading (null result, no cache hit yet)
   const isLoading = pitchData === null && word.length > 0;

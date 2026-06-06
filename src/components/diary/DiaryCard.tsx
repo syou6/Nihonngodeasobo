@@ -6,6 +6,7 @@ import { FeedbackCard } from '../feedback/FeedbackCard';
 import { UpgradePrompt } from '../subscription/UpgradePrompt';
 import { useAuthStore } from '../../stores/authStore';
 import { useDiaryStore } from '../../stores/diaryStore';
+import { useFeedbackPromptStore } from '../../stores/feedbackPromptStore';
 import { useSubscription } from '../../hooks/useSubscription';
 import { supabase } from '../../lib/supabase';
 import { commentLimiter } from '../../lib/rate-limiter';
@@ -34,12 +35,21 @@ export const DiaryCard: React.FC<DiaryCardProps> = ({ entry }) => {
   const [showComments, setShowComments] = useState(false);
   const [showFullContent, setShowFullContent] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const requestFeedbackPrompt = useFeedbackPromptStore((s) => s.request);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
   const [newComment, setNewComment] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+
+  // Post-experience: a few seconds after the learner opens their AI feedback,
+  // ask how it was (gated to once per 7 days by the store).
+  useEffect(() => {
+    if (!showFeedback) return;
+    const t = setTimeout(() => requestFeedbackPrompt('post-ai-feedback'), 6000);
+    return () => clearTimeout(t);
+  }, [showFeedback, requestFeedbackPrompt]);
 
   const { user } = useAuthStore();
   const { deleteEntry, fetchEntries } = useDiaryStore();

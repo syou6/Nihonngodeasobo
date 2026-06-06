@@ -8,13 +8,24 @@ import { usePitchAccent } from '../../hooks/usePitchAccent';
 import { PitchTracker, type PitchFrame } from '../../lib/pitch-tracker';
 import { comparePitchToPattern } from '../../lib/pitch-analyzer';
 
-// Curated beginner word set. All confirmed present in /pitch-accents.json and
-// chosen to surface meaningful accent contrasts — including minimal pairs where
-// pitch alone changes meaning (箸/橋, 雨/飴).
-const PRACTICE_WORDS = [
-  '日本', '日本語', '学生', '先生', '水', '山', '川',
-  '雨', '飴', '箸', '橋', '花', '鼻', '母', '友達',
-  '学校', '電話', '名前', '犬', '猫', '元気', '今日', '明日',
+// Curated beginner word set. Each carries its intended reading so the dictionary
+// lookup picks the correct entry (entries are not ordered by commonness — e.g.
+// 学生 lists がくしょう before がくせい). All readings verified against
+// /pitch-accents.json. Includes minimal pairs where pitch alone changes meaning
+// (箸/橋, 雨/飴, 花/鼻).
+const PRACTICE_WORDS: { word: string; reading: string }[] = [
+  { word: '日本', reading: 'にほん' }, { word: '学生', reading: 'がくせい' },
+  { word: '先生', reading: 'せんせい' }, { word: '水', reading: 'みず' },
+  { word: '山', reading: 'やま' }, { word: '川', reading: 'かわ' },
+  { word: '雨', reading: 'あめ' }, { word: '飴', reading: 'あめ' },
+  { word: '箸', reading: 'はし' }, { word: '橋', reading: 'はし' },
+  { word: '花', reading: 'はな' }, { word: '鼻', reading: 'はな' },
+  { word: '母', reading: 'はは' }, { word: '友達', reading: 'ともだち' },
+  { word: '学校', reading: 'がっこう' }, { word: '電話', reading: 'でんわ' },
+  { word: '名前', reading: 'なまえ' }, { word: '犬', reading: 'いぬ' },
+  { word: '猫', reading: 'ねこ' }, { word: '元気', reading: 'げんき' },
+  { word: '今日', reading: 'きょう' }, { word: '明日', reading: 'あした' },
+  { word: '海', reading: 'うみ' },
 ];
 
 type Phase = 'ready' | 'recording' | 'result';
@@ -40,8 +51,8 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
   const trackerRef = useRef<PitchTracker | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const word = PRACTICE_WORDS[wordIndex];
-  const pitchData = usePitchAccent(word);
+  const { word, reading } = PRACTICE_WORDS[wordIndex];
+  const pitchData = usePitchAccent(word, reading);
   const isLoadingAccent = pitchData === null;
 
   const releaseMic = () => {
@@ -130,7 +141,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
       >
         {/* Target word + expected pattern (green/red overlay after an attempt) */}
         <div className="flex justify-center">
-          <PitchWordCard word={word} detectedPattern={matches} />
+          <PitchWordCard word={word} reading={reading} detectedPattern={matches} />
         </div>
 
         {/* Result: score + recorded contour vs expected bands */}
