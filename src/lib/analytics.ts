@@ -1,12 +1,10 @@
 /**
- * Google Analytics 4 wrapper.
+ * Google Analytics 4 event helpers.
  *
- * Safe to call unconditionally: when VITE_GA_MEASUREMENT_ID is not set, every
- * export is a no-op, so local/dev builds never hit GA. Set the env var
- * (e.g. "G-XXXXXXXXXX") in Vercel to activate.
+ * The gtag loader lives in the page <head> (index.html / app.html) and only
+ * activates on the production domain, so these helpers simply forward events to
+ * window.gtag when it exists. On localhost / preview (no gtag) they are no-ops.
  */
-
-const MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID as string | undefined;
 
 type GtagArgs = [string, ...unknown[]];
 declare global {
@@ -16,36 +14,20 @@ declare global {
   }
 }
 
-let initialized = false;
-
+// Kept for call-site compatibility; the gtag tag is installed in the HTML head.
 export function initAnalytics(): void {
-  if (initialized || !MEASUREMENT_ID || typeof window === 'undefined') return;
-
-  const script = document.createElement('script');
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${MEASUREMENT_ID}`;
-  document.head.appendChild(script);
-
-  window.dataLayer = window.dataLayer || [];
-  window.gtag = function gtag(...args: GtagArgs) {
-    window.dataLayer!.push(args);
-  };
-  window.gtag('js', new Date());
-  // SPA: we send page_view manually on view changes.
-  window.gtag('config', MEASUREMENT_ID, { send_page_view: false });
-
-  initialized = true;
+  /* no-op: gtag is loaded by the page head on the production domain */
 }
 
-/** Track a custom event (no-op unless GA is configured). */
+/** Track a custom event (no-op unless GA is active on this domain). */
 export function trackEvent(name: string, params?: Record<string, unknown>): void {
-  if (!MEASUREMENT_ID || !window.gtag) return;
+  if (typeof window === 'undefined' || !window.gtag) return;
   window.gtag('event', name, params ?? {});
 }
 
 /** Track an in-app view change as a page_view. */
 export function trackPageView(view: string): void {
-  if (!MEASUREMENT_ID || !window.gtag) return;
+  if (typeof window === 'undefined' || !window.gtag) return;
   window.gtag('event', 'page_view', {
     page_title: view,
     page_path: `/${view}`,
@@ -54,6 +36,6 @@ export function trackPageView(view: string): void {
 
 /** Associate subsequent events with a user id (or clear it). */
 export function identify(userId: string | null): void {
-  if (!MEASUREMENT_ID || !window.gtag) return;
+  if (typeof window === 'undefined' || !window.gtag) return;
   window.gtag('set', { user_id: userId ?? undefined });
 }

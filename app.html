@@ -3,6 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Analytics 4 (production domain only) -->
+    <script>
+      if (location.hostname === 'nihongo.amorjp.com') {
+        var gaScript = document.createElement('script');
+        gaScript.async = true;
+        gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-79GNWZ3865';
+        document.head.appendChild(gaScript);
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { window.dataLayer.push(arguments); };
+        window.gtag('js', new Date());
+        window.gtag('config', 'G-79GNWZ3865');
+      }
+    </script>
     <title>NihonGo</title>
     <meta name="description" content="Learn Japanese every day with AI-powered feedback. Record your voice diary in Japanese, get personalized grammar and vocabulary corrections, and track your JLPT level progress.">
     <meta name="keywords" content="Japanese learning,JLPT,AI,speaking practice,voice diary,language learning,nihongo">

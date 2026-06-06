@@ -3,6 +3,19 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<!-- Google Analytics 4 (production domain only) -->
+<script>
+  if (location.hostname === 'nihongo.amorjp.com') {
+    var gaScript = document.createElement('script');
+    gaScript.async = true;
+    gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-79GNWZ3865';
+    document.head.appendChild(gaScript);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    window.gtag('js', new Date());
+    window.gtag('config', 'G-79GNWZ3865');
+  }
+</script>
 <title>NihonGo - Master Japanese with AI</title>
 <meta name="description" content="AI-powered Japanese learning app. Record voice diaries, get instant AI feedback, and practice JLPT speaking exercises. Start free today.">
 <meta property="og:title" content="NihonGo - Master Japanese with AI">
