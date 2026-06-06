@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+// Cloud TTS is unavailable in tests, so speak() falls back to the browser voice.
+vi.mock('./cloud-tts', () => ({
+  cloudSpeak: vi.fn(async () => false),
+  stopCloudAudio: vi.fn(),
+}));
+
 // Mock SpeechSynthesis API
 function createMockSynth() {
   return {
@@ -118,6 +124,7 @@ describe('TextToSpeech', () => {
     // Don't await - we'll trigger onend manually
     const speakPromise = ttsInstance.speak('こんにちは');
 
+    await new Promise((r) => setTimeout(r, 0)); // let cloud fallback resolve
     const utterance = mockSynth.speak.mock.calls[0][0];
     expect(utterance.lang).toBe('ja-JP');
     expect(utterance.rate).toBe(0.9); // Default slower rate for learners
@@ -140,6 +147,7 @@ describe('TextToSpeech', () => {
     const ttsInstance = new TextToSpeech();
 
     const speakPromise = ttsInstance.speak('test');
+    await new Promise((r) => setTimeout(r, 0)); // let cloud fallback resolve
     const utterance = mockSynth.speak.mock.calls[0][0];
 
     utterance.onerror({ error: 'interrupted' });
@@ -151,6 +159,7 @@ describe('TextToSpeech', () => {
     const ttsInstance = new TextToSpeech();
 
     const speakPromise = ttsInstance.speak('test');
+    await new Promise((r) => setTimeout(r, 0)); // let cloud fallback resolve
     const utterance = mockSynth.speak.mock.calls[0][0];
 
     utterance.onerror({ error: 'synthesis-failed' });
@@ -208,6 +217,7 @@ describe('TextToSpeech', () => {
     const ttsInstance = new TextToSpeech();
 
     const speakPromise = ttsInstance.speak('test', { rate: 1.5, pitch: 0.8, volume: 0.5 });
+    await new Promise((r) => setTimeout(r, 0)); // let cloud fallback resolve
     const utterance = mockSynth.speak.mock.calls[0][0];
 
     expect(utterance.rate).toBe(1.5);
@@ -226,6 +236,7 @@ describe('TextToSpeech', () => {
     const ttsInstance = new TextToSpeech();
 
     const speakPromise = ttsInstance.speak('test', { voice: 'Kyoko' });
+    await new Promise((r) => setTimeout(r, 0)); // let cloud fallback resolve
     const utterance = mockSynth.speak.mock.calls[0][0];
 
     expect(utterance.voice).toEqual(kyokoVoice);

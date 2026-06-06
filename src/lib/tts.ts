@@ -1,6 +1,9 @@
 /**
- * Text-to-Speech utility using Web Speech API
+ * Text-to-Speech utility. Prefers the natural cloud voice (ElevenLabs via the
+ * `tts` Edge Function) and falls back to the browser's Web Speech API when the
+ * cloud voice is unavailable (not configured, offline, guest, etc).
  */
+import { cloudSpeak, stopCloudAudio } from './cloud-tts';
 
 export interface TTSOptions {
   rate?: number;      // Speech rate (0.1 - 10, default 1)
@@ -80,7 +83,16 @@ class TextToSpeech {
   /**
    * Speak text
    */
-  speak(text: string, options: TTSOptions = {}): Promise<void> {
+  async speak(text: string, options: TTSOptions = {}): Promise<void> {
+    // Try the natural cloud voice first; fall back to the browser voice on miss.
+    this.stop();
+    if (options.voice === undefined && (await cloudSpeak(text))) {
+      return;
+    }
+    return this.speakWithBrowser(text, options);
+  }
+
+  private speakWithBrowser(text: string, options: TTSOptions = {}): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!TextToSpeech.isSupported()) {
         reject(new Error('Text-to-speech not supported'));
@@ -136,6 +148,7 @@ class TextToSpeech {
    * Stop speaking
    */
   stop(): void {
+    stopCloudAudio();
     if (this.synth.speaking) {
       this.synth.cancel();
     }
