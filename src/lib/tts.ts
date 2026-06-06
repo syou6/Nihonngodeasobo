@@ -52,16 +52,29 @@ class TextToSpeech {
   }
 
   /**
-   * Get preferred Japanese voice (ja-JP preferred)
+   * Get the highest-quality available Japanese voice. Browser default voices
+   * vary wildly — neural/enhanced ones (Google, Kyoko, Microsoft "Natural")
+   * sound natural, while legacy ones (e.g. Microsoft Haruka) sound robotic.
+   * Rank by known-good names so learners hear the best voice the device offers.
    */
   getPreferredVoice(): SpeechSynthesisVoice | null {
     const japaneseVoices = this.getJapaneseVoices();
+    if (japaneseVoices.length === 0) return null;
 
-    // Priority: ja-JP > any Japanese voice
-    const jaJpVoice = japaneseVoices.find(v => v.lang === 'ja-JP');
-    if (jaJpVoice) return jaJpVoice;
+    const score = (v: SpeechSynthesisVoice): number => {
+      const n = v.name.toLowerCase();
+      let s = 0;
+      if (/natural|neural|enhanced|premium/.test(n)) s += 100; // best neural voices
+      if (n.includes('google')) s += 80;   // Chrome's natural network voice
+      if (/nanami|keita/.test(n)) s += 70;  // Microsoft neural JA
+      if (/kyoko|o-ren|otoya|hattori/.test(n)) s += 50; // Apple voices
+      if (/haruka|ichiro|sayaka/.test(n)) s -= 50; // legacy robotic — avoid
+      if (v.localService === false) s += 10; // network voices usually richer
+      if (v.lang === 'ja-JP') s += 5;
+      return s;
+    };
 
-    return japaneseVoices[0] || null;
+    return [...japaneseVoices].sort((a, b) => score(b) - score(a))[0];
   }
 
   /**
