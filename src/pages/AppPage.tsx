@@ -15,6 +15,7 @@ import { WelcomeGuide } from '../components/onboarding/WelcomeGuide';
 import { OnboardingFlow } from '../components/onboarding/OnboardingFlow';
 import { HelpButton } from '../components/help/HelpButton';
 import { FeedbackPrompt } from '../components/feedback/FeedbackPrompt';
+import { trackPageView, identify } from '../lib/analytics';
 import { supabase } from '../lib/supabase';
 import { EN } from '../i18n/en';
 
@@ -63,6 +64,15 @@ export const AppPage: React.FC = () => {
       setGuestMode(false);
     }
   }, [user, isGuestMode, setGuestMode]);
+
+  // Analytics: associate events with the user, and log each in-app view change.
+  useEffect(() => {
+    identify(user?.id ?? null);
+  }, [user?.id]);
+
+  useEffect(() => {
+    trackPageView(currentView);
+  }, [currentView]);
 
   useEffect(() => {
     // アプリを使用したことを記録

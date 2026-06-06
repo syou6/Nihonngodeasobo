@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import type { User } from '../types';
 import type { JLPTLevel } from '../lib/constants';
 import { signupLimiter } from '../lib/rate-limiter';
+import { trackEvent } from '../lib/analytics';
 
 // Module-level variable to track auth subscription (prevents duplicate listeners)
 let authSubscription: { unsubscribe: () => void } | null = null;
@@ -57,6 +58,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         }
 
         signupLimiter.recordAction();
+        trackEvent('sign_up', { method: 'email' });
       }
     } catch (error) {
       throw error;
@@ -99,6 +101,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
               role: 'learner'
             });
         }
+        trackEvent('login', { method: 'email' });
       }
     } catch (error: any) {
       throw error;

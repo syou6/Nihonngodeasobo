@@ -7,6 +7,7 @@ import { PitchContourGraph } from './PitchContourGraph';
 import { usePitchAccent } from '../../hooks/usePitchAccent';
 import { PitchTracker, type PitchFrame } from '../../lib/pitch-tracker';
 import { comparePitchToPattern } from '../../lib/pitch-analyzer';
+import { trackEvent } from '../../lib/analytics';
 
 // Curated beginner word set. Each carries its intended reading so the dictionary
 // lookup picks the correct entry (entries are not ordered by commonness — e.g.
@@ -107,6 +108,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
     setMatches(result.matches);
     setAccuracy(result.accuracy);
     setPhase('result');
+    trackEvent('pitch_scored', { word, accuracy: result.accuracy });
   };
 
   const nextWord = () => {

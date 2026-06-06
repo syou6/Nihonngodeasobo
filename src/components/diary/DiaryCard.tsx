@@ -12,6 +12,7 @@ const FeedbackCard = lazy(() =>
 import { useAuthStore } from '../../stores/authStore';
 import { useDiaryStore } from '../../stores/diaryStore';
 import { useFeedbackPromptStore } from '../../stores/feedbackPromptStore';
+import { trackEvent } from '../../lib/analytics';
 import { useSubscription } from '../../hooks/useSubscription';
 import { supabase } from '../../lib/supabase';
 import { commentLimiter } from '../../lib/rate-limiter';
@@ -52,6 +53,7 @@ export const DiaryCard: React.FC<DiaryCardProps> = ({ entry }) => {
   // ask how it was (gated to once per 7 days by the store).
   useEffect(() => {
     if (!showFeedback) return;
+    trackEvent('ai_feedback_viewed');
     const t = setTimeout(() => requestFeedbackPrompt('post-ai-feedback'), 6000);
     return () => clearTimeout(t);
   }, [showFeedback, requestFeedbackPrompt]);

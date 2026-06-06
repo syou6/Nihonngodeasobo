@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { analyzeText, generateSummary } from '../lib/gemini';
 import { generateJapaneseFeedback } from '../lib/gemini-feedback';
 import { diaryLimiter } from '../lib/rate-limiter';
+import { trackEvent } from '../lib/analytics';
 import { toast } from 'sonner';
 import type { DiaryEntry, JLPTLevel } from '../types';
 
@@ -213,6 +214,7 @@ export const useDiaryStore = create<DiaryStore>((set, get) => ({
       }
 
       diaryLimiter.recordAction();
+      trackEvent('diary_created', { has_audio: !!audioBlob });
 
       // Refresh entries
       await get().fetchEntries();

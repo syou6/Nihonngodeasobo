@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useFeedbackPromptStore } from '../../stores/feedbackPromptStore';
 import { submitFeedback } from '../../lib/feedback-api';
+import { trackEvent } from '../../lib/analytics';
 
 const FACES: { value: number; emoji: string; label: string }[] = [
   { value: 1, emoji: '😞', label: 'Bad' },
@@ -27,6 +28,7 @@ export const FeedbackPrompt: React.FC = () => {
     setSubmitting(true);
     try {
       await submitFeedback({ rating: rating ?? undefined, comment, context });
+      trackEvent('feedback_submitted', { rating: rating ?? undefined });
       markSubmitted();
       toast.success('Thanks for the feedback! 🍣');
     } catch {
