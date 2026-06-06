@@ -23,6 +23,15 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  // Internal function: only the service role (DB triggers / cron) may invoke this.
+  const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  if (SERVICE_KEY && req.headers.get('Authorization') !== `Bearer ${SERVICE_KEY}`) {
+    return new Response(
+      JSON.stringify({ error: 'Forbidden' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+    )
+  }
+
   console.warn('send-push function is deprecated. Please use send-notification instead.')
 
   try {

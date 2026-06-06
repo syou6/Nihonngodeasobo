@@ -16,6 +16,15 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  // Internal function: only the service role (cron / trigger) may invoke this.
+  const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  if (SERVICE_KEY && req.headers.get('Authorization') !== `Bearer ${SERVICE_KEY}`) {
+    return new Response(
+      JSON.stringify({ error: 'Forbidden' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+    )
+  }
+
   try {
     const body = await req.json() as ReminderRequest || {}
     const { userId, testMode } = body

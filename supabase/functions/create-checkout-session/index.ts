@@ -33,7 +33,23 @@ serve(async (req) => {
 
   try {
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, { apiVersion: '2023-10-16' })
-    const { priceId, userId, successUrl, cancelUrl, couponId } = await req.json()
+
+    // Authenticate the caller and attribute the subscription to THEM — never trust
+    // a userId from the body (that would let the metadata be spoofed).
+    const token = req.headers.get('Authorization')?.replace('Bearer ', '')
+    const userRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/auth/v1/user`, {
+      headers: { Authorization: `Bearer ${token}`, apikey: Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')! },
+    })
+    const authedUser = userRes.ok ? await userRes.json() : null
+    if (!authedUser?.id) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      )
+    }
+    const userId = authedUser.id
+
+    const { priceId, successUrl, cancelUrl, couponId } = await req.json()
 
     const sessionParams: any = {
       payment_method_types: ['card'],

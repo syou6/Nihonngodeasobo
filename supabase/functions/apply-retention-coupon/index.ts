@@ -23,25 +23,26 @@ serve(async (req) => {
       )
     }
 
-    const { userId } = await req.json()
-
-    if (!userId) {
-      return new Response(
-        JSON.stringify({ error: 'userId is required' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      )
-    }
-
-    // Find active subscription for this user
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
+    // Authenticate the caller and act ONLY on their own subscription — never trust
+    // a userId from the body (that would let anyone coupon another user's sub).
+    const token = req.headers.get('Authorization')?.replace('Bearer ', '')
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token ?? '')
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      )
+    }
+
     const { data: sub } = await supabase
       .from('subscriptions')
       .select('stripe_subscription_id')
-      .eq('user_id', userId)
+      .eq('user_id', user.id)
       .eq('status', 'active')
       .maybeSingle()
 

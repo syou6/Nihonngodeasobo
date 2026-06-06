@@ -19,12 +19,23 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
-    const { userId, returnUrl } = await req.json()
+    // Authenticate the caller and operate ONLY on their own account — never trust
+    // a userId from the body (that would let anyone open another user's billing portal).
+    const token = req.headers.get('Authorization')?.replace('Bearer ', '')
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token ?? '')
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      )
+    }
+
+    const { returnUrl } = await req.json()
 
     const { data: sub } = await supabase
       .from('subscriptions')
       .select('stripe_customer_id')
-      .eq('user_id', userId)
+      .eq('user_id', user.id)
       .single()
 
     if (!sub?.stripe_customer_id) {

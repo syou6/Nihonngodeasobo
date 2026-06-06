@@ -14,9 +14,10 @@ interface NotificationPayload {
   type?: 'diary' | 'comment' | 'reminder'
 }
 
-// Web Push用のVAPID設定
-const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY') || 'BPbbeE9gPuQBaFzqzQ6sODqkCH4gODBWF2yNnCXQIr_ym1dvle_Gl_U2_QcdK-sG7KTRqCf9sKQZJw_F4B_bZwI'
-const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY') || 'BvVLEzrNTqZmsodEnfjIHHGLTRuVQmwzx-cEJIGrpWw'
+// Web Push VAPID keys come from env only. A hardcoded private-key fallback is a
+// leaked secret — set VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY as Edge Function secrets.
+const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY') || ''
+const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY') || ''
 
 // FCM Configuration
 const FCM_SERVER_KEY = Deno.env.get('FCM_SERVER_KEY')
@@ -80,6 +81,15 @@ serve(async (req) => {
   // CORS対応
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
+  }
+
+  // Internal function: only the service role (DB triggers / cron) may invoke this.
+  const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  if (SERVICE_KEY && req.headers.get('Authorization') !== `Bearer ${SERVICE_KEY}`) {
+    return new Response(
+      JSON.stringify({ error: 'Forbidden' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+    )
   }
 
   try {
