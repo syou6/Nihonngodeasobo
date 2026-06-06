@@ -8,7 +8,6 @@ import { useGuestStore } from '../stores/guestStore';
 import { AuthForm } from '../components/auth/AuthForm';
 import { Header } from '../components/navigation/Header';
 import { LearnerDashboard } from '../components/dashboard/LearnerDashboard';
-import { VoiceRecorder } from '../components/recording/VoiceRecorder';
 import { PWAInstallPrompt } from '../components/PWAInstallPrompt';
 import { GuestBanner } from '../components/guest/GuestBanner';
 import { GuestDiaryList } from '../components/guest/GuestDiaryList';
@@ -21,6 +20,7 @@ import { EN } from '../i18n/en';
 
 // Code-split the non-initial views so the first paint (home/record) ships a
 // smaller bundle. Each becomes its own chunk loaded on demand.
+const VoiceRecorder = lazy(() => import('../components/recording/VoiceRecorder').then((m) => ({ default: m.VoiceRecorder })));
 const DiaryList = lazy(() => import('../components/diary/DiaryList').then((m) => ({ default: m.DiaryList })));
 const FamilyManager = lazy(() => import('../components/family/FamilyManager').then((m) => ({ default: m.FamilyManager })));
 const SettingsView = lazy(() => import('../components/settings/SettingsView').then((m) => ({ default: m.SettingsView })));
@@ -264,7 +264,9 @@ export const AppPage: React.FC = () => {
                         <p className="text-sm text-gray-500">Speak in Japanese — AI will give you feedback</p>
                       </div>
                     </div>
-                    <VoiceRecorder isGuest />
+                    <Suspense fallback={<ViewFallback />}>
+                      <VoiceRecorder isGuest />
+                    </Suspense>
                   </div>
                   <GuestDiaryList />
                 </div>

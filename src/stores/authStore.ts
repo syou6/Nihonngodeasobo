@@ -225,6 +225,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
         if (session?.user) {
+          // Skip the redundant profile fetch when we already have this user (the
+          // initialize() query above, or a token refresh for the same session).
+          if (get().user?.id === session.user.id) return;
+
           const { data: userProfile, error } = await supabase
             .from('users')
             .select('*')

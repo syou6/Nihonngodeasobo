@@ -1,9 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../ui/Button';
 import { StandardDialog } from '../ui/StandardDialog';
-import { FeedbackCard } from '../feedback/FeedbackCard';
 import { UpgradePrompt } from '../subscription/UpgradePrompt';
+
+// FeedbackCard pulls in react-markdown + remark-gfm (heavy). Load it only when a
+// learner actually opens their AI feedback, keeping the diary list bundle small.
+const FeedbackCard = lazy(() =>
+  import('../feedback/FeedbackCard').then((m) => ({ default: m.FeedbackCard }))
+);
 import { useAuthStore } from '../../stores/authStore';
 import { useDiaryStore } from '../../stores/diaryStore';
 import { useFeedbackPromptStore } from '../../stores/feedbackPromptStore';
@@ -370,7 +375,9 @@ export const DiaryCard: React.FC<DiaryCardProps> = ({ entry }) => {
                   exit={{ opacity: 0, height: 0 }}
                   className="mt-4"
                 >
-                  <FeedbackCard feedback={entry.ai_feedback} />
+                  <Suspense fallback={<div className="h-24 animate-pulse bg-indigo-50 rounded-xl" />}>
+                    <FeedbackCard feedback={entry.ai_feedback} />
+                  </Suspense>
                 </motion.div>
               )}
             </AnimatePresence>
