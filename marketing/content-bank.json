@@ -1,0 +1,20 @@
+{
+  "_comment": "Daily short-form content bank for NihonGo. type 'pitch' = minimal-pair pitch-accent hook (pitch verified against public/pitch-accents.json). type 'grammar' = common learner mistake the AI fixes. Add entries freely; generate-daily.mjs picks one per run.",
+  "entries": [
+    { "type": "pitch", "reading": "はし", "a": { "word": "箸", "en": "chopsticks", "hl": "HL" }, "b": { "word": "橋", "en": "bridge", "hl": "LH" } },
+    { "type": "pitch", "reading": "あめ", "a": { "word": "雨", "en": "rain", "hl": "HL" }, "b": { "word": "飴", "en": "candy", "hl": "LH" } },
+    { "type": "pitch", "reading": "かき", "a": { "word": "牡蠣", "en": "oyster", "hl": "HL" }, "b": { "word": "柿", "en": "persimmon", "hl": "LH" } },
+    { "type": "pitch", "reading": "さけ", "a": { "word": "鮭", "en": "salmon", "hl": "HL" }, "b": { "word": "酒", "en": "sake (alcohol)", "hl": "LH" } },
+    { "type": "pitch", "reading": "かみ", "a": { "word": "神", "en": "god", "hl": "HL" }, "b": { "word": "髪", "en": "hair", "hl": "LH" } },
+    { "type": "pitch", "reading": "いま", "a": { "word": "今", "en": "now", "hl": "HL" }, "b": { "word": "居間", "en": "living room", "hl": "LH" } },
+    { "type": "pitch", "reading": "かめ", "a": { "word": "亀", "en": "turtle", "hl": "HL" }, "b": { "word": "甕", "en": "jar", "hl": "LH" } },
+
+    { "type": "grammar", "hook": "Your Japanese past tense is WRONG", "level": "N4", "wrong": "面白いでした", "right": "面白かったです", "why": "i-adjectives conjugate themselves — never add でした." },
+    { "type": "grammar", "hook": "Stop saying 〜たい like this", "level": "N5", "wrong": "行くたい", "right": "行きたい", "why": "〜たい attaches to the verb stem: 行き + たい." },
+    { "type": "grammar", "hook": "This は/が mistake screams 'beginner'", "level": "N4", "wrong": "私は犬が好きです。私は…", "right": "犬が好きです。", "why": "Japanese drops the subject once it's known. Don't repeat 私は." },
+    { "type": "grammar", "hook": "You're using the wrong 'live'", "level": "N4", "wrong": "東京に住みます", "right": "東京に住んでいます", "why": "Ongoing state = 〜ている. 住みます sounds like a future plan." },
+    { "type": "grammar", "hook": "na-adjective negative — most learners miss this", "level": "N4", "wrong": "静かくない", "right": "静かじゃない", "why": "na-adjectives negate with じゃない, not くない (that's for i-adjectives)." },
+    { "type": "grammar", "hook": "'Very' + verb doesn't work in Japanese", "level": "N4", "wrong": "とても好き（as 'I very like'）", "right": "大好き / すごく好き", "why": "とても modifies adjectives; for strong liking use 大好き or すごく." },
+    { "type": "grammar", "hook": "Counting things? You're probably wrong", "level": "N5", "wrong": "三犬", "right": "犬三匹（さんびき）", "why": "Animals use the counter 匹/匹. Numbers need the right counter, not bare 三." }
+  ]
+}
