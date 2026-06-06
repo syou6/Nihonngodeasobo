@@ -12,25 +12,34 @@ export interface PitchAccentResult {
 type AccentEntry = { r: string; p: number };
 type AccentDict = Record<string, AccentEntry[]>;
 
-// Module-level cache — shared across all hook instances
-let cachedDict: AccentDict | null = null;
-let loadPromise: Promise<AccentDict> | null = null;
+// Module-level caches — shared across all hook instances.
+// The practice feature only needs ~23 words, so we ship a tiny dict (~1KB) and
+// load it first. The full 4.3MB dictionary is fetched lazily ONLY if a looked-up
+// word is missing from the slim set — so the common path never pays for it.
+let slimDict: AccentDict | null = null;
+let slimPromise: Promise<AccentDict> | null = null;
+let fullDict: AccentDict | null = null;
+let fullPromise: Promise<AccentDict> | null = null;
+
+function fetchDict(path: string): Promise<AccentDict> {
+  return fetch(path).then((res) => {
+    if (!res.ok) throw new Error(`Failed to load ${path}: ${res.status}`);
+    return res.json() as Promise<AccentDict>;
+  });
+}
 
 async function loadDict(): Promise<AccentDict> {
-  if (cachedDict !== null) return cachedDict;
-  if (loadPromise !== null) return loadPromise;
+  if (slimDict !== null) return slimDict;
+  if (slimPromise !== null) return slimPromise;
+  slimPromise = fetchDict('/pitch-practice-dict.json').then((d) => (slimDict = d));
+  return slimPromise;
+}
 
-  loadPromise = fetch('/pitch-accents.json')
-    .then((res) => {
-      if (!res.ok) throw new Error(`Failed to load pitch-accents.json: ${res.status}`);
-      return res.json() as Promise<AccentDict>;
-    })
-    .then((dict) => {
-      cachedDict = dict;
-      return dict;
-    });
-
-  return loadPromise;
+async function loadFullDict(): Promise<AccentDict> {
+  if (fullDict !== null) return fullDict;
+  if (fullPromise !== null) return fullPromise;
+  fullPromise = fetchDict('/pitch-accents.json').then((d) => (fullDict = d));
+  return fullPromise;
 }
 
 function lookupWord(dict: AccentDict, word: string, preferredReading?: string): PitchAccentResult | null {
@@ -72,10 +81,13 @@ export function usePitchAccent(
     let cancelled = false;
 
     loadDict()
-      .then((dict) => {
-        if (!cancelled) {
-          setResult(lookupWord(dict, word, preferredReading));
+      .then(async (dict) => {
+        let found = lookupWord(dict, word, preferredReading);
+        // Word not in the slim practice set — fall back to the full dictionary.
+        if (found === null && dict[word] === undefined) {
+          found = lookupWord(await loadFullDict(), word, preferredReading);
         }
+        if (!cancelled) setResult(found);
       })
       .catch(() => {
         if (!cancelled) setResult(null);

@@ -155,6 +155,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   initialize: async () => {
+    // Safety net: never let the initial loading screen hang on a slow network or
+    // a stalled users query. After 5s, drop the spinner and let the app proceed;
+    // the session/profile still populates once the awaits resolve.
+    setTimeout(() => set({ loading: false }), 5000);
     try {
       // 環境変数が設定されていない場合はゲストモードで開始
       const hasValidConfig = import.meta.env.VITE_SUPABASE_URL && 

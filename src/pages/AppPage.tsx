@@ -146,10 +146,15 @@ export const AppPage: React.FC = () => {
     
     // 環境変数が設定されている場合は認証を試行
     if (hasValidConfig) {
-      initialize().catch(() => {
-        setGuestMode(true);
-        setShowOnboarding(true);
-      }).finally(() => {
+      // Cap auth init at 5s so a slow network can't keep the loading screen up.
+      const initTimeout = new Promise<void>((resolve) => setTimeout(resolve, 5000));
+      Promise.race([
+        initialize().catch(() => {
+          setGuestMode(true);
+          setShowOnboarding(true);
+        }),
+        initTimeout,
+      ]).finally(() => {
         setIsInitialized(true);
       });
     } else {
