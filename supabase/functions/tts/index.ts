@@ -79,8 +79,15 @@ serve(async (req) => {
       )
     }
 
+    // Validate the voice id before interpolating it into the upstream URL —
+    // ElevenLabs ids are short alphanumerics; anything else is rejected to prevent
+    // path injection / SSRF into other endpoints. Fall back to the default voice.
+    const safeVoiceId = (typeof voiceId === 'string' && /^[A-Za-z0-9]{16,32}$/.test(voiceId))
+      ? voiceId
+      : VOICE_ID
+
     const res = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId || VOICE_ID}`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${safeVoiceId}`,
       {
         method: 'POST',
         headers: {
