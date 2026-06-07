@@ -5,11 +5,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// NVIDIA NIM is OpenAI-compatible. Model is overridable via the NVIDIA_MODEL env.
-// Default is a small model confirmed available on the hosted free endpoint; set
-// NVIDIA_MODEL to a larger/Japanese-stronger model your account has access to.
-const NVIDIA_API_URL = 'https://integrate.api.nvidia.com/v1/chat/completions'
-const NVIDIA_MODEL = Deno.env.get('NVIDIA_MODEL') || 'meta/llama-3.1-8b-instruct'
+// Google Gemini — strong, accurate Japanese (correct readings) with a free tier.
+// Model overridable via GEMINI_MODEL. Set GEMINI_API_KEY as an Edge secret.
+const GEMINI_MODEL = Deno.env.get('GEMINI_MODEL') || 'gemini-2.0-flash'
 
 const jlptProgression: Record<string, string> = {
   'N5': 'N4', 'N4': 'N3', 'N3': 'N2', 'N2': 'N1', 'N1': 'N1'
@@ -25,30 +23,26 @@ interface GeminiRequest {
 }
 
 async function callLLM(apiKey: string, prompt: string): Promise<string> {
-  const response = await fetch(NVIDIA_API_URL, {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`
+  const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: NVIDIA_MODEL,
-      messages: [{ role: 'user', content: prompt }],
+      contents: [{ parts: [{ text: prompt }] }],
       // Lower temperature = more deterministic, fewer hallucinated "corrections".
-      temperature: 0.2,
-      max_tokens: 2048,
+      generationConfig: { temperature: 0.2, maxOutputTokens: 2048 },
     }),
   })
 
   if (!response.ok) {
     const errorText = await response.text()
-    throw new Error(`NVIDIA API error (${response.status}): ${errorText}`)
+    throw new Error(`Gemini API error (${response.status}): ${errorText}`)
   }
 
   const data = await response.json()
-  const text = data?.choices?.[0]?.message?.content
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
   if (!text) {
-    throw new Error('No text in NVIDIA response')
+    throw new Error('No text in Gemini response')
   }
   return text
 }
@@ -281,10 +275,10 @@ serve(async (req) => {
     }
   }
 
-  const apiKey = Deno.env.get('NVIDIA_API_KEY')
+  const apiKey = Deno.env.get('GEMINI_API_KEY')
   if (!apiKey) {
     return new Response(
-      JSON.stringify({ error: 'NVIDIA_API_KEY is not configured' }),
+      JSON.stringify({ error: 'GEMINI_API_KEY is not configured' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     )
   }
