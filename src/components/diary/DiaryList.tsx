@@ -27,7 +27,6 @@ interface DiaryListProps {
 export const DiaryList: React.FC<DiaryListProps> = ({ isGuest, onViewChange }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [showRecorder, setShowRecorder] = useState(false);
 
   // Teacher state
   const [isTeacher, setIsTeacher] = useState(false);
@@ -415,7 +414,7 @@ export const DiaryList: React.FC<DiaryListProps> = ({ isGuest, onViewChange }) =
 
           {(user?.role === 'learner' || isGuest) && (
             <Button
-              onClick={() => setShowRecorder(true)}
+              onClick={() => onViewChange?.("record")}
               variant="primary"
               className="w-full sm:w-auto"
             >
@@ -525,7 +524,7 @@ export const DiaryList: React.FC<DiaryListProps> = ({ isGuest, onViewChange }) =
                 {EN.diary.startFirst}
               </p>
               {(user?.role === 'learner' || isGuest) && (
-                <Button onClick={() => setShowRecorder(true)} size="lg">
+                <Button onClick={() => onViewChange?.("record")} size="lg">
                   <Plus className="w-6 h-6" />
                   {EN.dashboard.recordButton}
                 </Button>
