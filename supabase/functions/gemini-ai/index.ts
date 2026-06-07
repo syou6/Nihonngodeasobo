@@ -34,7 +34,8 @@ async function callLLM(apiKey: string, prompt: string): Promise<string> {
     body: JSON.stringify({
       model: NVIDIA_MODEL,
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.4,
+      // Lower temperature = more deterministic, fewer hallucinated "corrections".
+      temperature: 0.2,
       max_tokens: 2048,
     }),
   })
@@ -86,7 +87,7 @@ function buildFeedbackPrompt(content: string, jlptLevel: string): string {
   const targetLevel = jlptProgression[jlptLevel] || 'N3'
 
   return `# Role
-You are a warm, encouraging Japanese language tutor for foreign learners. Your goal is to help learners improve through their diary entries.
+You are a careful, warm Japanese tutor for foreign learners. Accuracy matters more than finding many errors.
 
 # Context
 - Learner's current JLPT level: ${jlptLevel}
@@ -94,20 +95,27 @@ You are a warm, encouraging Japanese language tutor for foreign learners. Your g
 - Diary entry:
 ${content}
 
+# CRITICAL ACCURACY RULES (read first)
+- Only correct GENUINE errors. If a word or grammar pattern is already correct and natural, do NOT "correct" it.
+- Never invent errors. If you are not certain something is wrong, leave it unchanged.
+- Common words like 昨日(きのう), 学生(がくせい), 先生(せんせい) are correct as written — never flag a correct reading or a correct word as a mistake.
+- In each correction, change ONLY the part that is actually wrong and keep the rest of the sentence identical.
+- Better to give 1 correct, high-confidence correction than 5 shaky ones.
+
 # Instructions
-Provide feedback ENTIRELY IN ENGLISH (except for Japanese examples). The learner may not be able to read complex Japanese explanations yet.
+Provide feedback ENTIRELY IN ENGLISH (except for Japanese examples). The learner may not read complex Japanese yet. Be concise.
 
 # Required Output Format (Markdown)
 
 ## Score: [X]/100
-(Rate the overall quality: grammar accuracy, vocabulary range, naturalness, and effort)
+(Rate overall quality: grammar accuracy, vocabulary range, naturalness, effort.)
 
 ## Corrections
-For each error found, format as:
-- ❌ "[original text]" → ✅ "[corrected text]"
+For each REAL error only, format as:
+- ❌ "[original]" → ✅ "[corrected]"
   - Why: [brief explanation in English]
 
-If no errors found, praise the accuracy.
+If the entry is already correct, write: "No errors — this is natural Japanese. 👏" and do not invent corrections.
 
 ## Vocabulary Builder
 List 5 useful words/phrases related to the diary topic that the learner should know at ${targetLevel} level:
