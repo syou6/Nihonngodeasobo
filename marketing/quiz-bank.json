@@ -1,0 +1,19 @@
+{
+  "_comment": "Interactive QUIZ content for NihonGo shorts. Each shows a question with two options + a 3-2-1 countdown ('comment your answer'), then reveals the correct one. Drives comments (2.4x) + saves + watch-through. correct = 'A' | 'B'.",
+  "entries": [
+    { "level": "N5", "q": "私 ___ 学生です。", "a": "は", "b": "が", "correct": "A", "why": "は marks the topic you're talking about: 私は学生です." },
+    { "level": "N5", "q": "コーヒー ___ 好きです。", "a": "を", "b": "が", "correct": "B", "why": "好き takes が, never を: コーヒーが好きです." },
+    { "level": "N5", "q": "昨日 寿司を ___。", "a": "食べます", "b": "食べました", "correct": "B", "why": "昨日 = yesterday, so use the past: 食べました." },
+    { "level": "N4", "q": "犬が3 ___ います。", "a": "匹（びき）", "b": "個（こ）", "correct": "A", "why": "Animals are counted with 匹: 三匹（さんびき）. 個 is for small objects." },
+    { "level": "N4", "q": "Correct? → 面白いでした", "a": "✅ Yes", "b": "❌ No", "correct": "B", "why": "i-adjectives never take でした. It's 面白かったです." },
+    { "level": "N4", "q": "ドア ___ 開いた。", "a": "が", "b": "を", "correct": "A", "why": "開く is intransitive (it opens), so it takes が: ドアが開いた." },
+    { "level": "N4", "q": "日本語 ___ 上手です。", "a": "を", "b": "が", "correct": "B", "why": "Skill words like 上手 take が: 日本語が上手です." },
+    { "level": "N5", "q": "アルバイト means…", "a": "part-time job", "b": "album", "correct": "A", "why": "アルバイト (from German 'Arbeit') = part-time job. Casual: バイト." },
+    { "level": "N4", "q": "Which is natural? → ___ 好き", "a": "とても", "b": "大", "correct": "B", "why": "For 'really like' use 大好き. とても modifies adjectives, not 好き directly." },
+    { "level": "N5", "q": "明日 友達 ___ 会います。", "a": "に", "b": "を", "correct": "A", "why": "会う takes に for the person you meet: 友達に会います." },
+    { "level": "N4", "q": "Potential of 食べる?", "a": "食べれる", "b": "食べられる", "correct": "B", "why": "Standard potential is 食べられる. 食べれる (ら抜き) is casual slang." },
+    { "level": "N5", "q": "2 people = ?", "a": "ふたり", "b": "にじん", "correct": "A", "why": "1 and 2 people are irregular: ひとり, ふたり — never にじん." },
+    { "level": "N4", "q": "Which means 'I'm bored'?", "a": "退屈です", "b": "退屈しています", "correct": "B", "why": "退屈しています = I'm bored. 退屈です can sound like 'I'm a boring person'." },
+    { "level": "N5", "q": "本 ___ 読みます。", "a": "を", "b": "が", "correct": "A", "why": "を marks the direct object of an action verb: 本を読みます." }
+  ]
+}
