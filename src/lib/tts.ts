@@ -84,9 +84,11 @@ class TextToSpeech {
    * Speak text
    */
   async speak(text: string, options: TTSOptions = {}): Promise<void> {
-    // Try the natural cloud voice first; fall back to the browser voice on miss.
     this.stop();
-    if (options.voice === undefined && (await cloudSpeak(text))) {
+    // Cloud voice (ElevenLabs/Google) is opt-in via VITE_CLOUD_TTS=true. Off by
+    // default → use the free browser voice (no setup, decent on Chrome).
+    const cloudEnabled = import.meta.env.VITE_CLOUD_TTS === 'true';
+    if (cloudEnabled && options.voice === undefined && (await cloudSpeak(text))) {
       return;
     }
     return this.speakWithBrowser(text, options);
