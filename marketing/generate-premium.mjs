@@ -21,7 +21,8 @@ const W = 1080, H = 1920, DUR = 12.9;
 
 const args = process.argv.slice(2);
 const idxArg = args.includes('--index') ? Number(args[args.indexOf('--index') + 1]) : null;
-const bank = JSON.parse(await readFile(path.join(MK, 'content-bank.json'), 'utf8')).entries;
+const bankFile = args.includes('--bank') ? args[args.indexOf('--bank') + 1] : 'content-bank.json';
+const bank = JSON.parse(await readFile(path.join(MK, bankFile), 'utf8')).entries;
 const doy = Math.floor((Date.now() - Date.UTC(new Date().getUTCFullYear(), 0, 0)) / 86400000);
 const idx = (idxArg != null ? idxArg : doy) % bank.length;
 const e = bank[idx];
