@@ -15,6 +15,25 @@
     { "type": "grammar", "hook": "You're using the wrong 'live'", "level": "N4", "wrong": "東京に住みます", "right": "東京に住んでいます", "why": "Ongoing state = 〜ている. 住みます sounds like a future plan." },
     { "type": "grammar", "hook": "na-adjective negative — most learners miss this", "level": "N4", "wrong": "静かくない", "right": "静かじゃない", "why": "na-adjectives negate with じゃない, not くない (that's for i-adjectives)." },
     { "type": "grammar", "hook": "'Very' + verb doesn't work in Japanese", "level": "N4", "wrong": "とても好き（as 'I very like'）", "right": "大好き / すごく好き", "why": "とても modifies adjectives; for strong liking use 大好き or すごく." },
-    { "type": "grammar", "hook": "Counting things? You're probably wrong", "level": "N5", "wrong": "三犬", "right": "犬三匹（さんびき）", "why": "Animals use the counter 匹/匹. Numbers need the right counter, not bare 三." }
+    { "type": "grammar", "hook": "Counting things? You're probably wrong", "level": "N5", "wrong": "三犬", "right": "犬三匹（さんびき）", "why": "Animals use the counter 匹. Numbers need the right counter, not bare 三." },
+
+    { "type": "grammar", "hook": "Stop saying 知ります for 'I know'", "level": "N5", "wrong": "知ります", "right": "知っています", "why": "'To know' as a current state uses 〜ている: 知っています. 知ります sounds like a future action." },
+    { "type": "grammar", "hook": "You're giving gifts backwards", "level": "N4", "wrong": "友達が私にプレゼントをあげた", "right": "友達が私にプレゼントをくれた", "why": "When someone gives TO you, use くれる — not あげる (which is giving away from you)." },
+    { "type": "grammar", "hook": "ら抜き言葉 — natives notice instantly", "level": "N4", "wrong": "食べれる", "right": "食べられる", "why": "The potential form of 食べる is 食べられる. Dropping the ら is casual slang, not standard." },
+    { "type": "grammar", "hook": "高いすぎる is wrong", "level": "N4", "wrong": "高いすぎる", "right": "高すぎる", "why": "〜すぎる attaches to the adjective stem: 高 + すぎる." },
+    { "type": "grammar", "hook": "おいしいそう? Nope.", "level": "N4", "wrong": "おいしいそうです", "right": "おいしそうです", "why": "For 'looks ~', drop the final い: おいし + そう です." },
+    { "type": "grammar", "hook": "This counter is irregular and everyone misses it", "level": "N5", "wrong": "二人（にじん）", "right": "二人（ふたり）", "why": "1 and 2 people are irregular: ひとり, ふたり — never いちじん/にじん." },
+    { "type": "grammar", "hook": "Your door won't 開ける itself", "level": "N4", "wrong": "ドアが開けた", "right": "ドアが開いた", "why": "開ける = someone opens it (transitive); 開く = it opens (intransitive). が takes the intransitive 開く." },
+    { "type": "grammar", "hook": "元気くなる doesn't exist", "level": "N4", "wrong": "元気くなる", "right": "元気になる", "why": "na-adjectives + なる use に: 元気になる. 〜くなる is only for i-adjectives (高くなる)." },
+    { "type": "grammar", "hook": "〜たいだ is never a thing", "level": "N5", "wrong": "行きたいだ", "right": "行きたいです", "why": "〜たい conjugates like an i-adjective: 行きたいです — never 〜たいだ." },
+    { "type": "grammar", "hook": "もう vs まだ trips up everyone", "level": "N5", "wrong": "まだ食べました", "right": "もう食べました", "why": "もう = already (done); まだ = not yet / still. 'Already ate' is もう食べました." },
+    { "type": "grammar", "hook": "You don't 'play' sports in Japanese", "level": "N5", "wrong": "サッカーをプレイする", "right": "サッカーをする", "why": "Sports and games use する: サッカーをする, テニスをする." },
+    { "type": "grammar", "hook": "あまり needs a negative", "level": "N4", "wrong": "あまり好きです", "right": "あまり好きじゃないです", "why": "あまり pairs with a negative: あまり〜ない = 'not very'. With a positive it's ungrammatical." },
+    { "type": "grammar", "hook": "Want someone ELSE to do it? Not 〜たい", "level": "N4", "wrong": "あなたに来たいです", "right": "あなたに来てほしいです", "why": "〜てほしい = want someone else to do it. 〜たい = want to do it yourself." },
+    { "type": "grammar", "hook": "Never stack は after も", "level": "N4", "wrong": "私もは行きます", "right": "私も行きます", "why": "も replaces は/が — you can't stack them. Just 私も." },
+    { "type": "grammar", "hook": "上手 takes が, not を", "level": "N4", "wrong": "日本語を上手です", "right": "日本語が上手です", "why": "Skill words (上手・下手・好き・得意) take が: 日本語が上手です." },
+    { "type": "grammar", "hook": "na-adjectives need だ before と思う", "level": "N4", "wrong": "便利と思います", "right": "便利だと思います", "why": "Nouns and na-adjectives add だ before と思う: 便利だと思います." },
+    { "type": "grammar", "hook": "Don't translate 'I'm boring' literally", "level": "N4", "wrong": "私は退屈です（meaning 'I'm bored'）", "right": "退屈しています / つまらないです", "why": "私は退屈です can read as 'I am a boring person'. For 'I'm bored' use 退屈しています." },
+    { "type": "grammar", "hook": "〜に行く needs the stem, not 〜て", "level": "N4", "wrong": "食べてに行く", "right": "食べに行く", "why": "Purpose 'go to do X' = verb stem + に行く: 食べに行く, 買いに行く." }
   ]
 }
