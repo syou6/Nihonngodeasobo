@@ -6,8 +6,9 @@ const corsHeaders = {
 }
 
 const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY') ?? ''
-// Default multilingual voice; override with ELEVENLABS_VOICE_ID to use a JA voice.
-const VOICE_ID = Deno.env.get('ELEVENLABS_VOICE_ID') || '21m00Tcm4TlvDq8ikWAM'
+// Default to a PREMADE voice (Sarah) — free-tier API works with premade/stock
+// voices but rejects community "library" voices. Override via ELEVENLABS_VOICE_ID.
+const VOICE_ID = Deno.env.get('ELEVENLABS_VOICE_ID') || 'EXAVITQu4vr4xnSDxMaL'
 const MODEL_ID = Deno.env.get('ELEVENLABS_MODEL_ID') || 'eleven_multilingual_v2'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
