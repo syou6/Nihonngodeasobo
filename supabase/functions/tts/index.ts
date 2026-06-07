@@ -5,52 +5,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY') ?? ''
-// Default to a PREMADE voice (Sarah) — free-tier API works with premade/stock
-// voices but rejects community "library" voices. Override via ELEVENLABS_VOICE_ID.
-const VOICE_ID = Deno.env.get('ELEVENLABS_VOICE_ID') || 'EXAVITQu4vr4xnSDxMaL'
-const MODEL_ID = Deno.env.get('ELEVENLABS_MODEL_ID') || 'eleven_multilingual_v2'
+// Google Cloud Text-to-Speech: native Japanese voices read kanji correctly with
+// no conversion step. Free tier covers ~1M Neural2 chars/month.
+const GOOGLE_TTS_API_KEY = Deno.env.get('GOOGLE_TTS_API_KEY') ?? ''
+const VOICE_NAME = Deno.env.get('GOOGLE_TTS_VOICE') || 'ja-JP-Neural2-B'
+const LANGUAGE_CODE = 'ja-JP'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 
-// ElevenLabs guesses kanji readings (often wrong). Convert kanji text to hiragana
-// first via the LLM so the voice reads it correctly. Pure-kana text is left as-is.
-const NVIDIA_API_KEY = Deno.env.get('NVIDIA_API_KEY') ?? ''
-const NVIDIA_MODEL = Deno.env.get('NVIDIA_MODEL') || 'meta/llama-3.1-8b-instruct'
-
-const hasKanji = (s: string) => /[一-龯㐀-䶿]/.test(s)
-
-async function toHiragana(text: string): Promise<string> {
-  if (!NVIDIA_API_KEY || !hasKanji(text)) return text
-  try {
-    const res = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${NVIDIA_API_KEY}` },
-      body: JSON.stringify({
-        model: NVIDIA_MODEL,
-        temperature: 0,
-        max_tokens: 1024,
-        messages: [{
-          role: 'user',
-          content: `Convert this Japanese text to hiragana only. Keep punctuation and spacing. Output ONLY the hiragana, nothing else.\n\n${text}`,
-        }],
-      }),
-    })
-    if (!res.ok) return text
-    const data = await res.json()
-    const out = (data?.choices?.[0]?.message?.content ?? '').trim()
-    // Sanity check: result should be mostly kana and contain no kanji.
-    return out && !hasKanji(out) ? out : text
-  } catch {
-    return text
-  }
-}
-
-// Free tier is small, so cap text length and burst rate to avoid draining it.
-const MAX_CHARS = 500
+const MAX_CHARS = 800
 const rateLimit = new Map<string, { count: number; resetAt: number }>()
-const RATE_LIMIT = 20
+const RATE_LIMIT = 30
 const RATE_WINDOW = 60_000
 
 async function resolveUserId(authHeader: string | null): Promise<string | null> {
@@ -73,14 +39,14 @@ serve(async (req) => {
   }
 
   // Not configured → tell the client so it can fall back to the browser voice.
-  if (!ELEVENLABS_API_KEY) {
+  if (!GOOGLE_TTS_API_KEY) {
     return new Response(
       JSON.stringify({ error: 'TTS not configured' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 501 }
     )
   }
 
-  // Require an authenticated user — protects the small free quota from anon abuse.
+  // Require an authenticated user — protects the quota from anon abuse.
   const userId = await resolveUserId(req.headers.get('authorization'))
   if (!userId) {
     return new Response(
@@ -104,7 +70,7 @@ serve(async (req) => {
   }
 
   try {
-    const { text, voiceId } = await req.json()
+    const { text, voice } = await req.json()
     const clean = (text ?? '').toString().trim().slice(0, MAX_CHARS)
     if (!clean) {
       return new Response(
@@ -113,46 +79,37 @@ serve(async (req) => {
       )
     }
 
-    // Validate the voice id before interpolating it into the upstream URL —
-    // ElevenLabs ids are short alphanumerics; anything else is rejected to prevent
-    // path injection / SSRF into other endpoints. Fall back to the default voice.
-    const safeVoiceId = (typeof voiceId === 'string' && /^[A-Za-z0-9]{16,32}$/.test(voiceId))
-      ? voiceId
-      : VOICE_ID
-
-    // Read kanji correctly by feeding hiragana to the voice.
-    const speakText = await toHiragana(clean)
+    // Only allow a safe voice-name override (letters/digits/hyphen).
+    const voiceName = (typeof voice === 'string' && /^[A-Za-z0-9-]{1,40}$/.test(voice))
+      ? voice
+      : VOICE_NAME
 
     const res = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${safeVoiceId}`,
+      `https://texttospeech.googleapis.com/v1/text:synthesize?key=${GOOGLE_TTS_API_KEY}`,
       {
         method: 'POST',
-        headers: {
-          'xi-api-key': ELEVENLABS_API_KEY,
-          'Content-Type': 'application/json',
-          Accept: 'audio/mpeg',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          text: speakText,
-          model_id: MODEL_ID,
-          voice_settings: { stability: 0.5, similarity_boost: 0.75 },
+          input: { text: clean },
+          voice: { languageCode: LANGUAGE_CODE, name: voiceName },
+          audioConfig: { audioEncoding: 'MP3', speakingRate: 0.95 },
         }),
       }
     )
 
     if (!res.ok) {
       const errText = await res.text()
-      throw new Error(`ElevenLabs error (${res.status}): ${errText}`)
+      throw new Error(`Google TTS error (${res.status}): ${errText}`)
     }
 
-    // Return the audio as a base64 string the browser can play directly.
-    const buf = new Uint8Array(await res.arrayBuffer())
-    let binary = ''
-    for (let i = 0; i < buf.length; i++) binary += String.fromCharCode(buf[i])
-    const base64 = btoa(binary)
+    const data = await res.json()
+    if (!data?.audioContent) {
+      throw new Error('No audio returned from Google TTS')
+    }
 
+    // Google already returns base64-encoded MP3.
     return new Response(
-      JSON.stringify({ audio: base64, mime: 'audio/mpeg' }),
+      JSON.stringify({ audio: data.audioContent, mime: 'audio/mpeg' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
