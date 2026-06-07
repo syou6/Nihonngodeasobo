@@ -14,6 +14,39 @@ const MODEL_ID = Deno.env.get('ELEVENLABS_MODEL_ID') || 'eleven_multilingual_v2'
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 
+// ElevenLabs guesses kanji readings (often wrong). Convert kanji text to hiragana
+// first via the LLM so the voice reads it correctly. Pure-kana text is left as-is.
+const NVIDIA_API_KEY = Deno.env.get('NVIDIA_API_KEY') ?? ''
+const NVIDIA_MODEL = Deno.env.get('NVIDIA_MODEL') || 'meta/llama-3.1-8b-instruct'
+
+const hasKanji = (s: string) => /[一-龯㐀-䶿]/.test(s)
+
+async function toHiragana(text: string): Promise<string> {
+  if (!NVIDIA_API_KEY || !hasKanji(text)) return text
+  try {
+    const res = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${NVIDIA_API_KEY}` },
+      body: JSON.stringify({
+        model: NVIDIA_MODEL,
+        temperature: 0,
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: `Convert this Japanese text to hiragana only. Keep punctuation and spacing. Output ONLY the hiragana, nothing else.\n\n${text}`,
+        }],
+      }),
+    })
+    if (!res.ok) return text
+    const data = await res.json()
+    const out = (data?.choices?.[0]?.message?.content ?? '').trim()
+    // Sanity check: result should be mostly kana and contain no kanji.
+    return out && !hasKanji(out) ? out : text
+  } catch {
+    return text
+  }
+}
+
 // Free tier is small, so cap text length and burst rate to avoid draining it.
 const MAX_CHARS = 500
 const rateLimit = new Map<string, { count: number; resetAt: number }>()
@@ -87,6 +120,9 @@ serve(async (req) => {
       ? voiceId
       : VOICE_ID
 
+    // Read kanji correctly by feeding hiragana to the voice.
+    const speakText = await toHiragana(clean)
+
     const res = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${safeVoiceId}`,
       {
@@ -97,7 +133,7 @@ serve(async (req) => {
           Accept: 'audio/mpeg',
         },
         body: JSON.stringify({
-          text: clean,
+          text: speakText,
           model_id: MODEL_ID,
           voice_settings: { stability: 0.5, similarity_boost: 0.75 },
         }),
