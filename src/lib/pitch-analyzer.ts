@@ -10,6 +10,10 @@ export interface PitchStats {
 export interface PitchComparisonResult {
   matches: (boolean | null)[];
   accuracy: number;
+  /** Detected accent nucleus in the learner's production (0 = no drop / flat). */
+  userNucleus: number;
+  /** Target accent nucleus (0 = heiban / no drop). */
+  targetNucleus: number;
 }
 
 export interface NucleusResult {
@@ -114,19 +118,22 @@ export function comparePitchToPattern(
   expectedPattern: number[],
   moraCount: number,
 ): PitchComparisonResult {
+  const targetNucleus = patternToNucleus(expectedPattern);
+  const blank = (): PitchComparisonResult => ({
+    matches: Array.from({ length: moraCount }, () => null),
+    accuracy: 0,
+    userNucleus: 0,
+    targetNucleus,
+  });
+
   const voiced = frames.filter((f) => f.pitch !== null);
-  if (voiced.length < MIN_VOICED_FRAMES) {
-    return { matches: Array.from({ length: moraCount }, () => null), accuracy: 0 };
-  }
+  if (voiced.length < MIN_VOICED_FRAMES) return blank();
 
   const moraF0 = moraMedians(frames, moraCount);
   const definedCount = moraF0.filter((m) => m !== null).length;
-  if (definedCount === 0) {
-    return { matches: Array.from({ length: moraCount }, () => null), accuracy: 0 };
-  }
+  if (definedCount === 0) return blank();
 
   const user = detectAccentNucleus(moraF0);
-  const targetNucleus = patternToNucleus(expectedPattern);
 
   // Odaka: the drop lands on the following particle, which the learner usually
   // doesn't say — a flat-high word with no internal drop is acceptable.
@@ -162,7 +169,7 @@ export function comparePitchToPattern(
     return userPattern[i] === 1 === expected;
   });
 
-  return { matches, accuracy };
+  return { matches, accuracy, userNucleus: user.nucleus, targetNucleus };
 }
 
 /** Basic stats over voiced frames only. */

@@ -41,12 +41,31 @@ function scoreColor(score: number): string {
   return 'text-red-600';
 }
 
+// Actionable feedback from the detected vs target accent nucleus.
+function coachText(
+  result: { userNucleus: number; targetNucleus: number; accuracy: number },
+  morae: string[],
+): string {
+  const at = (n: number) => (n >= 1 && n <= morae.length ? `「${morae[n - 1]}」` : 'the particle');
+  const { userNucleus, targetNucleus, accuracy } = result;
+  if (accuracy >= 80) {
+    return targetNucleus === 0
+      ? 'Nice — 平板: it stays high with no drop. ✅'
+      : `Nice — the drop after ${at(targetNucleus)} is right. ✅`;
+  }
+  const target = targetNucleus === 0 ? 'no drop — 平板, stays high' : `a drop after ${at(targetNucleus)}`;
+  const you = userNucleus === 0 ? 'you kept it flat' : `you dropped after ${at(userNucleus)}`;
+  return `Target: ${target}. But ${you}.`;
+}
+
 export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
   const [wordIndex, setWordIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>('ready');
   const [frames, setFrames] = useState<PitchFrame[]>([]);
   const [accuracy, setAccuracy] = useState<number | null>(null);
   const [matches, setMatches] = useState<(boolean | null)[] | undefined>(undefined);
+  const [coach, setCoach] = useState<string | null>(null);
+  const [streak, setStreak] = useState(() => Number(localStorage.getItem('pitchStreak') || 0));
   const [error, setError] = useState<string | null>(null);
 
   const trackerRef = useRef<PitchTracker | null>(null);
@@ -75,6 +94,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
     setFrames([]);
     setAccuracy(null);
     setMatches(undefined);
+    setCoach(null);
     setError(null);
   };
 
@@ -107,6 +127,10 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
     setFrames(captured);
     setMatches(result.matches);
     setAccuracy(result.accuracy);
+    setCoach(coachText(result, pitchData.morae));
+    const newStreak = result.accuracy >= 80 ? streak + 1 : 0;
+    setStreak(newStreak);
+    localStorage.setItem('pitchStreak', String(newStreak));
     setPhase('result');
     trackEvent('pitch_scored', { word, accuracy: result.accuracy });
   };
@@ -133,6 +157,11 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
             Word {wordIndex + 1} of {PRACTICE_WORDS.length}
           </p>
         </div>
+        {streak > 0 && (
+          <div className="ml-auto inline-flex items-center gap-1 rounded-full bg-orange-50 text-orange-600 font-bold text-sm px-3 py-1">
+            🔥 {streak}
+          </div>
+        )}
       </div>
 
       <motion.div
@@ -160,6 +189,12 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
               </div>
               <p className="text-sm text-gray-500 mt-1">Pitch accuracy</p>
             </div>
+
+            {coach && (
+              <p className={`text-center text-sm font-medium mb-4 ${accuracy >= 80 ? 'text-green-700' : 'text-gray-700'}`}>
+                {coach}
+              </p>
+            )}
 
             {pitchData && (
               <PitchContourGraph
