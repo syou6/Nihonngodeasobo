@@ -44,6 +44,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
   const [wordIndex, setWordIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>('ready');
   const [frames, setFrames] = useState<PitchFrame[]>([]);
+  const [liveFrames, setLiveFrames] = useState<PitchFrame[]>([]);
   const [accuracy, setAccuracy] = useState<number | null>(null);
   const [matches, setMatches] = useState<(boolean | null)[] | undefined>(undefined);
   const [coach, setCoach] = useState<string | null>(null);
@@ -55,12 +56,23 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
 
   const trackerRef = useRef<PitchTracker | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  // Live contour: onPitch fires ~60fps, so buffer frames in a ref and flush to
+  // state on an interval — decouples React re-renders from the detection rate.
+  const liveBufferRef = useRef<PitchFrame[]>([]);
+  const liveTimerRef = useRef<number | null>(null);
 
   const { word, reading } = PRACTICE_WORDS[wordIndex];
   const pitchData = usePitchAccent(word, reading);
   const isLoadingAccent = pitchData === null;
   // Minimal pair: another curriculum word with the same reading (箸/橋, 雨/飴).
   const pairWith = PRACTICE_WORDS.find((w) => w.reading === reading && w.word !== word)?.word;
+
+  const stopLiveFlush = () => {
+    if (liveTimerRef.current !== null) {
+      clearInterval(liveTimerRef.current);
+      liveTimerRef.current = null;
+    }
+  };
 
   const releaseMic = () => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -71,14 +83,18 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
   // Stop the mic if the component unmounts mid-recording.
   useEffect(() => {
     return () => {
+      stopLiveFlush();
       trackerRef.current?.stop();
       releaseMic();
     };
   }, []);
 
   const resetAttempt = () => {
+    stopLiveFlush();
     setPhase('ready');
     setFrames([]);
+    setLiveFrames([]);
+    liveBufferRef.current = [];
     setAccuracy(null);
     setMatches(undefined);
     setCoach(null);
@@ -93,8 +109,17 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
       streamRef.current = stream;
       const tracker = new PitchTracker();
       trackerRef.current = tracker;
+      liveBufferRef.current = [];
+      setLiveFrames([]);
+      tracker.onPitch = (frame) => {
+        liveBufferRef.current.push(frame);
+      };
       tracker.start(stream);
       setPhase('recording');
+      // Flush the buffered frames to state ~10x/sec for a live contour.
+      liveTimerRef.current = window.setInterval(() => {
+        setLiveFrames(liveBufferRef.current.slice());
+      }, 100);
     } catch {
       setError('Microphone access was denied. Please allow mic access and try again.');
       releaseMic();
@@ -105,6 +130,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
     const tracker = trackerRef.current;
     if (!tracker || !pitchData) return;
 
+    stopLiveFlush();
     const captured = tracker.stop();
     releaseMic();
 
@@ -189,6 +215,34 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
                 expectedPattern={{ morae: pitchData.morae, pattern: pitchData.pattern }}
               />
             )}
+
+            <p className="text-xs text-gray-400 text-center mt-2">
+              Blue line = your pitch · shaded bands = target high/low
+            </p>
+          </motion.div>
+        )}
+
+        {/* Live: stream the user's pitch against the target bands while recording */}
+        {phase === 'recording' && pitchData && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="rounded-2xl border border-red-200 bg-white p-5"
+          >
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+              </span>
+              <p className="text-sm font-semibold text-red-600">
+                Recording — match the shaded bands
+              </p>
+            </div>
+
+            <PitchContourGraph
+              frames={liveFrames}
+              expectedPattern={{ morae: pitchData.morae, pattern: pitchData.pattern }}
+            />
 
             <p className="text-xs text-gray-400 text-center mt-2">
               Blue line = your pitch · shaded bands = target high/low

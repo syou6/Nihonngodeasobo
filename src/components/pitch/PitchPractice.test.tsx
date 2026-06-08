@@ -65,6 +65,17 @@ describe('PitchPractice', () => {
     expect(trackerStop).toHaveBeenCalled();
   });
 
+  it('shows the live "match the bands" contour while recording', async () => {
+    render(<PitchPractice onBack={vi.fn()} />);
+
+    fireEvent.click(screen.getByText('Record & say it'));
+
+    await waitFor(() => expect(trackerStart).toHaveBeenCalled());
+    expect(
+      await screen.findByText('Recording — match the shaded bands'),
+    ).toBeInTheDocument();
+  });
+
   it('calls onBack when the back button is clicked', () => {
     const onBack = vi.fn();
     render(<PitchPractice onBack={onBack} />);
