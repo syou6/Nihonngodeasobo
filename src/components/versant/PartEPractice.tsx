@@ -26,7 +26,6 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
   const [timeRemaining, setTimeRemaining] = useState(PRACTICE.PART_E.TIME_LIMIT);
   const [transcribedText, setTranscribedText] = useState('');
   const [currentAnswer, setCurrentAnswer] = useState<any>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [showPassage, setShowPassage] = useState(false);
 
   const transcriberRef = useRef<VoiceTranscriber | null>(null);
@@ -89,17 +88,14 @@ export const PartEPractice: React.FC<PartEPracticeProps> = ({ onBack }) => {
   const playQuestion = async () => {
     if (!currentQuestion) return;
 
-    setIsPlaying(true);
     setState('listening');
 
     try {
       await tts.speak(currentQuestion.text, { rate: PRACTICE.PART_E.TTS_RATE });
-      setIsPlaying(false);
       setTimeout(() => {
         startRecording();
       }, PRACTICE.PART_E.RECORDING_DELAY_MS);
     } catch (error) {
-      setIsPlaying(false);
       toast.error(EN.versant.ttsErrorRetry);
       setState('ready');
     }
