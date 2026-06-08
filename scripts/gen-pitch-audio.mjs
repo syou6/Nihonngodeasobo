@@ -35,8 +35,13 @@ const WORDS = [
 const OUT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', 'public', 'pitch-audio');
 await mkdir(OUT, { recursive: true });
 
+// Optional: pass specific words as args to regenerate ONLY those (saves credits):
+//   node scripts/gen-pitch-audio.mjs 友達 学生
+const only = process.argv.slice(2);
+const todo = only.length ? WORDS.filter(([w]) => only.includes(w)) : WORDS;
+
 let made = 0, failed = 0;
-for (const [word, reading] of WORDS) {
+for (const [word, reading] of todo) {
   const out = path.join(OUT, `${word}.mp3`);
   try {
     const res = await fetch(
