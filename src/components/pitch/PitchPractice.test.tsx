@@ -29,6 +29,7 @@ vi.mock('../../lib/pitch-tracker', () => ({
 
 describe('PitchPractice', () => {
   beforeEach(() => {
+    localStorage.clear();
     trackerStart.mockClear();
     trackerStop.mockClear();
     // Grant a fake mic stream.
@@ -63,6 +64,20 @@ describe('PitchPractice', () => {
     expect(screen.getByText('Retry')).toBeInTheDocument();
     expect(screen.getByText('Next')).toBeInTheDocument();
     expect(trackerStop).toHaveBeenCalled();
+  });
+
+  it('marks a word mastered after a high score and tracks progress', async () => {
+    render(<PitchPractice onBack={vi.fn()} />);
+    // Starts with nothing mastered.
+    expect(screen.getByText(/✓ 0\//)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Record & say it'));
+    await waitFor(() => expect(trackerStart).toHaveBeenCalled());
+    fireEvent.click(screen.getByText('Stop'));
+
+    // Mocked score is 92 (≥80) → the word counts as mastered.
+    expect(await screen.findByText('92')).toBeInTheDocument();
+    expect(screen.getByText(/✓ 1\//)).toBeInTheDocument();
   });
 
   it('shows the live "match the bands" contour while recording', async () => {

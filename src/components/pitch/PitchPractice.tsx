@@ -7,9 +7,20 @@ import { PitchContourGraph } from './PitchContourGraph';
 import { usePitchAccent } from '../../hooks/usePitchAccent';
 import { PitchTracker, type PitchFrame } from '../../lib/pitch-tracker';
 import { comparePitchToPattern } from '../../lib/pitch-analyzer';
+import {
+  loadProgress,
+  saveProgress,
+  recordAttempt,
+  isMastered,
+  masteredCount,
+  nextWordIndex,
+  type PitchProgress,
+} from '../../lib/pitch-progress';
 import { trackEvent } from '../../lib/analytics';
 
 import { PRACTICE_WORDS } from './practiceWords';
+
+const WORD_LIST = PRACTICE_WORDS.map((w) => w.word);
 
 type Phase = 'ready' | 'recording' | 'result';
 
@@ -53,6 +64,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
     return Number.isFinite(n) && n > 0 ? n : 0;
   });
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<PitchProgress>(() => loadProgress());
 
   const trackerRef = useRef<PitchTracker | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -66,6 +78,8 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
   const isLoadingAccent = pitchData === null;
   // Minimal pair: another curriculum word with the same reading (箸/橋, 雨/飴).
   const pairWith = PRACTICE_WORDS.find((w) => w.reading === reading && w.word !== word)?.word;
+  const mastered = masteredCount(progress, WORD_LIST);
+  const wordMastered = isMastered(progress, word);
 
   const stopLiveFlush = () => {
     if (liveTimerRef.current !== null) {
@@ -144,12 +158,19 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
     const newStreak = result.accuracy >= 80 ? streak + 1 : 0;
     setStreak(newStreak);
     localStorage.setItem('pitchStreak', String(newStreak));
+
+    const updated = recordAttempt(progress, word, result.accuracy);
+    setProgress(updated);
+    saveProgress(updated);
+
     setPhase('result');
     trackEvent('pitch_scored', { word, accuracy: result.accuracy });
   };
 
+  // Resurface the nearest word the learner hasn't mastered yet (≥80), rather
+  // than marching through the curriculum in a fixed loop.
   const nextWord = () => {
-    setWordIndex((i) => (i + 1) % PRACTICE_WORDS.length);
+    setWordIndex((i) => nextWordIndex(WORD_LIST, progress, i));
     resetAttempt();
   };
 
@@ -168,13 +189,22 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
           <h1 className="text-xl font-bold text-gray-900">Pitch Accent Practice</h1>
           <p className="text-sm text-gray-500">
             Word {wordIndex + 1} of {PRACTICE_WORDS.length}
+            {wordMastered && <span className="ml-2 text-green-600 font-semibold">✓ mastered</span>}
           </p>
         </div>
-        {streak > 0 && (
-          <div className="ml-auto inline-flex items-center gap-1 rounded-full bg-orange-50 text-orange-600 font-bold text-sm px-3 py-1">
-            🔥 {streak}
+        <div className="ml-auto flex items-center gap-2">
+          <div
+            className="inline-flex items-center gap-1 rounded-full bg-green-50 text-green-700 font-semibold text-sm px-3 py-1"
+            title="Words mastered (≥80)"
+          >
+            ✓ {mastered}/{PRACTICE_WORDS.length}
           </div>
-        )}
+          {streak > 0 && (
+            <div className="inline-flex items-center gap-1 rounded-full bg-orange-50 text-orange-600 font-bold text-sm px-3 py-1">
+              🔥 {streak}
+            </div>
+          )}
+        </div>
       </div>
 
       <motion.div
