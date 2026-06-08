@@ -25,27 +25,38 @@ export const pricingPlans: PricingPlan[] = [
     price: 0,
     interval: 'month',
     features: [
-      '3 diary recordings per month',
-      'Basic AI analysis',
-      '1 speaking practice per day',
-      '7-day diary storage'
+      'Unlimited pitch perception drills',
+      '5 voice scorings per day',
+      'See your contour vs a native speaker',
+      'All 4 pitch patterns — intro words'
     ]
   },
   {
     id: 'premium',
     name: 'Premium',
-    price: 4.99,
-    originalPrice: 9.99,
+    price: 8.99,
     interval: 'month',
     stripePriceId: import.meta.env.VITE_STRIPE_PREMIUM_PRICE_ID,
     features: [
-      'Unlimited diary recordings',
-      'Detailed AI feedback on every entry',
-      'Unlimited JLPT speaking practice',
-      'Grammar & vocabulary corrections',
-      'Share diary with your teacher',
-      'Unlimited storage',
+      'Unlimited voice pitch scoring',
+      'Full curated word curriculum',
+      'Instant drop-location coaching',
+      'Streak & per-pattern progress',
+      'Minimal-pair drills (箸/橋, 雨/飴)',
       'Priority support'
+    ]
+  },
+  {
+    id: 'premium-annual',
+    name: 'Premium — Annual',
+    price: 59,
+    originalPrice: 107.88,
+    interval: 'year',
+    stripePriceId: import.meta.env.VITE_STRIPE_ANNUAL_PRICE_ID,
+    features: [
+      'Everything in Premium',
+      '2 months free vs monthly',
+      'Best value for a 90-day pitch sprint'
     ]
   }
 ];
