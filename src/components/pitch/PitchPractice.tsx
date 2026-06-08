@@ -9,25 +9,7 @@ import { PitchTracker, type PitchFrame } from '../../lib/pitch-tracker';
 import { comparePitchToPattern } from '../../lib/pitch-analyzer';
 import { trackEvent } from '../../lib/analytics';
 
-// Curated beginner word set. Each carries its intended reading so the dictionary
-// lookup picks the correct entry (entries are not ordered by commonness — e.g.
-// 学生 lists がくしょう before がくせい). All readings verified against
-// /pitch-accents.json. Includes minimal pairs where pitch alone changes meaning
-// (箸/橋, 雨/飴, 花/鼻).
-const PRACTICE_WORDS: { word: string; reading: string }[] = [
-  { word: '日本', reading: 'にほん' }, { word: '学生', reading: 'がくせい' },
-  { word: '先生', reading: 'せんせい' }, { word: '水', reading: 'みず' },
-  { word: '山', reading: 'やま' }, { word: '川', reading: 'かわ' },
-  { word: '雨', reading: 'あめ' }, { word: '飴', reading: 'あめ' },
-  { word: '箸', reading: 'はし' }, { word: '橋', reading: 'はし' },
-  { word: '花', reading: 'はな' }, { word: '鼻', reading: 'はな' },
-  { word: '母', reading: 'はは' }, { word: '友達', reading: 'ともだち' },
-  { word: '学校', reading: 'がっこう' }, { word: '電話', reading: 'でんわ' },
-  { word: '名前', reading: 'なまえ' }, { word: '犬', reading: 'いぬ' },
-  { word: '猫', reading: 'ねこ' }, { word: '元気', reading: 'げんき' },
-  { word: '今日', reading: 'きょう' }, { word: '明日', reading: 'あした' },
-  { word: '海', reading: 'うみ' },
-];
+import { PRACTICE_WORDS } from './practiceWords';
 
 type Phase = 'ready' | 'recording' | 'result';
 
