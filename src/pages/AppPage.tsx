@@ -27,6 +27,7 @@ const FamilyManager = lazy(() => import('../components/family/FamilyManager').th
 const SettingsView = lazy(() => import('../components/settings/SettingsView').then((m) => ({ default: m.SettingsView })));
 const PricingCards = lazy(() => import('../components/subscription/PricingCards').then((m) => ({ default: m.PricingCards })));
 const VersantHome = lazy(() => import('../components/versant/VersantHome').then((m) => ({ default: m.VersantHome })));
+const PitchPractice = lazy(() => import('../components/pitch/PitchPractice').then((m) => ({ default: m.PitchPractice })));
 const SubscriptionSuccess = lazy(() => import('./SubscriptionSuccess').then((m) => ({ default: m.SubscriptionSuccess })));
 const SubscriptionCancel = lazy(() => import('./SubscriptionCancel').then((m) => ({ default: m.SubscriptionCancel })));
 
@@ -38,6 +39,8 @@ const ViewFallback = () => (
 
 export const AppPage: React.FC = () => {
   const [currentView, setCurrentView] = useState('home');
+  // Guest experience leads with pitch (the shareable aha); diary is secondary.
+  const [guestTab, setGuestTab] = useState<'pitch' | 'diary'>('pitch');
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showAuthFormState, setShowAuthFormState] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
@@ -262,23 +265,47 @@ export const AppPage: React.FC = () => {
                 transition={{ duration: 0.3 }}
               >
                 <div className="max-w-4xl mx-auto">
-                  <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
-                        <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-bold text-gray-900">
-                          Record Your Diary
-                        </h2>
-                        <p className="text-sm text-gray-500">Speak in Japanese — AI will give you feedback</p>
-                      </div>
-                    </div>
-                    <Suspense fallback={<ViewFallback />}>
-                      <VoiceRecorder isGuest />
-                    </Suspense>
+                  {/* Guest tabs: pitch trainer leads (the shareable aha), diary secondary */}
+                  <div className="flex gap-2 mb-6 bg-white rounded-full p-1 shadow-sm w-fit mx-auto">
+                    <button
+                      onClick={() => setGuestTab('pitch')}
+                      className={`px-5 py-2 rounded-full text-sm font-bold transition-colors ${guestTab === 'pitch' ? 'bg-primary text-white' : 'text-gray-500 hover:text-gray-900'}`}
+                    >
+                      🎯 Pitch Trainer
+                    </button>
+                    <button
+                      onClick={() => setGuestTab('diary')}
+                      className={`px-5 py-2 rounded-full text-sm font-bold transition-colors ${guestTab === 'diary' ? 'bg-primary text-white' : 'text-gray-500 hover:text-gray-900'}`}
+                    >
+                      🎙 Voice Diary
+                    </button>
                   </div>
-                  <GuestDiaryList />
+
+                  {guestTab === 'pitch' ? (
+                    <Suspense fallback={<ViewFallback />}>
+                      <PitchPractice onBack={() => setGuestTab('diary')} />
+                    </Suspense>
+                  ) : (
+                    <>
+                      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
+                            <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                          </div>
+                          <div>
+                            <h2 className="text-xl font-bold text-gray-900">
+                              Record Your Diary
+                            </h2>
+                            <p className="text-sm text-gray-500">Speak in Japanese — AI will give you feedback</p>
+                          </div>
+                        </div>
+                        <Suspense fallback={<ViewFallback />}>
+                          <VoiceRecorder isGuest />
+                        </Suspense>
+                      </div>
+                      <GuestDiaryList />
+                    </>
+                  )}
                 </div>
               </motion.div>
             )}
@@ -388,6 +415,18 @@ export const AppPage: React.FC = () => {
               transition={{ duration: 0.3 }}
             >
               <PricingCards onClose={() => setCurrentView('home')} />
+            </motion.div>
+          )}
+
+          {currentView === 'pitch' && (
+            <motion.div
+              key="pitch"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <PitchPractice onBack={() => setCurrentView('home')} />
             </motion.div>
           )}
 
