@@ -47,7 +47,10 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
   const [accuracy, setAccuracy] = useState<number | null>(null);
   const [matches, setMatches] = useState<(boolean | null)[] | undefined>(undefined);
   const [coach, setCoach] = useState<string | null>(null);
-  const [streak, setStreak] = useState(() => Number(localStorage.getItem('pitchStreak') || 0));
+  const [streak, setStreak] = useState(() => {
+    const n = Number(localStorage.getItem('pitchStreak'));
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  });
   const [error, setError] = useState<string | null>(null);
 
   const trackerRef = useRef<PitchTracker | null>(null);

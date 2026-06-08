@@ -37,6 +37,7 @@ function computeMedian(values: number[]): number {
 }
 
 function semitones(hz: number, ref: number): number {
+  if (hz <= 0 || ref <= 0) return 0;
   return 12 * Math.log2(hz / ref);
 }
 
