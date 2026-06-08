@@ -846,6 +846,46 @@
         });
     }
 
+    // ── 4. Conversion analytics (GA4 events) ────────────────────────────────
+    // Lets us see the funnel in GA4: land -> scroll -> which CTA -> app.
+    function track(name, params) {
+        if (typeof window.gtag === 'function') window.gtag('event', name, params || {});
+    }
+
+    // CTA clicks: every link into the app, labelled by section + intent.
+    function sectionOf(el) {
+        var s = el.closest('section, nav, footer, #exit-popup, #pricing-banner');
+        return (s && (s.id || s.tagName.toLowerCase())) || 'unknown';
+    }
+    document.querySelectorAll('a[href*="app.html"]').forEach(function (a) {
+        a.addEventListener('click', function () {
+            var href = a.getAttribute('href') || '';
+            track('cta_click', {
+                location: sectionOf(a),
+                intent: href.indexOf('guest') > -1 ? 'guest' : 'signup',
+                link_url: href
+            });
+        });
+    });
+
+    // Scroll depth milestones (how far they read before leaving).
+    var marks = [25, 50, 75, 100], fired = {};
+    function onScrollDepth() {
+        var doc = document.documentElement;
+        var pct = (window.scrollY + window.innerHeight) / doc.scrollHeight * 100;
+        marks.forEach(function (m) {
+            if (!fired[m] && pct >= m) { fired[m] = true; track('scroll_depth', { percent: m }); }
+        });
+    }
+    window.addEventListener('scroll', onScrollDepth, { passive: true });
+
+    // Exit-intent popup shown (already wired above — emit once here too).
+    var _origShow = showExitPopup;
+    showExitPopup = function () {
+        if (!exitShown) track('exit_popup_shown', {});
+        _origShow();
+    };
+
 })();
 </script>
 
