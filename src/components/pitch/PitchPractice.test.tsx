@@ -91,6 +91,21 @@ describe('PitchPractice', () => {
     ).toBeInTheDocument();
   });
 
+  it('shows a session summary with stats after finishing', async () => {
+    render(<PitchPractice onBack={vi.fn()} />);
+
+    fireEvent.click(screen.getByText('Record & say it'));
+    await waitFor(() => expect(trackerStart).toHaveBeenCalled());
+    fireEvent.click(screen.getByText('Stop'));
+    await screen.findByText('92');
+
+    fireEvent.click(screen.getByText('Finish session'));
+
+    expect(await screen.findByText('Session complete')).toBeInTheDocument();
+    expect(screen.getByText('Share my progress')).toBeInTheDocument();
+    expect(screen.getByText('Keep practicing')).toBeInTheDocument();
+  });
+
   it('calls onBack when the back button is clicked', () => {
     const onBack = vi.fn();
     render(<PitchPractice onBack={onBack} />);

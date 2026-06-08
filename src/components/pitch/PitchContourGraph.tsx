@@ -8,6 +8,8 @@ export interface ExpectedPattern {
 interface Props {
   frames: PitchFrame[];
   expectedPattern?: ExpectedPattern;
+  /** Draw the idealized native pitch line over the bands (a model to trace). */
+  showReferenceLine?: boolean;
   width?: number | string;
   height?: number;
 }
@@ -16,11 +18,13 @@ const PADDING = { top: 12, right: 12, bottom: 28, left: 40 };
 const HIGH_COLOR = '#22c55e'; // green-500
 const LOW_COLOR = '#9ca3af';  // gray-400
 const LINE_COLOR = '#3b82f6'; // blue-500
+const REF_COLOR = '#16a34a';  // green-600 — the native model line
 const BAND_OPACITY = 0.18;
 
 export function PitchContourGraph({
   frames,
   expectedPattern,
+  showReferenceLine = true,
   width = '100%',
   height = 160,
 }: Props) {
@@ -60,6 +64,13 @@ export function PitchContourGraph({
   const segW = moraCount > 0 ? innerW / moraCount : 0;
   const midY = innerH / 2;
   const bandH = innerH * 0.3;
+
+  // Idealized native model line: sit in the middle of each mora's target band so
+  // the learner has a smooth contour to trace, not just abstract H/L blocks.
+  const refLine =
+    showReferenceLine && moraCount > 0
+      ? buildReferencePath(expectedPattern!.pattern, segW, midY, bandH, innerW)
+      : null;
 
   const yAxisTicks = buildYTicks(pitchMin, pitchMax, 4);
 
@@ -127,6 +138,20 @@ export function PitchContourGraph({
         <line x1={0} y1={0} x2={0} y2={innerH} stroke="#9ca3af" strokeWidth={1} />
         <line x1={0} y1={innerH} x2={innerW} y2={innerH} stroke="#9ca3af" strokeWidth={1} />
 
+        {/* Native model line (dashed) — the target contour to trace */}
+        {refLine && (
+          <path
+            d={refLine}
+            fill="none"
+            stroke={REF_COLOR}
+            strokeWidth={2}
+            strokeDasharray="5 4"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            opacity={0.9}
+          />
+        )}
+
         {/* Pitch contour */}
         {pathSegments.map((d, i) => (
           <path
@@ -155,6 +180,32 @@ export function PitchContourGraph({
       </g>
     </svg>
   );
+}
+
+// Build an SVG path for the native model line: one point at each mora's centre,
+// at the vertical middle of its high/low band, extended to both edges. Uses a
+// step at each H↔L boundary so the downstep reads as a crisp fall.
+function buildReferencePath(
+  pattern: number[],
+  segW: number,
+  midY: number,
+  bandH: number,
+  innerW: number,
+): string {
+  const yFor = (high: boolean) => (high ? midY - bandH / 2 : midY + bandH / 2);
+  const pts: Array<[number, number]> = [];
+  pattern.forEach((p, i) => {
+    const high = p === 1;
+    const y = yFor(high);
+    const xStart = i * segW;
+    const xEnd = (i + 1) * segW;
+    // Step at the boundary: hold the previous level's x, then jump to this level.
+    if (i > 0) pts.push([xStart, y]);
+    pts.push([i === 0 ? 0 : xStart, y]);
+    pts.push([i === pattern.length - 1 ? innerW : xEnd, y]);
+  });
+  if (pts.length === 0) return '';
+  return `M ${pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' L ')}`;
 }
 
 function buildYTicks(min: number, max: number, count: number): number[] {

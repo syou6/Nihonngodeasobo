@@ -73,3 +73,71 @@ export function nextWordIndex(
   }
   return (currentIndex + 1) % n;
 }
+
+// Combine two progress maps, keeping the strongest record per word — used to
+// reconcile this device's localStorage with the user's cloud-synced row.
+export function mergeProgress(a: PitchProgress, b: PitchProgress): PitchProgress {
+  const out: PitchProgress = { ...a };
+  for (const [word, s] of Object.entries(b)) {
+    const prev = out[word];
+    out[word] = prev
+      ? { attempts: Math.max(prev.attempts, s.attempts), best: Math.max(prev.best, s.best) }
+      : s;
+  }
+  return out;
+}
+
+// --- Cloud sync (logged-in users) -----------------------------------------
+// Best-effort: callers gate on a real authenticated user, and every call is
+// wrapped so a network/RLS failure never breaks practice (localStorage remains
+// the source of truth). `client` is the supabase-js client (typed loosely
+// because the project's client is untyped).
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export async function fetchRemoteProgress(
+  client: any,
+  userId: string,
+): Promise<PitchProgress> {
+  try {
+    const { data, error } = await client
+      .from('pitch_progress')
+      .select('word, best, attempts')
+      .eq('user_id', userId);
+    if (error || !Array.isArray(data)) return {};
+    const out: PitchProgress = {};
+    for (const row of data) {
+      if (row && typeof row.word === 'string') {
+        out[row.word] = {
+          attempts: Number(row.attempts) || 0,
+          best: Number(row.best) || 0,
+        };
+      }
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+export async function upsertRemoteAttempt(
+  client: any,
+  userId: string,
+  word: string,
+  stats: WordStats,
+): Promise<void> {
+  try {
+    await client.from('pitch_progress').upsert(
+      {
+        user_id: userId,
+        word,
+        best: stats.best,
+        attempts: stats.attempts,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id,word' },
+    );
+  } catch {
+    /* offline or RLS — local progress already saved, sync will catch up later */
+  }
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   loadProgress,
   saveProgress,
@@ -6,6 +6,9 @@ import {
   isMastered,
   masteredCount,
   nextWordIndex,
+  mergeProgress,
+  fetchRemoteProgress,
+  upsertRemoteAttempt,
   MASTERY_THRESHOLD,
 } from './pitch-progress';
 
@@ -67,5 +70,50 @@ describe('pitch-progress', () => {
     p = recordAttempt(p, 'え', 90);
     // all mastered -> just advance by one
     expect(nextWordIndex(WORDS, p, 0)).toBe(1);
+  });
+
+  it('merges two progress maps keeping the strongest record per word', () => {
+    const local = { あ: { attempts: 2, best: 70 }, い: { attempts: 1, best: 90 } };
+    const remote = { あ: { attempts: 5, best: 60 }, う: { attempts: 3, best: 85 } };
+    expect(mergeProgress(local, remote)).toEqual({
+      あ: { attempts: 5, best: 70 },
+      い: { attempts: 1, best: 90 },
+      う: { attempts: 3, best: 85 },
+    });
+  });
+
+  it('fetchRemoteProgress maps rows and tolerates errors', async () => {
+    const ok = {
+      from: () => ({
+        select: () => ({
+          eq: () =>
+            Promise.resolve({
+              data: [{ word: 'あ', best: 88, attempts: 4 }],
+              error: null,
+            }),
+        }),
+      }),
+    };
+    expect(await fetchRemoteProgress(ok, 'u1')).toEqual({ あ: { best: 88, attempts: 4 } });
+
+    const bad = {
+      from: () => ({
+        select: () => ({ eq: () => Promise.resolve({ data: null, error: { message: 'x' } }) }),
+      }),
+    };
+    expect(await fetchRemoteProgress(bad, 'u1')).toEqual({});
+  });
+
+  it('upsertRemoteAttempt sends the row with onConflict and swallows failures', async () => {
+    const upsert = vi.fn().mockResolvedValue({ error: null });
+    const client = { from: () => ({ upsert }) };
+    await upsertRemoteAttempt(client, 'u1', 'あ', { best: 90, attempts: 3 });
+    expect(upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ user_id: 'u1', word: 'あ', best: 90, attempts: 3 }),
+      { onConflict: 'user_id,word' },
+    );
+
+    const throwing = { from: () => ({ upsert: () => { throw new Error('offline'); } }) };
+    await expect(upsertRemoteAttempt(throwing, 'u1', 'あ', { best: 1, attempts: 1 })).resolves.toBeUndefined();
   });
 });
