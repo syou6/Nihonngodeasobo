@@ -10,6 +10,28 @@ interface Props {
   detectedPattern?: (boolean | null)[];
   /** Compact variant for inline use — smaller card, no border */
   compact?: boolean;
+  /** English gloss shown under the word (when known). */
+  english?: string;
+  /** Set when this word shares a reading with another (minimal pair). */
+  pairWith?: string;
+}
+
+// Plain-language explanation of each accent pattern + where the drop is.
+function accentTip(patternName: string, morae: string[], pattern: number[]): string {
+  const dropAfter = (() => {
+    for (let i = 0; i < pattern.length - 1; i++) {
+      if (pattern[i] === 1 && pattern[i + 1] === 0) return i + 1;
+    }
+    return 0;
+  })();
+  const at = dropAfter >= 1 && dropAfter <= morae.length ? `「${morae[dropAfter - 1]}」` : 'the next particle';
+  switch (patternName) {
+    case '平板': return 'Heiban — starts low, rises, and stays high (no drop).';
+    case '頭高': return `Atamadaka — starts high, then drops after ${at}.`;
+    case '中高': return `Nakadaka — rises, then drops after ${at}.`;
+    case '尾高': return 'Odaka — rises and stays high; the drop lands on the following particle.';
+    default: return dropAfter ? `The pitch drops after ${at}.` : 'Stays high — no drop.';
+  }
 }
 
 function LoadingState({ compact }: { compact: boolean }): React.ReactElement {
@@ -40,7 +62,7 @@ function NotFoundState({ word, compact }: { word: string; compact: boolean }): R
   );
 }
 
-export function PitchWordCard({ word, reading, detectedPattern, compact = false }: Props): React.ReactElement {
+export function PitchWordCard({ word, reading, detectedPattern, compact = false, english, pairWith }: Props): React.ReactElement {
   const pitchData = usePitchAccent(word, reading);
 
   // Still loading (null result, no cache hit yet)
@@ -69,26 +91,38 @@ export function PitchWordCard({ word, reading, detectedPattern, compact = false 
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm flex flex-col items-center gap-3">
+    <div className="rounded-3xl border border-gray-200 bg-white px-6 py-7 shadow-sm flex flex-col items-center gap-4 w-full max-w-sm">
       {/* Word heading */}
-      <div className="flex flex-col items-center gap-0.5">
-        <span className="text-2xl font-bold text-gray-900">{word}</span>
+      <div className="flex flex-col items-center gap-1">
+        <span className="text-6xl font-extrabold text-gray-900 leading-none">{word}</span>
         {pitchData && (
-          <span className="text-sm text-gray-500">{pitchData.reading}</span>
+          <span className="text-lg text-gray-500">{pitchData.reading}</span>
         )}
+        {english && <span className="text-sm text-gray-400">{english}</span>}
       </div>
+
+      {pairWith && (
+        <span className="inline-flex items-center gap-1 text-xs font-bold text-orange-600 bg-orange-50 px-3 py-1 rounded-full">
+          ⚖️ minimal pair with {pairWith}
+        </span>
+      )}
 
       {isLoading ? (
         <LoadingState compact={false} />
       ) : pitchData === null ? (
         <NotFoundState word={word} compact={false} />
       ) : (
-        <PitchAccentDisplay
-          morae={pitchData.morae}
-          pattern={pitchData.pattern}
-          patternName={pitchData.patternName}
-          detectedPattern={detectedPattern}
-        />
+        <>
+          <PitchAccentDisplay
+            morae={pitchData.morae}
+            pattern={pitchData.pattern}
+            patternName={pitchData.patternName}
+            detectedPattern={detectedPattern}
+          />
+          <p className="text-sm text-gray-500 text-center leading-relaxed">
+            {accentTip(pitchData.patternName, pitchData.morae, pitchData.pattern)}
+          </p>
+        </>
       )}
     </div>
   );

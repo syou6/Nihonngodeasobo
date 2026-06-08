@@ -59,6 +59,8 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
   const { word, reading } = PRACTICE_WORDS[wordIndex];
   const pitchData = usePitchAccent(word, reading);
   const isLoadingAccent = pitchData === null;
+  // Minimal pair: another curriculum word with the same reading (箸/橋, 雨/飴).
+  const pairWith = PRACTICE_WORDS.find((w) => w.reading === reading && w.word !== word)?.word;
 
   const releaseMic = () => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -157,7 +159,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
       >
         {/* Target word + expected pattern (green/red overlay after an attempt) */}
         <div className="flex justify-center">
-          <PitchWordCard word={word} reading={reading} detectedPattern={matches} />
+          <PitchWordCard word={word} reading={reading} detectedPattern={matches} pairWith={pairWith} />
         </div>
 
         {/* Result: score + recorded contour vs expected bands */}
@@ -200,19 +202,26 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
 
         {/* Controls */}
         <div className="flex flex-col items-center gap-3">
-          {/* Listen to the native model (pre-generated static audio; silently
-              no-ops if the asset isn't present yet) */}
-          <button
-            type="button"
+          {/* Listen FIRST (no mic needed) — the low-friction entry that lets a new
+              user "get it" before the mic-permission prompt. */}
+          <Button
             onClick={() => {
               const a = new Audio(`/pitch-audio/${encodeURIComponent(word)}.mp3`);
               a.play().catch(() => {/* asset missing or autoplay blocked */});
             }}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:opacity-70 transition-opacity"
+            variant="outline"
+            size="lg"
+            className="w-full sm:w-64"
           >
-            <Volume2 className="w-4 h-4" />
-            Listen to a native speaker
-          </button>
+            <Volume2 className="w-5 h-5 mr-2" />
+            Listen to a native
+          </Button>
+
+          {phase === 'ready' && wordIndex === 0 && (
+            <p className="text-xs text-gray-400 text-center">
+              👂 Tap Listen first — then record yourself and we'll score your pitch.
+            </p>
+          )}
 
           {phase === 'ready' && (
             <Button
