@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mic, Square, ArrowLeft, RotateCcw, ChevronRight, Loader2 } from 'lucide-react';
+import { Mic, Square, ArrowLeft, RotateCcw, ChevronRight, Loader2, Volume2 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { PitchWordCard } from './PitchWordCard';
 import { PitchContourGraph } from './PitchContourGraph';
@@ -180,6 +180,20 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
 
         {/* Controls */}
         <div className="flex flex-col items-center gap-3">
+          {/* Listen to the native model (pre-generated static audio; silently
+              no-ops if the asset isn't present yet) */}
+          <button
+            type="button"
+            onClick={() => {
+              const a = new Audio(`/pitch-audio/${encodeURIComponent(word)}.mp3`);
+              a.play().catch(() => {/* asset missing or autoplay blocked */});
+            }}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:opacity-70 transition-opacity"
+          >
+            <Volume2 className="w-4 h-4" />
+            Listen to a native speaker
+          </button>
+
           {phase === 'ready' && (
             <Button
               onClick={startRecording}
