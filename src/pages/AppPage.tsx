@@ -89,16 +89,19 @@ export const AppPage: React.FC = () => {
       import.meta.env.VITE_SUPABASE_URL !== 'your_supabase_url' &&
       import.meta.env.VITE_SUPABASE_ANON_KEY !== 'your_supabase_anon_key';
 
+    // URLパラメータをチェック
+    const urlParams = new URLSearchParams(window.location.search);
+    const isGuestParam = urlParams.get('guest') === 'true';
+
     if (!hasValidConfig) {
       setGuestMode(true);
-      setShowOnboarding(true);
+      // A visitor arriving with ?guest=true (the LP "Score My Pitch" CTA) goes
+      // straight to the pitch trainer — no onboarding wall before the aha.
+      setShowOnboarding(!isGuestParam);
       setIsInitialized(true);
       return;
     }
 
-    // URLパラメータをチェック
-    const urlParams = new URLSearchParams(window.location.search);
-    const isGuestParam = urlParams.get('guest') === 'true';
     const isSignupParam = urlParams.get('signup') === 'true';
     const isLoginParam = urlParams.get('login') === 'true';
     const viewParam = urlParams.get('view');
