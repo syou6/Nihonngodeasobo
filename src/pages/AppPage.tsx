@@ -127,10 +127,11 @@ export const AppPage: React.FC = () => {
       return;
     }
     
-    // ゲストパラメータがある場合
+    // ゲストパラメータがある場合: skip onboarding and drop them straight into the
+    // pitch trainer (the aha). Every extra step before it costs conversions.
     if (isGuestParam) {
       setGuestMode(true);
-      setShowOnboarding(true);
+      setShowOnboarding(false);
       setIsInitialized(true);
       // URLからパラメータを削除
       const newUrl = new URL(window.location.href);
