@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /app.html
+Disallow: /*-old.html$
+
+Sitemap: https://nihongo.amorjp.com/sitemap.xml

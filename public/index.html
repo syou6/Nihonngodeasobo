@@ -29,9 +29,48 @@
 <meta name="twitter:title" content="NihonGo - Master Japanese with AI">
 <meta name="twitter:description" content="AI-powered Japanese learning app. Record voice diaries and get instant feedback.">
 <meta name="twitter:image" content="https://nihongo.amorjp.com/og-image.png">
+<link rel="canonical" href="https://nihongo.amorjp.com/">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png">
 <meta name="theme-color" content="#4F46E5">
+<!-- Structured data: rich results in Google search -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "NihonGo",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Web, iOS, Android",
+      "description": "AI-powered Japanese learning app. Record voice diaries, get instant AI feedback that explains why you're wrong and how to fix it, and practice JLPT speaking from N5 to N1.",
+      "url": "https://nihongo.amorjp.com",
+      "image": "https://nihongo.amorjp.com/og-image.png",
+      "offers": [
+        { "@type": "Offer", "price": "0", "priceCurrency": "USD", "name": "Free" },
+        { "@type": "Offer", "price": "9.99", "priceCurrency": "USD", "name": "Premium" }
+      ]
+    },
+    {
+      "@type": "Organization",
+      "name": "NihonGo",
+      "url": "https://nihongo.amorjp.com",
+      "logo": "https://nihongo.amorjp.com/logo.png"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "Is NihonGo free?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. NihonGo has a free plan forever with 3 diary recordings, 3 AI feedback sessions per month, and daily JLPT speaking practice. Premium is $9.99/mo for unlimited use." } },
+        { "@type": "Question", "name": "What JLPT levels does NihonGo cover?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Every level from N5 to N1, including advanced N2 and N1 speaking content that most apps don't cover." } },
+        { "@type": "Question", "name": "How is NihonGo different from other Japanese apps?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Most apps only score you. NihonGo's AI explains why your Japanese is wrong and how to say it naturally, with grammar corrections, vocabulary tips, and sample answers." } }
+      ]
+    }
+  ]
+}
+</script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet"/>
