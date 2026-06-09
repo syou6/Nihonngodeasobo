@@ -8,6 +8,10 @@
     { "type": "pitch", "reading": "かみ", "a": { "word": "神", "en": "god", "hl": "HL" }, "b": { "word": "髪", "en": "hair", "hl": "LH" } },
     { "type": "pitch", "reading": "いま", "a": { "word": "今", "en": "now", "hl": "HL" }, "b": { "word": "居間", "en": "living room", "hl": "LH" } },
     { "type": "pitch", "reading": "かめ", "a": { "word": "亀", "en": "turtle", "hl": "HL" }, "b": { "word": "甕", "en": "jar", "hl": "LH" } },
+    { "type": "pitch", "reading": "あさ", "a": { "word": "朝", "en": "morning", "hl": "HL" }, "b": { "word": "麻", "en": "hemp / linen", "hl": "LH" } },
+    { "type": "pitch", "reading": "せき", "a": { "word": "席", "en": "seat", "hl": "HL" }, "b": { "word": "咳", "en": "cough", "hl": "LH" } },
+    { "type": "pitch", "reading": "もも", "a": { "word": "股", "en": "thigh", "hl": "HL" }, "b": { "word": "桃", "en": "peach", "hl": "LH" } },
+    { "type": "pitch", "reading": "あき", "a": { "word": "秋", "en": "autumn", "hl": "HL" }, "b": { "word": "空き", "en": "vacancy", "hl": "LH" } },
 
     { "type": "grammar", "hook": "Your Japanese past tense is WRONG", "level": "N4", "wrong": "面白いでした", "right": "面白かったです", "why": "i-adjectives conjugate themselves — never add でした." },
     { "type": "grammar", "hook": "Stop saying 〜たい like this", "level": "N5", "wrong": "行くたい", "right": "行きたい", "why": "〜たい attaches to the verb stem: 行き + たい." },
