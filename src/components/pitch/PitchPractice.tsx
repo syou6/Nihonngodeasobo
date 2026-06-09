@@ -73,6 +73,23 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<PitchProgress>(() => loadProgress());
   const [contours, setContours] = useState<ContourMap>({});
+  // First-run nudge: highlight "Listen" until the user has tried it once. Kept
+  // non-blocking — the funnel goal is to reach the aha with zero walls.
+  const [introSeen, setIntroSeen] = useState(() => !!localStorage.getItem('pitchIntroSeen'));
+
+  const markIntroSeen = () => {
+    if (introSeen) return;
+    setIntroSeen(true);
+    localStorage.setItem('pitchIntroSeen', '1');
+  };
+
+  const playNative = () => {
+    markIntroSeen();
+    const a = new Audio(`/pitch-audio/${encodeURIComponent(word)}.mp3`);
+    // play() returns undefined in some environments (jsdom, older browsers).
+    const p = a.play();
+    if (p && typeof p.catch === 'function') p.catch(() => {/* asset missing or autoplay blocked */});
+  };
 
   const userId = useAuthStore((s) => s.user?.id) ?? null;
 
@@ -118,6 +135,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
   const mastered = masteredCount(progress, WORD_LIST);
   const wordMastered = isMastered(progress, word);
   const nativeContour = contours[word];
+  const showIntro = !introSeen && wordIndex === 0 && phase === 'ready';
 
   const stopLiveFlush = () => {
     if (liveTimerRef.current !== null) {
@@ -186,6 +204,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
 
   const startRecording = async () => {
     if (!pitchData) return;
+    markIntroSeen();
     setError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -416,23 +435,23 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
         {/* Controls */}
         <div className="flex flex-col items-center gap-3">
           {/* Listen FIRST (no mic needed) — the low-friction entry that lets a new
-              user "get it" before the mic-permission prompt. */}
-          <Button
-            onClick={() => {
-              const a = new Audio(`/pitch-audio/${encodeURIComponent(word)}.mp3`);
-              a.play().catch(() => {/* asset missing or autoplay blocked */});
-            }}
-            variant="outline"
-            size="lg"
-            className="w-full sm:w-64"
-          >
-            <Volume2 className="w-5 h-5 mr-2" />
-            Listen to a native
-          </Button>
+              user "get it" before the mic-permission prompt. Pulsing ring on the
+              very first run points the user at where to start. */}
+          <div className="relative w-full sm:w-64">
+            {showIntro && (
+              <span className="pointer-events-none absolute -inset-1 rounded-xl ring-2 ring-brand-400 animate-pulse" />
+            )}
+            <Button onClick={playNative} variant="outline" size="lg" className="w-full">
+              <Volume2 className="w-5 h-5 mr-2" />
+              Listen to a native
+            </Button>
+          </div>
 
-          {phase === 'ready' && wordIndex === 0 && (
-            <p className="text-xs text-gray-400 text-center">
-              👂 Tap Listen first — then record yourself and we'll score your pitch.
+          {phase === 'ready' && (showIntro || wordIndex === 0) && (
+            <p className={`text-xs text-center ${showIntro ? 'text-brand-600 font-medium' : 'text-gray-400'}`}>
+              {showIntro
+                ? '👂 Start here — tap Listen, then record. 箸 or 橋? Your pitch decides.'
+                : 'Tap Listen first — then record yourself and we\'ll score your pitch.'}
             </p>
           )}
 

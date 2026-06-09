@@ -111,6 +111,19 @@ describe('PitchPractice', () => {
     expect(screen.getByText('Keep practicing')).toBeInTheDocument();
   });
 
+  it('shows a first-run "Start here" nudge that clears after listening', async () => {
+    render(<PitchPractice onBack={vi.fn()} />);
+
+    // First run (cleared localStorage) → the strong nudge points at Listen.
+    expect(screen.getByText(/Start here/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Listen to a native/ }));
+
+    // Once listened, the first-run nudge is gone.
+    await waitFor(() => expect(screen.queryByText(/Start here/)).not.toBeInTheDocument());
+    expect(localStorage.getItem('pitchIntroSeen')).toBe('1');
+  });
+
   it('calls onBack when the back button is clicked', () => {
     const onBack = vi.fn();
     render(<PitchPractice onBack={onBack} />);
