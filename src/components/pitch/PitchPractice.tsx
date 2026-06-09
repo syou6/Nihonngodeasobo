@@ -16,11 +16,13 @@ import {
   nextWordIndex,
   mergeProgress,
   fetchRemoteProgress,
-  upsertRemoteAttempt,
+  upsertRemoteProgress,
   type PitchProgress,
 } from '../../lib/pitch-progress';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../lib/supabase';
+import { loadNativeContours, type ContourMap } from '../../lib/native-contours';
+import { buildShareCard } from '../../lib/share-card';
 import { trackEvent } from '../../lib/analytics';
 
 import { PRACTICE_WORDS } from './practiceWords';
@@ -70,6 +72,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
   });
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<PitchProgress>(() => loadProgress());
+  const [contours, setContours] = useState<ContourMap>({});
 
   const userId = useAuthStore((s) => s.user?.id) ?? null;
 
@@ -78,6 +81,27 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
   const [sessionAttempts, setSessionAttempts] = useState(0);
   const [sessionMastered, setSessionMastered] = useState(0);
   const sessionWordsRef = useRef<Set<string>>(new Set());
+
+  // Cloud sync is batched: collect changed words + the latest progress, then
+  // flush in one upsert on a debounce / summary / unmount instead of per attempt.
+  const progressRef = useRef<PitchProgress>(progress);
+  progressRef.current = progress;
+  const dirtyRef = useRef<Set<string>>(new Set());
+  const flushTimerRef = useRef<number | null>(null);
+  const userIdRef = useRef<string | null>(userId);
+  userIdRef.current = userId;
+
+  const flushRemote = () => {
+    if (flushTimerRef.current !== null) {
+      clearTimeout(flushTimerRef.current);
+      flushTimerRef.current = null;
+    }
+    const uid = userIdRef.current;
+    if (!uid || dirtyRef.current.size === 0) return;
+    const words = [...dirtyRef.current];
+    dirtyRef.current = new Set();
+    void upsertRemoteProgress(supabase, uid, progressRef.current, words);
+  };
 
   const trackerRef = useRef<PitchTracker | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -93,6 +117,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
   const pairWith = PRACTICE_WORDS.find((w) => w.reading === reading && w.word !== word)?.word;
   const mastered = masteredCount(progress, WORD_LIST);
   const wordMastered = isMastered(progress, word);
+  const nativeContour = contours[word];
 
   const stopLiveFlush = () => {
     if (liveTimerRef.current !== null) {
@@ -113,6 +138,18 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
       stopLiveFlush();
       trackerRef.current?.stop();
       releaseMic();
+      flushRemote(); // best-effort final sync of anything still queued
+    };
+  }, []);
+
+  // Load the real native contours once (degrades to the idealized model line).
+  useEffect(() => {
+    let cancelled = false;
+    loadNativeContours().then((c) => {
+      if (!cancelled) setContours(c);
+    });
+    return () => {
+      cancelled = true;
     };
   }, []);
 
@@ -194,8 +231,14 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
     const justMastered = !isMastered(progress, word) && result.accuracy >= 80;
     const updated = recordAttempt(progress, word, result.accuracy);
     setProgress(updated);
+    progressRef.current = updated;
     saveProgress(updated);
-    if (userId) void upsertRemoteAttempt(supabase, userId, word, updated[word]);
+    // Queue this word and debounce the cloud flush (8s of inactivity).
+    if (userId) {
+      dirtyRef.current.add(word);
+      if (flushTimerRef.current !== null) clearTimeout(flushTimerRef.current);
+      flushTimerRef.current = window.setTimeout(flushRemote, 8000);
+    }
 
     sessionWordsRef.current.add(word);
     setSessionAttempts((n) => n + 1);
@@ -206,6 +249,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
   };
 
   const openSummary = () => {
+    flushRemote();
     trackEvent('pitch_session_summary', {
       attempts: sessionAttempts,
       newlyMastered: sessionMastered,
@@ -221,11 +265,29 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
     const url = typeof window !== 'undefined' ? window.location.origin : '';
     trackEvent('pitch_session_share', { totalMastered: mastered });
     try {
-      if (typeof navigator !== 'undefined' && navigator.share) {
-        await navigator.share({ title: 'Pitch Accent Trainer', text, url });
-      } else if (navigator?.clipboard) {
-        await navigator.clipboard.writeText(`${text} ${url}`.trim());
-        setError(null);
+      const blob = await buildShareCard({ mastered, total: PRACTICE_WORDS.length, streak });
+      const file = blob ? new File([blob], 'pitch-progress.png', { type: 'image/png' }) : null;
+
+      const nav = typeof navigator !== 'undefined' ? navigator : undefined;
+      // Prefer sharing the image where supported.
+      if (file && nav?.canShare?.({ files: [file] }) && nav.share) {
+        await nav.share({ files: [file], title: 'Pitch Accent Trainer', text });
+        return;
+      }
+      if (nav?.share) {
+        await nav.share({ title: 'Pitch Accent Trainer', text, url });
+        return;
+      }
+      // No Web Share — download the image (or copy the text) as a fallback.
+      if (blob) {
+        const href = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = href;
+        a.download = 'pitch-progress.png';
+        a.click();
+        URL.revokeObjectURL(href);
+      } else if (nav?.clipboard) {
+        await nav.clipboard.writeText(`${text} ${url}`.trim());
       }
     } catch {
       /* user dismissed the share sheet — nothing to do */
@@ -308,6 +370,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
               <PitchContourGraph
                 frames={frames}
                 expectedPattern={{ morae: pitchData.morae, pattern: pitchData.pattern }}
+                nativeContour={nativeContour}
               />
             )}
 
@@ -337,6 +400,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
             <PitchContourGraph
               frames={liveFrames}
               expectedPattern={{ morae: pitchData.morae, pattern: pitchData.pattern }}
+              nativeContour={nativeContour}
             />
 
             <p className="text-xs text-gray-400 text-center mt-2">

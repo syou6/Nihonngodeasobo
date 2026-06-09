@@ -5,9 +5,20 @@ export interface ExpectedPattern {
   pattern: number[]; // 1 = HIGH, 0 = LOW
 }
 
+// A real native contour extracted from the reference audio (see
+// scripts/gen-pitch-contours.mjs): x in [0,1] over the voiced span, y in [0,1]
+// with 1 = highest. Relative shape only — pitch accent is about rise/fall, not
+// the speaker's absolute Hz.
+export interface NativeContour {
+  x: number[];
+  y: number[];
+}
+
 interface Props {
   frames: PitchFrame[];
   expectedPattern?: ExpectedPattern;
+  /** Real native contour for this word; overrides the idealized model line. */
+  nativeContour?: NativeContour;
   /** Draw the idealized native pitch line over the bands (a model to trace). */
   showReferenceLine?: boolean;
   width?: number | string;
@@ -24,6 +35,7 @@ const BAND_OPACITY = 0.18;
 export function PitchContourGraph({
   frames,
   expectedPattern,
+  nativeContour,
   showReferenceLine = true,
   width = '100%',
   height = 160,
@@ -65,12 +77,21 @@ export function PitchContourGraph({
   const midY = innerH / 2;
   const bandH = innerH * 0.3;
 
-  // Idealized native model line: sit in the middle of each mora's target band so
-  // the learner has a smooth contour to trace, not just abstract H/L blocks.
-  const refLine =
-    showReferenceLine && moraCount > 0
-      ? buildReferencePath(expectedPattern!.pattern, segW, midY, bandH, innerW)
-      : null;
+  // Native model line. Prefer the REAL contour extracted from the reference
+  // audio; fall back to an idealized line drawn from the H/L pattern.
+  let refLine: string | null = null;
+  if (showReferenceLine && nativeContour && nativeContour.x.length >= 2) {
+    const top = midY - bandH; // y = 1
+    const bottom = midY + bandH; // y = 0
+    const pts = nativeContour.x.map((xn, i) => {
+      const px = xn * innerW;
+      const py = bottom - nativeContour.y[i] * (bottom - top);
+      return `${px.toFixed(1)},${py.toFixed(1)}`;
+    });
+    refLine = `M ${pts.join(' L ')}`;
+  } else if (showReferenceLine && moraCount > 0) {
+    refLine = buildReferencePath(expectedPattern!.pattern, segW, midY, bandH, innerW);
+  }
 
   const yAxisTicks = buildYTicks(pitchMin, pitchMax, 4);
 

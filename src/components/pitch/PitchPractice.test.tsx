@@ -17,6 +17,11 @@ vi.mock('../../lib/pitch-analyzer', () => ({
   comparePitchToPattern: () => ({ matches: [true, true], accuracy: 92 }),
 }));
 
+// No native-contour fetch in tests (avoids an async setState after render).
+vi.mock('../../lib/native-contours', () => ({
+  loadNativeContours: () => Promise.resolve({}),
+}));
+
 // Fake PitchTracker: start() is a no-op, stop() returns one voiced frame.
 const trackerStart = vi.fn();
 const trackerStop = vi.fn(() => [{ time: 0, pitch: 120, clarity: 0.9 }]);

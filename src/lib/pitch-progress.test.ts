@@ -8,7 +8,7 @@ import {
   nextWordIndex,
   mergeProgress,
   fetchRemoteProgress,
-  upsertRemoteAttempt,
+  upsertRemoteProgress,
   MASTERY_THRESHOLD,
 } from './pitch-progress';
 
@@ -104,16 +104,28 @@ describe('pitch-progress', () => {
     expect(await fetchRemoteProgress(bad, 'u1')).toEqual({});
   });
 
-  it('upsertRemoteAttempt sends the row with onConflict and swallows failures', async () => {
+  it('upsertRemoteProgress batches the dirty words and swallows failures', async () => {
     const upsert = vi.fn().mockResolvedValue({ error: null });
     const client = { from: () => ({ upsert }) };
-    await upsertRemoteAttempt(client, 'u1', 'あ', { best: 90, attempts: 3 });
-    expect(upsert).toHaveBeenCalledWith(
-      expect.objectContaining({ user_id: 'u1', word: 'あ', best: 90, attempts: 3 }),
-      { onConflict: 'user_id,word' },
-    );
+    const progress = {
+      あ: { best: 90, attempts: 3 },
+      い: { best: 40, attempts: 1 },
+      う: { best: 0, attempts: 0 },
+    };
+    await upsertRemoteProgress(client, 'u1', progress, ['あ', 'い', 'missing']);
+    const [rows, opts] = upsert.mock.calls[0];
+    expect(rows).toHaveLength(2); // 'missing' has no stats → dropped
+    expect(rows[0]).toMatchObject({ user_id: 'u1', word: 'あ', best: 90, attempts: 3 });
+    expect(opts).toEqual({ onConflict: 'user_id,word' });
+
+    // Nothing to write → no call.
+    upsert.mockClear();
+    await upsertRemoteProgress(client, 'u1', progress, []);
+    expect(upsert).not.toHaveBeenCalled();
 
     const throwing = { from: () => ({ upsert: () => { throw new Error('offline'); } }) };
-    await expect(upsertRemoteAttempt(throwing, 'u1', 'あ', { best: 1, attempts: 1 })).resolves.toBeUndefined();
+    await expect(
+      upsertRemoteProgress(throwing, 'u1', progress, ['あ']),
+    ).resolves.toBeUndefined();
   });
 });

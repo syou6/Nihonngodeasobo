@@ -281,6 +281,13 @@
                 Your grammar is fine — but your <strong class="text-ink font-semibold">pitch</strong> gives you away. Record a word, see your pitch vs a native speaker, and fix what makes you sound foreign. <span class="text-ink font-semibold">箸</span> or <span class="text-ink font-semibold">橋</span>? Your pitch decides.
             </p>
 
+            <!-- Returning-learner banner: revealed by JS from localStorage progress -->
+            <a id="returning-banner" href="/app.html?guest=true" class="hidden mx-auto max-w-md items-center justify-center gap-3 px-5 py-3 rounded-2xl bg-green-50 border border-green-200 text-green-800 font-semibold hover:bg-green-100 transition-colors">
+                <span class="material-symbols-outlined text-green-600">military_tech</span>
+                <span id="returning-text">Welcome back</span>
+                <span class="material-symbols-outlined">arrow_forward</span>
+            </a>
+
             <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
                 <a href="/app.html?guest=true" class="w-full sm:w-auto px-10 py-5 bg-primary text-white font-extrabold text-lg rounded-2xl shadow-lg shadow-primary/25 hover:scale-105 transition-all inline-block text-center">
                     Score My Pitch — Free
@@ -886,6 +893,34 @@
         _origShow();
     };
 
+})();
+</script>
+
+<!-- Returning-learner badge: surface saved pitch progress to pull visitors back in -->
+<script>
+(function () {
+    try {
+        var stats = JSON.parse(localStorage.getItem('pitchWordStats') || '{}');
+        var mastered = 0;
+        for (var w in stats) {
+            if (stats[w] && stats[w].best >= 80) mastered++;
+        }
+        var streak = parseInt(localStorage.getItem('pitchStreak') || '0', 10);
+        if (!mastered && !(streak > 0)) return;
+
+        var parts = [];
+        if (mastered) parts.push(mastered + '/66 words mastered');
+        if (streak > 0) parts.push('🔥 ' + streak + '-streak');
+        var msg = 'Welcome back — ' + parts.join(' · ') + '. Keep going';
+
+        var textEl = document.getElementById('returning-text');
+        var banner = document.getElementById('returning-banner');
+        if (textEl && banner) {
+            textEl.textContent = msg;
+            banner.classList.remove('hidden');
+            banner.classList.add('inline-flex');
+        }
+    } catch (e) { /* no/invalid storage — show nothing */ }
 })();
 </script>
 

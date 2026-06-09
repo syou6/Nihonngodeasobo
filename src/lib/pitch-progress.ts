@@ -119,23 +119,26 @@ export async function fetchRemoteProgress(
   }
 }
 
-export async function upsertRemoteAttempt(
+// Batched upsert: one request for several words, so practicing N words is one
+// round-trip on session end rather than N writes mid-session.
+export async function upsertRemoteProgress(
   client: any,
   userId: string,
-  word: string,
-  stats: WordStats,
+  progress: PitchProgress,
+  words: string[],
 ): Promise<void> {
+  const rows = words
+    .filter((w) => progress[w])
+    .map((w) => ({
+      user_id: userId,
+      word: w,
+      best: progress[w].best,
+      attempts: progress[w].attempts,
+      updated_at: new Date().toISOString(),
+    }));
+  if (rows.length === 0) return;
   try {
-    await client.from('pitch_progress').upsert(
-      {
-        user_id: userId,
-        word,
-        best: stats.best,
-        attempts: stats.attempts,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'user_id,word' },
-    );
+    await client.from('pitch_progress').upsert(rows, { onConflict: 'user_id,word' });
   } catch {
     /* offline or RLS — local progress already saved, sync will catch up later */
   }
