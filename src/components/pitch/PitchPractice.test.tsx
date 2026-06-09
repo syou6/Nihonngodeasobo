@@ -17,6 +17,11 @@ vi.mock('../../lib/pitch-analyzer', () => ({
   comparePitchToPattern: () => ({ matches: [true, true], accuracy: 92 }),
 }));
 
+// No native-contour fetch in tests (avoids an async setState after render).
+vi.mock('../../lib/native-contours', () => ({
+  loadNativeContours: () => Promise.resolve({}),
+}));
+
 // Fake PitchTracker: start() is a no-op, stop() returns one voiced frame.
 const trackerStart = vi.fn();
 const trackerStop = vi.fn(() => [{ time: 0, pitch: 120, clarity: 0.9 }]);
@@ -29,6 +34,7 @@ vi.mock('../../lib/pitch-tracker', () => ({
 
 describe('PitchPractice', () => {
   beforeEach(() => {
+    localStorage.clear();
     trackerStart.mockClear();
     trackerStop.mockClear();
     // Grant a fake mic stream.
@@ -63,6 +69,46 @@ describe('PitchPractice', () => {
     expect(screen.getByText('Retry')).toBeInTheDocument();
     expect(screen.getByText('Next')).toBeInTheDocument();
     expect(trackerStop).toHaveBeenCalled();
+  });
+
+  it('marks a word mastered after a high score and tracks progress', async () => {
+    render(<PitchPractice onBack={vi.fn()} />);
+    // Starts with nothing mastered.
+    expect(screen.getByText(/✓ 0\//)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Record & say it'));
+    await waitFor(() => expect(trackerStart).toHaveBeenCalled());
+    fireEvent.click(screen.getByText('Stop'));
+
+    // Mocked score is 92 (≥80) → the word counts as mastered.
+    expect(await screen.findByText('92')).toBeInTheDocument();
+    expect(screen.getByText(/✓ 1\//)).toBeInTheDocument();
+  });
+
+  it('shows the live "match the bands" contour while recording', async () => {
+    render(<PitchPractice onBack={vi.fn()} />);
+
+    fireEvent.click(screen.getByText('Record & say it'));
+
+    await waitFor(() => expect(trackerStart).toHaveBeenCalled());
+    expect(
+      await screen.findByText('Recording — match the shaded bands'),
+    ).toBeInTheDocument();
+  });
+
+  it('shows a session summary with stats after finishing', async () => {
+    render(<PitchPractice onBack={vi.fn()} />);
+
+    fireEvent.click(screen.getByText('Record & say it'));
+    await waitFor(() => expect(trackerStart).toHaveBeenCalled());
+    fireEvent.click(screen.getByText('Stop'));
+    await screen.findByText('92');
+
+    fireEvent.click(screen.getByText('Finish session'));
+
+    expect(await screen.findByText('Session complete')).toBeInTheDocument();
+    expect(screen.getByText('Share my progress')).toBeInTheDocument();
+    expect(screen.getByText('Keep practicing')).toBeInTheDocument();
   });
 
   it('calls onBack when the back button is clicked', () => {

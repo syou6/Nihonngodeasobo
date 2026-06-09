@@ -66,7 +66,7 @@ test.describe('Landing Page', () => {
     await expect(pricingSection.locator('h4', { hasText: 'Free' })).toBeVisible();
     await expect(pricingSection.locator('h4', { hasText: 'Premium' })).toBeVisible();
     await expect(pricingSection.locator('text=$0')).toBeVisible();
-    await expect(pricingSection.locator('text=$4.99')).toBeVisible();
+    await expect(pricingSection.locator('text=$9.99')).toBeVisible();
   });
 
   test('shows testimonials from learners', async ({ page }) => {

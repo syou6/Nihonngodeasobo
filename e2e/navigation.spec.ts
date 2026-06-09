@@ -21,9 +21,11 @@ test.describe('Navigation - Landing to App', () => {
     // Use evaluate to click in case it's off-screen on mobile
     await guestLink.evaluate((el: HTMLElement) => el.click());
 
-    // Should navigate to the app and show onboarding
+    // Guests skip onboarding and land directly in the Pitch Trainer.
     await page.waitForURL('**/app.html**');
-    await expect(page.locator('text=Japanese learning path')).toBeVisible({ timeout: 15000 });
+    await expect(
+      page.getByRole('heading', { name: 'Pitch Accent Practice' })
+    ).toBeVisible({ timeout: 15000 });
   });
 });
 
@@ -36,14 +38,10 @@ test.describe('Navigation - Guest Mode App', () => {
     });
     await page.goto('/app.html?guest=true');
 
-    // Skip onboarding to reach the guest app
-    await expect(page.locator('text=Japanese learning path')).toBeVisible({ timeout: 15000 });
-    await page.locator('button', { hasText: 'Skip' }).click();
-
-    // Wait for the guest app to render
+    // Guests land directly in the Pitch Trainer (no onboarding wall).
     await expect(
-      page.getByRole('heading', { name: 'Record Your Diary' }).first()
-    ).toBeVisible({ timeout: 10000 });
+      page.getByRole('heading', { name: 'Pitch Accent Practice' })
+    ).toBeVisible({ timeout: 15000 });
   });
 
   test('guest mode does NOT show navigation header', async ({ page }) => {
@@ -75,13 +73,13 @@ test.describe('Navigation - Guest Mode App', () => {
     // After the click, handleGuestMode calls reload
     await page.waitForEvent('load', { timeout: 15000 }).catch(() => {});
 
-    // After reload, should show auth form, onboarding, or guest app
+    // After reload, should show the auth form (configured env) or fall back to
+    // the guest Pitch Trainer (no Supabase config).
     const formVisible = page.locator('form');
-    const onboardingVisible = page.locator('text=Japanese learning path');
-    const guestVisible = page.getByRole('heading', { name: 'Record Your Diary' }).first();
+    const trainerVisible = page.getByRole('heading', { name: 'Pitch Accent Practice' });
 
     await expect(
-      formVisible.or(onboardingVisible).or(guestVisible)
+      formVisible.or(trainerVisible)
     ).toBeVisible({ timeout: 15000 });
   });
 });

@@ -26,9 +26,12 @@ test.describe('LearnerDashboard - Guest Mode View', () => {
     });
     await page.goto('/app.html?guest=true');
 
-    // Skip onboarding to reach the guest app
-    await expect(page.locator('text=Japanese learning path')).toBeVisible({ timeout: 15000 });
-    await page.locator('button', { hasText: 'Skip' }).click();
+    // Guests now land directly in the Pitch Trainer (no onboarding). The diary
+    // UI these tests cover lives behind the "Voice Diary" tab.
+    await expect(
+      page.getByRole('heading', { name: 'Pitch Accent Practice' })
+    ).toBeVisible({ timeout: 15000 });
+    await page.getByRole('button', { name: /Voice Diary/ }).click();
 
     // Wait for the guest app to render
     await expect(
