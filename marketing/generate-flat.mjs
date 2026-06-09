@@ -8,6 +8,7 @@ import { chromium } from 'playwright';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { mkdir, writeFile, rm, readdir } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 
 const run = promisify(execFile);
@@ -113,8 +114,37 @@ await page.waitForTimeout(DUR * 1000);
 await ctx.close();
 await browser.close();
 
-const webm = (await readdir(REC)).find((f) => f.endsWith('.webm'));
+const webm = path.join(REC, (await readdir(REC)).find((f) => f.endsWith('.webm')));
 const outFile = path.join(OUT, `NihonGo_flat_${e.word}.mp4`);
-await run('ffmpeg', ['-y', '-i', path.join(REC, webm), '-c:v', 'libx264', '-crf', '18', '-preset', 'slow', '-pix_fmt', 'yuv420p', '-vf', `scale=${W}:${H},fps=30`, '-movflags', '+faststart', outFile]);
+
+// Audio: a music bed (faded) + the word spoken at the ✅ native-pitch reveal (s3
+// starts at 7.2s) so viewers HEAR the correct pitch, not just see the contour.
+const music = path.join(MK, 'audio', 'music_130.mp3');
+const wordAudio = path.join(MK, 'audio', 'words', `${e.word}.mp3`);
+const hasMusic = existsSync(music);
+const hasWord = existsSync(wordAudio);
+
+if (hasMusic || hasWord) {
+  const inputs = ['-i', webm];
+  const filters = [`[0:v]scale=${W}:${H},fps=30[v]`];
+  const amix = [];
+  let ai = 1;
+  if (hasMusic) {
+    inputs.push('-i', music);
+    filters.push(`[${ai}:a]volume=0.16,atrim=0:13,afade=t=in:st=0:d=1,afade=t=out:st=11.4:d=1.2[m]`);
+    amix.push('[m]'); ai++;
+  }
+  if (hasWord) {
+    inputs.push('-i', wordAudio);
+    filters.push(`[${ai}:a]adelay=7350|7350,volume=1.7[w]`);
+    amix.push('[w]'); ai++;
+  }
+  filters.push(`${amix.join('')}amix=inputs=${amix.length}:duration=longest:normalize=0[a]`);
+  await run('ffmpeg', ['-y', ...inputs, '-filter_complex', filters.join(';'),
+    '-map', '[v]', '-map', '[a]', '-c:v', 'libx264', '-crf', '18', '-preset', 'slow', '-pix_fmt', 'yuv420p',
+    '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', '-t', '12.4', outFile]);
+} else {
+  await run('ffmpeg', ['-y', '-i', webm, '-c:v', 'libx264', '-crf', '18', '-preset', 'slow', '-pix_fmt', 'yuv420p', '-vf', `scale=${W}:${H},fps=30`, '-movflags', '+faststart', outFile]);
+}
 await rm(REC, { recursive: true, force: true });
-console.log(`✅ ${outFile}`);
+console.log(`✅ ${outFile}${hasWord ? ' (BGM + word read-aloud)' : ''}`);
