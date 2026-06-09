@@ -118,6 +118,15 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
     const newStreak = result.accuracy >= 80 ? streak + 1 : 0;
     setStreak(newStreak);
     localStorage.setItem('pitchStreak', String(newStreak));
+    // Lightweight progress stats for the home dashboard.
+    const num = (k: string) => Number(localStorage.getItem(k)) || 0;
+    localStorage.setItem('pitchBest', String(Math.max(num('pitchBest'), newStreak)));
+    localStorage.setItem('pitchScored', String(num('pitchScored') + 1));
+    if (result.accuracy >= 80) {
+      const mastered = new Set(JSON.parse(localStorage.getItem('pitchMastered') || '[]'));
+      mastered.add(word);
+      localStorage.setItem('pitchMastered', JSON.stringify([...mastered]));
+    }
     setPhase('result');
     trackEvent('pitch_scored', { word, accuracy: result.accuracy });
   };

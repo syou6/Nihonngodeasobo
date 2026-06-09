@@ -7,7 +7,6 @@ import { EN } from '../../i18n/en';
 import {
   Mic,
   Calendar,
-  Heart,
   TrendingUp,
   MessageCircle,
   Crown,
@@ -25,9 +24,6 @@ interface LearnerDashboardProps {
 
 export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange }) => {
   const [recentComments, setRecentComments] = useState<any[]>([]);
-  const [commentCount, setCommentCount] = useState(0);
-  const [todayLanguageScore, setTodayLanguageScore] = useState<number | null>(null);
-  const [todayEmotion, setTodayEmotion] = useState<string | null>(null);
   const { entries, fetchEntries } = useDiaryStore();
   const { user } = useAuthStore();
   const { isPremium, usage, limits } = useSubscription();
@@ -50,26 +46,6 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
     const userDiaries = entries.filter(entry => entry.user_id === user?.id);
     const allComments: any[] = [];
 
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date();
-    todayEnd.setHours(23, 59, 59, 999);
-
-    const todayDiary = userDiaries.find(diary => {
-      const diaryDate = new Date(diary.created_at);
-      return diaryDate >= todayStart && diaryDate <= todayEnd;
-    });
-
-    if (todayDiary) {
-      // Extract score from AI feedback markdown (## Score: X/100)
-      const scoreMatch = todayDiary.ai_feedback?.markdownContent?.match(/Score:\s*(\d+)\s*\/\s*100/);
-      setTodayLanguageScore(scoreMatch ? parseInt(scoreMatch[1], 10) : null);
-      setTodayEmotion(todayDiary.emotion || null);
-    } else {
-      setTodayLanguageScore(null);
-      setTodayEmotion(null);
-    }
-
     userDiaries.forEach(diary => {
       if (diary.comments && diary.comments.length > 0) {
         diary.comments.forEach(comment => {
@@ -86,11 +62,19 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
       .slice(0, 3);
 
     setRecentComments(sortedComments);
-    setCommentCount(allComments.length);
   }, [entries, user]);
 
   const userDiaryCount = entries.filter(entry => entry.user_id === user?.id).length;
   const isFirstTime = userDiaryCount === 0;
+
+  const num = (k: string) => Number(localStorage.getItem(k)) || 0;
+  const pitchStats = {
+    streak: num('pitchStreak'),
+    best: num('pitchBest'),
+    mastered: (() => {
+      try { return JSON.parse(localStorage.getItem('pitchMastered') || '[]').length; } catch { return 0; }
+    })(),
+  };
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -364,41 +348,29 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
         transition={{ delay: 0.15 }}
         className="bg-white rounded-xl shadow-sm border border-gray-100 p-5"
       >
-        <h2 className="font-semibold text-gray-900 mb-4">
-          {EN.parentDashboard.todaySummary}
-        </h2>
+        <h2 className="font-semibold text-gray-900 mb-4">Your Pitch Progress</h2>
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
-            <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <TrendingUp className="w-5 h-5 text-green-500" />
-            </div>
-            <div className="text-lg font-bold text-gray-900">
-              {todayLanguageScore !== null ? todayLanguageScore : '-'}
-            </div>
-            <div className="text-xs text-gray-500">{EN.parentDashboard.speakingScore}</div>
+            <div className="text-2xl mb-1">🔥</div>
+            <div className="text-lg font-bold text-gray-900">{pitchStats.streak}</div>
+            <div className="text-xs text-gray-500">Current streak</div>
           </div>
-
           <div className="text-center">
-            <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <Heart className="w-5 h-5 text-blue-500" />
-            </div>
-            <div className="text-lg font-bold text-gray-900">
-              {todayEmotion || '-'}
-            </div>
-            <div className="text-xs text-gray-500">{EN.parentDashboard.todayMood}</div>
+            <div className="text-2xl mb-1">⭐</div>
+            <div className="text-lg font-bold text-gray-900">{pitchStats.best}</div>
+            <div className="text-xs text-gray-500">Best streak</div>
           </div>
-
           <div className="text-center">
-            <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <MessageCircle className="w-5 h-5 text-purple-500" />
-            </div>
-            <div className="text-lg font-bold text-gray-900">{commentCount}</div>
-            <div className="text-xs text-gray-500">{EN.parentDashboard.familyComments}</div>
+            <div className="text-2xl mb-1">✅</div>
+            <div className="text-lg font-bold text-gray-900">{pitchStats.mastered}</div>
+            <div className="text-xs text-gray-500">Words nailed</div>
           </div>
         </div>
       </motion.div>
 
-      {/* Teacher Messages */}
+      {/* Teacher messages — only render when a teacher has actually commented;
+          an empty "no messages" block on the pitch home reads as dead. */}
+      {recentComments.length > 0 && (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -410,7 +382,7 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
         </h2>
 
         <div className="space-y-3">
-          {recentComments.length > 0 ? (
+          {
             recentComments.map((comment, index) => (
               <div
                 key={index}
@@ -432,27 +404,21 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
                 </div>
               </div>
             ))
-          ) : (
-            <div className="text-center py-6 text-gray-400">
-              <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">{EN.parentDashboard.noMessages}</p>
-            </div>
-          )}
+          }
         </div>
 
-        {recentComments.length > 0 && (
-          <div className="mt-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onViewChange('diary')}
-              className="w-full"
-            >
-              {EN.parentDashboard.viewAllComments}
-            </Button>
-          </div>
-        )}
+        <div className="mt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onViewChange('diary')}
+            className="w-full"
+          >
+            {EN.parentDashboard.viewAllComments}
+          </Button>
+        </div>
       </motion.div>
+      )}
     </div>
   );
 };
