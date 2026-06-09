@@ -30,6 +30,6 @@
     { "type": "grammar", "hook": "ru-verb negative — drop る", "level": "N5", "wrong": "野菜を食べりません", "right": "野菜を食べません", "why": "ru-verbs: drop る + ません → 食べません (never 食べりません)." },
     { "type": "grammar", "hook": "'Must do' = ない-stem + なければ", "level": "N4", "wrong": "行かないなければなりません", "right": "行かなければなりません", "why": "'Must' = ない-stem + ければなりません: 行かなければなりません." },
     { "type": "grammar", "hook": "Asking 'may I…?'", "level": "N5", "wrong": "トイレに行ってはいいですか", "right": "トイレに行ってもいいですか", "why": "Permission = て-form + もいいですか: 行ってもいいですか." },
-    { "type": "grammar", "hook": "Reason: 〜から vs だから", "level": "N4", "wrong": "学生だから、安いです → 学生から、安いです", "right": "学生だから、安いです", "why": "After a noun, 'because' = noun + だから: 学生だから. Don't drop the だ." }
+    { "type": "grammar", "hook": "'Because' after a noun needs だ", "level": "N4", "wrong": "学生から、安いです", "right": "学生だから、安いです", "why": "After a noun, 'because' = noun + だから: 学生だから, not just から." }
   ]
 }
