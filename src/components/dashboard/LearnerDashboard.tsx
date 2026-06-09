@@ -160,6 +160,34 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
         </div>
       </motion.div>
 
+      {/* Pitch trainer — the primary daily action */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ scale: 1.01 }}
+        onClick={() => onViewChange('pitch')}
+        className="relative overflow-hidden rounded-2xl p-6 cursor-pointer text-white shadow-lg"
+        style={{ background: 'linear-gradient(135deg, #4F46E5, #6366F1)' }}
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-extrabold mb-1">🎯 Train Your Pitch</h2>
+            <p className="text-sm text-white/80">Record a word, see your pitch vs a native, fix what sounds foreign.</p>
+          </div>
+          {(() => {
+            const s = Number(localStorage.getItem('pitchStreak'));
+            return Number.isFinite(s) && s > 0 ? (
+              <div className="flex-shrink-0 ml-4 text-center bg-white/15 rounded-2xl px-4 py-2">
+                <div className="text-2xl font-black">🔥 {s}</div>
+                <div className="text-[10px] uppercase tracking-wider text-white/70">streak</div>
+              </div>
+            ) : (
+              <span className="flex-shrink-0 ml-4 bg-white text-primary font-bold text-sm px-5 py-2.5 rounded-full">Start →</span>
+            );
+          })()}
+        </div>
+      </motion.div>
+
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-4">
         <motion.div
