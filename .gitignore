@@ -45,3 +45,11 @@ marketing/.recp/
 marketing/stock/
 marketing/audio/
 marketing/fonts/
+
+# tooling + generated artifacts
+.agents/
+.hermes/
+.windsurf/
+skills-lock.json
+marketing/out-flat/
+marketing/captions.txt
