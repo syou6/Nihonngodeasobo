@@ -10,6 +10,10 @@ import { comparePitchToPattern } from '../../lib/pitch-analyzer';
 import { trackEvent } from '../../lib/analytics';
 import { logAttempt } from '../../lib/pitchAttempts';
 import { useAuthStore } from '../../stores/authStore';
+import { shareResult } from '../../lib/shareCard';
+import { Share2 } from 'lucide-react';
+
+const PATTERN_EN: Record<string, string> = { 平板: 'Heiban', 頭高: 'Atamadaka', 中高: 'Nakadaka', 尾高: 'Odaka' };
 
 import { PRACTICE_WORDS } from './practiceWords';
 
@@ -415,15 +419,37 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
           )}
 
           {phase === 'result' && (
-            <div className="flex gap-3 w-full sm:w-auto">
-              <Button onClick={resetAttempt} variant="outline" size="lg" className="flex-1">
-                <RotateCcw className="w-5 h-5 mr-2" />
-                Retry
-              </Button>
-              <Button onClick={nextWord} variant="primary" size="lg" className="flex-1">
-                Next
-                <ChevronRight className="w-5 h-5 ml-2" />
-              </Button>
+            <div className="w-full sm:w-auto space-y-3">
+              <div className="flex gap-3">
+                <Button onClick={resetAttempt} variant="outline" size="lg" className="flex-1">
+                  <RotateCcw className="w-5 h-5 mr-2" />
+                  Retry
+                </Button>
+                <Button onClick={nextWord} variant="primary" size="lg" className="flex-1">
+                  Next
+                  <ChevronRight className="w-5 h-5 ml-2" />
+                </Button>
+              </div>
+              {/* Viral share — a polished result card → friends try → organic growth */}
+              {accuracy !== null && pitchData && (
+                <button
+                  onClick={async () => {
+                    trackEvent('share_score_click', { accuracy });
+                    try {
+                      await shareResult({
+                        word, reading, score: accuracy,
+                        pattern: pitchData.patternName ?? '',
+                        patternEn: PATTERN_EN[pitchData.patternName ?? ''] ?? '',
+                        frames,
+                      });
+                    } catch { /* user cancelled */ }
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors"
+                >
+                  <Share2 className="w-4 h-4" />
+                  Share my score — challenge a friend
+                </button>
+              )}
             </div>
           )}
         </div>
