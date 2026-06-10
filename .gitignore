@@ -54,3 +54,8 @@ skills-lock.json
 marketing/out-flat/
 marketing/captions.txt
 marketing/out-long/
+
+# analytics secrets — never commit
+.secrets/
+analytics-data/
+.env
