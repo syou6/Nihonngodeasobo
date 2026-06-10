@@ -442,7 +442,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
                         word, reading, score: accuracy,
                         pattern: pitchData.patternName ?? '',
                         patternEn: PATTERN_EN[pitchData.patternName ?? ''] ?? '',
-                        frames, targetNucleus, moraCount: pitchData.morae.length,
+                        frames, targetNucleus, moraCount: pitchData.morae.length, streak,
                       });
                     } catch { /* user cancelled */ }
                   }}

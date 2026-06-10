@@ -13,6 +13,7 @@ export interface ShareCardInput {
   frames: PitchFrame[];   // the user's recorded pitch
   targetNucleus: number;  // expected drop position (0 = heiban)
   moraCount: number;
+  streak?: number;        // current correct streak — a flex/social-proof badge
 }
 
 const W = 1080;
@@ -170,10 +171,24 @@ export async function generateShareCard(input: ShareCardInput): Promise<Blob> {
   ctx.textAlign = 'right';
   ctx.fillText('PITCH ACCENT TRAINER', W - 80, 128);
 
-  // Word hero
+  // Streak badge (top-right, under the header) — social-proof flex
+  if (input.streak && input.streak >= 2) {
+    const sText = `🔥 ${input.streak} in a row`;
+    ctx.font = `800 32px ${UI_FONT}`;
+    const sw = ctx.measureText(sText).width + 56;
+    ctx.fillStyle = 'rgba(251,146,60,0.22)';
+    roundRect(ctx, W - 80 - sw, 168, sw, 58, 29);
+    ctx.fill();
+    ctx.fillStyle = '#FDBA74';
+    ctx.textAlign = 'right';
+    ctx.fillText(sText, W - 108, 207);
+  }
+
+  // Word hero (font shrinks for longer words so it never overflows)
   ctx.textAlign = 'center';
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = `800 230px ${JP_FONT}`;
+  const wordSize = input.word.length >= 4 ? 150 : input.word.length === 3 ? 185 : 230;
+  ctx.font = `800 ${wordSize}px ${JP_FONT}`;
   ctx.fillText(input.word, W / 2, 460);
   ctx.fillStyle = 'rgba(255,255,255,0.78)';
   ctx.font = `600 60px ${JP_FONT}`;
@@ -236,7 +251,10 @@ const SHARE_URL = 'https://nihongo.amorjp.com/?utm_source=share_card';
 export async function shareResult(input: ShareCardInput): Promise<'shared' | 'downloaded'> {
   const blob = await generateShareCard(input);
   const file = new File([blob], `nihongo-pitch-${input.word}.png`, { type: 'image/png' });
-  const text = `I scored ${input.score}/100 on Japanese pitch accent (${input.word}) 🎯 Can you sound more native? ${SHARE_URL}`;
+  const text =
+    `I scored ${input.score}/100 on Japanese pitch accent (${input.word} ${input.reading}) 🎯\n` +
+    `Can you sound more native? ${SHARE_URL}\n\n` +
+    `#LearnJapanese #JapanesePitchAccent #日本語 #studytok`;
 
   const nav = navigator as Navigator & { canShare?: (d: unknown) => boolean };
   if (nav.share && nav.canShare?.({ files: [file] })) {
