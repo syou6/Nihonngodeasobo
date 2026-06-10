@@ -3,10 +3,7 @@ import { motion } from 'framer-motion';
 import { Check, Loader2, Crown, X, Sparkles } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useAuthStore } from '../../stores/authStore';
-import { pricingPlans, StripeService, ONBOARDING_COUPON_ID } from '../../lib/stripe';
-
-// The 50%-off coupon applies to the MONTHLY plan only (protect annual margin).
-const MONTHLY_PLAN_ID = 'premium';
+import { pricingPlans, StripeService } from '../../lib/stripe';
 import { trackEvent } from '../../lib/analytics';
 import toast from 'react-hot-toast';
 
@@ -33,9 +30,9 @@ export const PricingCards: React.FC<PricingCardsProps> = ({ currentPlan = 'free'
     setLoading(planId);
     trackEvent('begin_checkout', { plan: planId });
     try {
-      // Discount the monthly plan only; the annual already carries the saving.
-      const coupon = planId === MONTHLY_PLAN_ID ? (ONBOARDING_COUPON_ID || undefined) : undefined;
-      await StripeService.createCheckoutSession(priceId, user.id, coupon);
+      // General upgrade = full price. The 50% coupon is reserved for the
+      // onboarding / exit-intent flows (first-time offer), not every checkout.
+      await StripeService.createCheckoutSession(priceId, user.id);
     } catch {
       toast.error('Something went wrong. Please try again.');
     } finally {
