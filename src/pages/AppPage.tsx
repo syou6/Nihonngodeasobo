@@ -28,6 +28,7 @@ const SettingsView = lazy(() => import('../components/settings/SettingsView').th
 const PricingCards = lazy(() => import('../components/subscription/PricingCards').then((m) => ({ default: m.PricingCards })));
 const VersantHome = lazy(() => import('../components/versant/VersantHome').then((m) => ({ default: m.VersantHome })));
 const PitchPractice = lazy(() => import('../components/pitch/PitchPractice').then((m) => ({ default: m.PitchPractice })));
+const KartePage = lazy(() => import('../components/karte/KartePage').then((m) => ({ default: m.KartePage })));
 const SubscriptionSuccess = lazy(() => import('./SubscriptionSuccess').then((m) => ({ default: m.SubscriptionSuccess })));
 const SubscriptionCancel = lazy(() => import('./SubscriptionCancel').then((m) => ({ default: m.SubscriptionCancel })));
 
@@ -431,6 +432,18 @@ export const AppPage: React.FC = () => {
               transition={{ duration: 0.3 }}
             >
               <PitchPractice onBack={() => setCurrentView('home')} />
+            </motion.div>
+          )}
+
+          {currentView === 'karte' && (
+            <motion.div
+              key="karte"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <KartePage onBack={() => setCurrentView('home')} onViewChange={setCurrentView} />
             </motion.div>
           )}
 

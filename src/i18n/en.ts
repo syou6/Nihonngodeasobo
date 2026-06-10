@@ -12,6 +12,7 @@ export const EN = {
   nav: {
     home: 'Home',           // ホーム
     pitch: 'Pitch',         // ピッチ
+    karte: 'Karte',         // カルテ(診断)
     record: 'Record',       // 録音
     diary: 'Diary',         // 日記
     practice: 'Practice',   // 練習

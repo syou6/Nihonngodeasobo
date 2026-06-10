@@ -13,6 +13,7 @@ import {
   Mic,
   BookOpen,
   AudioLines,
+  ClipboardList,
   Crown
 } from 'lucide-react';
 
@@ -31,6 +32,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
   const navigation = [
     { id: 'home', label: EN.nav.home, icon: Home, show: true },
     { id: 'pitch', label: EN.nav.pitch, icon: AudioLines, show: true },
+    { id: 'karte', label: EN.nav.karte, icon: ClipboardList, show: !isGuestMode },
     { id: 'record', label: EN.nav.record, icon: Mic, show: isLearner || isGuestMode },
     { id: 'diary', label: EN.nav.diary, icon: Calendar, show: true },
     { id: 'practice', label: EN.nav.practice, icon: BookOpen, show: true },
