@@ -207,7 +207,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
 
             {/* Guest karte nudge — soft, never blocks scoring. After ~5 attempts a
                 real diagnosis exists, so send them to SEE it (the registration carrot). */}
-            {!user && getGuestAttemptCount() >= 5 && (
+            {!user && getGuestAttemptCount() >= 3 && (
               <div className="mb-4 rounded-xl bg-indigo-50 border border-indigo-100 p-3 text-center">
                 <p className="text-sm text-indigo-900 font-medium">
                   📋 Your Pitch Karte is ready — {getGuestAttemptCount()} recordings analyzed.

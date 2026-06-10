@@ -282,6 +282,12 @@ export const AppPage: React.FC = () => {
                       🎯 Pitch Trainer
                     </button>
                     <button
+                      onClick={() => setGuestTab('karte')}
+                      className={`px-5 py-2 rounded-full text-sm font-bold transition-colors ${guestTab === 'karte' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-900'}`}
+                    >
+                      📋 My Karte
+                    </button>
+                    <button
                       onClick={() => setGuestTab('diary')}
                       className={`px-5 py-2 rounded-full text-sm font-bold transition-colors ${guestTab === 'diary' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-900'}`}
                     >
