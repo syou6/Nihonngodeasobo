@@ -245,6 +245,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
           if (userProfile) {
             set({ user: userProfile });
+            // Mid-session signup/login (AuthForm) resolves the user HERE, not in
+            // initialize() — so backfill the guest's pitch attempts here too, or
+            // the "your attempts are waiting / Save my Karte" carrot loses them.
+            // backfillGuestAttempts read-and-clears, so the double call is safe.
+            void backfillGuestAttempts(userProfile.id);
           } else if (!error || error.code === 'PGRST116') {
             // Profile doesn't exist yet — create it
             const newUserProfile = {
@@ -261,6 +266,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
               .single();
 
             set({ user: createdProfile || newUserProfile });
+            void backfillGuestAttempts(newUserProfile.id);
           }
         } else {
           set({ user: null });

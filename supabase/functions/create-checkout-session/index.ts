@@ -51,6 +51,23 @@ serve(async (req) => {
 
     const { priceId, successUrl, cancelUrl, couponId } = await req.json()
 
+    // SERVER-SIDE VALIDATION — never trust the client's priceId/couponId.
+    // Without this, anyone with a JWT could curl this function and buy an
+    // arbitrary price or apply an arbitrary coupon (e.g. a 100%-off test coupon).
+    const allowedPrices = [
+      Deno.env.get('STRIPE_PREMIUM_PRICE_ID'),
+      Deno.env.get('STRIPE_ANNUAL_PRICE_ID'),
+    ].filter(Boolean)
+    if (allowedPrices.length > 0 && !allowedPrices.includes(priceId)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid price' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+    if (allowedPrices.length === 0) {
+      console.warn('STRIPE_PREMIUM_PRICE_ID / STRIPE_ANNUAL_PRICE_ID not set — price validation skipped')
+    }
+
     const sessionParams: any = {
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
@@ -61,8 +78,11 @@ serve(async (req) => {
       subscription_data: { metadata: { userId } },
     }
 
-    // Apply coupon if provided, otherwise allow manual promo codes
-    if (couponId) {
+    // Only ONE coupon is ever honored server-side: the configured onboarding /
+    // win-back 50% coupon. Any other couponId from the body is ignored (falls
+    // through to manual promo codes), closing the arbitrary-coupon hole.
+    const onboardingCoupon = Deno.env.get('STRIPE_ONBOARDING_COUPON_ID')
+    if (couponId && onboardingCoupon && couponId === onboardingCoupon) {
       sessionParams.discounts = [{ coupon: couponId }]
     } else {
       sessionParams.allow_promotion_codes = true

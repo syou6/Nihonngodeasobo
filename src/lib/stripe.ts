@@ -78,8 +78,9 @@ export class StripeService {
 
     if (error) throw error;
 
-    // Stripe Checkout URLに直接リダイレクト
-    if (data.url) {
+    // Stripe Checkout URLに直接リダイレクト。data が null/undefined でも
+    // ここで投げ、呼び出し側が「無言で無料に流す」のを防ぐ。
+    if (data?.url) {
       window.location.href = data.url;
     } else {
       throw new Error('No checkout URL returned');
