@@ -249,7 +249,7 @@ export const AppPage: React.FC = () => {
   if (isGuestMode && !user) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <GuestBanner />
+        <GuestBanner showTries={guestTab === 'diary'} />
         <div className="container mx-auto px-4 py-8">
           <AnimatePresence mode="wait">
             {showOnboarding ? (

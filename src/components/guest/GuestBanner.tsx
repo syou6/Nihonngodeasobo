@@ -5,9 +5,19 @@ import { Button } from '../ui/Button';
 import { useGuestStore } from '../../stores/guestStore';
 import { EN } from '../../i18n/en';
 
-export const GuestBanner: React.FC = () => {
+interface GuestBannerProps {
+  // The 'tries' limit applies to the Voice Diary only. On the (unlimited) pitch
+  // trainer / karte, showing 'X tries remaining' falsely implies a cap and scares
+  // guests off — so those tabs pass showTries={false}.
+  showTries?: boolean;
+}
+
+export const GuestBanner: React.FC<GuestBannerProps> = ({ showTries = true }) => {
   const { getRemainingTries, isGuestMode, setGuestMode, clearGuestData } = useGuestStore();
   const remaining = getRemainingTries();
+  const subtitle = showTries
+    ? `${remaining} ${EN.guestMode.remaining}`
+    : 'Free unlimited pitch scoring — sign up to save your progress';
 
   if (!isGuestMode) return null;
 
@@ -25,7 +35,7 @@ export const GuestBanner: React.FC = () => {
               <AlertCircle className="w-5 h-5" />
               <div className="flex-1">
                 <p className="font-bold text-sm">{EN.guestMode.banner}</p>
-                <p className="text-xs opacity-90">{remaining} {EN.guestMode.remaining}</p>
+                <p className="text-xs opacity-90">{subtitle}</p>
               </div>
             </div>
             <Button
@@ -51,9 +61,7 @@ export const GuestBanner: React.FC = () => {
             <AlertCircle className="w-6 h-6" />
             <div>
               <p className="font-bold text-lg">{EN.guestMode.banner}</p>
-              <p className="text-sm opacity-90">
-                {remaining} {EN.guestMode.remaining}
-              </p>
+              <p className="text-sm opacity-90">{subtitle}</p>
             </div>
           </div>
 
