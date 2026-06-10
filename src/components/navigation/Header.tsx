@@ -125,21 +125,22 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation — horizontally scrollable so 7 items stay readable
+            instead of cramming/truncating on a phone. */}
         <div className="md:hidden border-t border-gray-100">
-          <div className="flex justify-around py-1">
+          <div className="flex overflow-x-auto py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {navigation.filter(item => item.show).map(item => (
               <button
                 key={item.id}
                 onClick={() => onViewChange(item.id)}
-                className={`flex flex-col items-center gap-0.5 py-2 px-2 rounded-lg min-w-0 flex-1 transition-colors ${
+                className={`flex flex-col items-center gap-0.5 py-2 px-3 rounded-lg flex-shrink-0 min-w-[60px] transition-colors ${
                   currentView === item.id
                     ? 'text-brand-600'
                     : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
                 <item.icon className="w-5 h-5" />
-                <span className="text-[10px] font-medium truncate">{item.label}</span>
+                <span className="text-[11px] font-medium whitespace-nowrap">{item.label}</span>
               </button>
             ))}
           </div>
