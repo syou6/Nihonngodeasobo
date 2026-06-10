@@ -138,14 +138,19 @@ export function getGuestKarteData(): KarteData {
 export async function backfillGuestAttempts(userId: string): Promise<number> {
   const list = readGuestAttempts();
   if (list.length === 0) return 0;
+  // Clear FIRST (atomic read-and-clear) so a concurrent/repeat call — e.g. a
+  // second initialize() on the same load — sees an empty buffer and can't
+  // re-insert the same rows (which would double-count and corrupt the karte).
+  localStorage.removeItem(GUEST_KEY);
   try {
     const rows = list.map((a) => ({ user_id: userId, ...a }));
     const { error } = await supabase.from('pitch_attempts').insert(rows);
     if (error) throw error;
-    localStorage.removeItem(GUEST_KEY);
     return rows.length;
   } catch (error) {
     console.error('guest attempt backfill failed:', error);
+    // Restore the buffer so the attempts aren't lost on a transient failure.
+    try { localStorage.setItem(GUEST_KEY, JSON.stringify(list.slice(-GUEST_MAX))); } catch { /* ignore */ }
     return 0;
   }
 }

@@ -34,9 +34,13 @@ function dailyIndex(len: number): number {
   return len > 0 ? day % len : 0;
 }
 
-const Blur: React.FC<{ locked: boolean; children: React.ReactNode }> = ({ locked, children }) => (
-  <span className={locked ? 'blur-sm select-none pointer-events-none' : ''}>{children}</span>
-);
+// When locked, render a MASK — never the real value — so paid karte numbers are
+// not present in the DOM/JS for a free user (blur alone is one CSS toggle away
+// from exposing the paywalled diagnosis). Blur kept purely for visual feel.
+const Locked: React.FC<{ locked: boolean; mask: string; children: React.ReactNode }> = ({ locked, mask, children }) =>
+  locked
+    ? <span className="blur-sm select-none pointer-events-none">{mask}</span>
+    : <>{children}</>;
 
 export const KartePage: React.FC<KartePageProps> = ({ onBack, onViewChange }) => {
   const { user } = useAuthStore();
@@ -218,7 +222,7 @@ export const KartePage: React.FC<KartePageProps> = ({ onBack, onViewChange }) =>
               <span className="text-xs text-gray-400">{p.errors} errors detected</span>
               <span className="text-sm font-bold text-gray-700 flex items-center gap-1">
                 {!isPremium && <Lock className="w-3 h-3 text-gray-400" />}
-                <Blur locked={!isPremium}>{p.accuracy}%</Blur>
+                <Locked locked={!isPremium} mask="••%">{p.accuracy}%</Locked>
               </span>
             </div>
           </button>
@@ -255,8 +259,8 @@ export const KartePage: React.FC<KartePageProps> = ({ onBack, onViewChange }) =>
         {karte.wrongWords.slice(0, 5).map((w, i) => (
           <button key={w.word} onClick={() => !isPremium && i > 0 && lockTap('errors')} className="w-full text-left">
             <div className="flex items-center justify-between border-b border-gray-50 py-2">
-              <Blur locked={!isPremium && i > 0}><span className="font-medium">{w.word}（{w.reading}）</span></Blur>
-              <Blur locked={!isPremium && i > 0}><span className="text-sm text-red-500 font-bold">{w.accuracy}%</span></Blur>
+              <Locked locked={!isPremium && i > 0} mask="••（••）"><span className="font-medium">{w.word}（{w.reading}）</span></Locked>
+              <Locked locked={!isPremium && i > 0} mask="••%"><span className="text-sm text-red-500 font-bold">{w.accuracy}%</span></Locked>
             </div>
           </button>
         ))}
