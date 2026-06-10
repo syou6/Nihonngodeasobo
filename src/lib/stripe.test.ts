@@ -22,10 +22,9 @@ const mockInvoke = supabase.functions.invoke as ReturnType<typeof vi.fn>;
 const mockFrom = supabase.from as ReturnType<typeof vi.fn>;
 
 describe('pricingPlans', () => {
-  it('has a free plan and a premium plan', () => {
-    expect(pricingPlans).toHaveLength(2);
-    expect(pricingPlans[0].id).toBe('free');
-    expect(pricingPlans[1].id).toBe('premium');
+  it('has free, premium (monthly) and premium-annual plans', () => {
+    expect(pricingPlans).toHaveLength(3);
+    expect(pricingPlans.map((p) => p.id)).toEqual(['free', 'premium', 'premium-annual']);
   });
 
   it('free plan has price 0', () => {

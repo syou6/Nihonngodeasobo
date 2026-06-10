@@ -57,7 +57,7 @@ describe('getSubscriptionStatus', () => {
     );
 
     const result = await getSubscriptionStatus('user1');
-    expect(result).toEqual({ isPremium: true, planId: 'premium' });
+    expect(result).toEqual({ isPremium: true, planId: 'premium', isTrialing: false, trialEndsAt: null });
   });
 
   it('returns free when subscription is not active', async () => {
@@ -69,7 +69,7 @@ describe('getSubscriptionStatus', () => {
     );
 
     const result = await getSubscriptionStatus('user1');
-    expect(result).toEqual({ isPremium: false, planId: 'free' });
+    expect(result).toEqual({ isPremium: false, planId: 'free', isTrialing: false, trialEndsAt: null });
   });
 
   it('returns free when subscription period has ended', async () => {
@@ -88,14 +88,14 @@ describe('getSubscriptionStatus', () => {
     );
 
     const result = await getSubscriptionStatus('user1');
-    expect(result).toEqual({ isPremium: false, planId: 'free' });
+    expect(result).toEqual({ isPremium: false, planId: 'free', isTrialing: false, trialEndsAt: null });
   });
 
   it('returns free when no subscription data', async () => {
     mockFrom.mockReturnValue(mockChain({ data: null, error: null }));
 
     const result = await getSubscriptionStatus('user1');
-    expect(result).toEqual({ isPremium: false, planId: 'free' });
+    expect(result).toEqual({ isPremium: false, planId: 'free', isTrialing: false, trialEndsAt: null });
   });
 
   it('returns free on error', async () => {
@@ -108,7 +108,7 @@ describe('getSubscriptionStatus', () => {
     });
 
     const result = await getSubscriptionStatus('user1');
-    expect(result).toEqual({ isPremium: false, planId: 'free' });
+    expect(result).toEqual({ isPremium: false, planId: 'free', isTrialing: false, trialEndsAt: null });
   });
 
   it('returns premium when no end date (null period end)', async () => {
@@ -124,7 +124,7 @@ describe('getSubscriptionStatus', () => {
     );
 
     const result = await getSubscriptionStatus('user1');
-    expect(result).toEqual({ isPremium: true, planId: 'premium' });
+    expect(result).toEqual({ isPremium: true, planId: 'premium', isTrialing: false, trialEndsAt: null });
   });
 });
 
