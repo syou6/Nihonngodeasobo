@@ -5,6 +5,8 @@ import { useAuthStore } from '../../stores/authStore';
 import { useSubscription } from '../../hooks/useSubscription';
 import { getKarteData, getGuestKarteData, getGuestAttemptCount, type KarteData } from '../../lib/pitchAttempts';
 import { startTrialIfEligible } from '../../lib/subscription';
+import { pricingPlans, StripeService, ONBOARDING_COUPON_ID } from '../../lib/stripe';
+import toast from 'react-hot-toast';
 import { PRACTICE_WORDS } from '../pitch/practiceWords';
 import { trackEvent } from '../../lib/analytics';
 
@@ -67,6 +69,22 @@ export const KartePage: React.FC<KartePageProps> = ({ onBack, onViewChange }) =>
   const trialDaysLeft = trialEndsAt
     ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000))
     : 0;
+
+  // Trial-end win-back: the 50% coupon (Moment 3) is spent HERE, on monthly.
+  // Start a checkout with the coupon applied so $4.49 is real, not a teaser.
+  const claimTrialOffer = async () => {
+    const monthly = pricingPlans.find((p) => p.id === 'premium');
+    trackEvent('karte_section_lock_tapped', { section: 'trial_ended' });
+    if (!monthly?.stripePriceId || !user?.id || !ONBOARDING_COUPON_ID) {
+      onViewChange('pricing');
+      return;
+    }
+    try {
+      await StripeService.createCheckoutSession(monthly.stripePriceId, user.id, ONBOARDING_COUPON_ID);
+    } catch {
+      toast.error('Something went wrong. Please try again.');
+    }
+  };
 
   const lockTap = (section: string) => {
     trackEvent('karte_section_lock_tapped', { section });
@@ -179,7 +197,7 @@ export const KartePage: React.FC<KartePageProps> = ({ onBack, onViewChange }) =>
       )}
       {/* Trial ended (had a trial, no longer premium) — the loss moment */}
       {!isPremium && trialEndsAt && trialDaysLeft === 0 && (
-        <button onClick={() => { trackEvent('karte_section_lock_tapped', { section: 'trial_ended' }); onViewChange('pricing'); }} className="w-full">
+        <button onClick={claimTrialOffer} className="w-full">
           <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-center">
             <p className="font-bold text-gray-900">Your free trial ended — your full diagnosis is locked.</p>
             <p className="text-sm text-gray-600 mt-1">Your {karte?.totalAttempts ?? 0} recordings and progress are safe. Keep your Karte for <b>$4.49/mo</b> (50% off).</p>
