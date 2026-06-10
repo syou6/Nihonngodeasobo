@@ -4,6 +4,7 @@ import type { User } from '../types';
 import type { JLPTLevel } from '../lib/constants';
 import { signupLimiter } from '../lib/rate-limiter';
 import { trackEvent } from '../lib/analytics';
+import { backfillGuestAttempts } from '../lib/pitchAttempts';
 
 // Module-level variable to track auth subscription (prevents duplicate listeners)
 let authSubscription: { unsubscribe: () => void } | null = null;
@@ -195,6 +196,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
         if (userProfile) {
           set({ user: userProfile, loading: false });
+          // Move any guest-recorded pitch attempts into the user's karte log.
+          // No-op when the guest buffer is empty (cleared after first success).
+          void backfillGuestAttempts(userProfile.id);
         } else if (!error || error.code === 'PGRST116') {
           // Profile doesn't exist yet — create it
           const newUserProfile = {
@@ -211,6 +215,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             .single();
 
           set({ user: createdProfile || newUserProfile, loading: false });
+          void backfillGuestAttempts(newUserProfile.id);
         } else {
           // RLS/auth not ready yet (e.g. 406 during OAuth callback)
           // onAuthStateChange will handle it once the session is fully established

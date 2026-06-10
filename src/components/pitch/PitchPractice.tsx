@@ -8,6 +8,8 @@ import { usePitchAccent } from '../../hooks/usePitchAccent';
 import { PitchTracker, type PitchFrame } from '../../lib/pitch-tracker';
 import { comparePitchToPattern } from '../../lib/pitch-analyzer';
 import { trackEvent } from '../../lib/analytics';
+import { logAttempt, getGuestAttemptCount } from '../../lib/pitchAttempts';
+import { useAuthStore } from '../../stores/authStore';
 
 import { PRACTICE_WORDS } from './practiceWords';
 
@@ -41,6 +43,7 @@ function coachText(
 }
 
 export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
+  const { user } = useAuthStore();
   const [wordIndex, setWordIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>('ready');
   const [frames, setFrames] = useState<PitchFrame[]>([]);
@@ -129,6 +132,16 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
     }
     setPhase('result');
     trackEvent('pitch_scored', { word, accuracy: result.accuracy });
+    // Karte foundation: log every attempt (server for members, localStorage for
+    // guests — backfilled at signup).
+    logAttempt(user?.id ?? null, {
+      word,
+      reading,
+      pattern_name: pitchData.patternName ?? null,
+      target_nucleus: result.targetNucleus,
+      detected_nucleus: result.userNucleus,
+      accuracy: result.accuracy,
+    });
   };
 
   const nextWord = () => {
@@ -190,6 +203,21 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
               <p className={`text-center text-sm font-medium mb-4 ${accuracy >= 80 ? 'text-green-700' : 'text-gray-700'}`}>
                 {coach}
               </p>
+            )}
+
+            {/* Guest karte nudge — soft, never blocks scoring */}
+            {!user && getGuestAttemptCount() >= 3 && (
+              <div className="mb-4 rounded-xl bg-indigo-50 border border-indigo-100 p-3 text-center">
+                <p className="text-sm text-indigo-900 font-medium">
+                  📋 {getGuestAttemptCount()} attempts recorded — but they aren't being saved.
+                </p>
+                <button
+                  onClick={() => { window.location.href = '/app.html?signup=true'; }}
+                  className="mt-2 text-sm font-bold text-indigo-600 hover:text-indigo-700"
+                >
+                  Create a free account to start your Pitch Karte →
+                </button>
+              </div>
             )}
 
             {pitchData && (
