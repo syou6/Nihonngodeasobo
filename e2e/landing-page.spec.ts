@@ -5,6 +5,11 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Landing Page', () => {
   test.beforeEach(async ({ page }) => {
+    // The hero headline is A/B tested (ab:lp_hero rewrites it to variant b).
+    // Pin variant 'a' so headline assertions are deterministic.
+    await page.addInitScript(() => {
+      try { localStorage.setItem('ab:lp_hero', 'a'); } catch { /* storage blocked */ }
+    });
     await page.goto('/');
   });
 
@@ -111,6 +116,13 @@ test.describe('Landing Page', () => {
 });
 
 test.describe('Landing Page - Responsive', () => {
+  test.beforeEach(async ({ page }) => {
+    // Pin the hero A/B variant so headline assertions are deterministic.
+    await page.addInitScript(() => {
+      try { localStorage.setItem('ab:lp_hero', 'a'); } catch { /* storage blocked */ }
+    });
+  });
+
   test('renders correctly on mobile viewport', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/');
