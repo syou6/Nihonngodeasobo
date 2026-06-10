@@ -521,6 +521,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
           totalMastered={mastered}
           totalWords={PRACTICE_WORDS.length}
           streak={streak}
+          isGuest={!userId}
           onShare={shareProgress}
           onResume={resumeSession}
           onDone={onBack}
@@ -537,6 +538,7 @@ interface SessionSummaryProps {
   totalMastered: number;
   totalWords: number;
   streak: number;
+  isGuest: boolean;
   onShare: () => void;
   onResume: () => void;
   onDone: () => void;
@@ -549,6 +551,7 @@ const SessionSummary: React.FC<SessionSummaryProps> = ({
   totalMastered,
   totalWords,
   streak,
+  isGuest,
   onShare,
   onResume,
   onDone,
@@ -609,6 +612,15 @@ const SessionSummary: React.FC<SessionSummaryProps> = ({
               Done
             </Button>
           </div>
+          {isGuest && (
+            <a
+              href="/app.html?signup=true"
+              onClick={() => trackEvent('pitch_summary_signup_click', { totalMastered })}
+              className="mt-1 block text-center text-sm font-semibold text-brand-600 hover:text-brand-700 underline underline-offset-2"
+            >
+              Save your {totalMastered > 0 ? `${totalMastered}-word progress` : 'progress'} — create a free account
+            </a>
+          )}
         </div>
       </motion.div>
     </div>

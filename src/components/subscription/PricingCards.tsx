@@ -50,8 +50,17 @@ export const PricingCards: React.FC<PricingCardsProps> = ({ currentPlan = 'free'
   };
 
   const freePlan = pricingPlans.find(p => p.id === 'free')!;
-  const premiumPlan = pricingPlans.find(p => p.id === 'premium')!;
-  const isPremiumUser = currentPlan === 'premium';
+  const monthlyPlan = pricingPlans.find(p => p.id === 'premium')!;
+  // Annual is optional: if the plan (or its env price ID) is missing we fall
+  // back to monthly-only instead of crashing the pricing screen.
+  const annualPlan = pricingPlans.find(p => p.id === 'premium-annual');
+  const [interval, setInterval] = useState<'month' | 'year'>('month');
+  const premiumPlan = interval === 'year' && annualPlan ? annualPlan : monthlyPlan;
+  // What a year costs on each plan — the annual pitch in one number.
+  const annualSavings = annualPlan
+    ? Math.round((1 - annualPlan.price / (monthlyPlan.price * 12)) * 100)
+    : 0;
+  const isPremiumUser = currentPlan === 'premium' || currentPlan === 'premium-annual';
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -71,6 +80,27 @@ export const PricingCards: React.FC<PricingCardsProps> = ({ currentPlan = 'free'
           Get unlimited access to all features and accelerate your Japanese learning
         </p>
       </div>
+
+      {/* Billing interval toggle — the LP sells $59/yr, so it must be buyable here */}
+      {annualPlan && (
+      <div className="flex justify-center mb-6">
+        <div className="inline-flex items-center bg-gray-100 rounded-full p-1">
+          <button
+            onClick={() => setInterval('month')}
+            className={`px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${interval === 'month' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setInterval('year')}
+            className={`px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${interval === 'year' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+          >
+            Annual
+            <span className="ml-1.5 text-xs font-bold text-green-600">−{annualSavings}%</span>
+          </button>
+        </div>
+      </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Free Plan */}
@@ -120,8 +150,16 @@ export const PricingCards: React.FC<PricingCardsProps> = ({ currentPlan = 'free'
             <h3 className="text-lg font-bold text-gray-900">{premiumPlan.name}</h3>
           </div>
           <div className="mb-4">
-            <span className="text-3xl font-bold text-gray-900">${premiumPlan.originalPrice || premiumPlan.price}</span>
-            <span className="text-gray-500 text-sm ml-1">/month</span>
+            {premiumPlan.originalPrice && (
+              <span className="text-lg text-gray-400 line-through mr-2">${premiumPlan.originalPrice}</span>
+            )}
+            <span className="text-3xl font-bold text-gray-900">${premiumPlan.price}</span>
+            <span className="text-gray-500 text-sm ml-1">{interval === 'year' ? '/year' : '/month'}</span>
+            {interval === 'year' && annualPlan && (
+              <span className="block text-xs text-green-600 font-semibold mt-1">
+                ≈ ${(annualPlan.price / 12).toFixed(2)}/mo — save {annualSavings}% vs monthly
+              </span>
+            )}
           </div>
 
           <ul className="space-y-2.5 mb-6">

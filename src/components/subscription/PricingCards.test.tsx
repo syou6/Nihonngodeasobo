@@ -56,6 +56,15 @@ vi.mock('../../lib/stripe', () => ({
       stripePriceId: 'price_test123',
       features: ['Unlimited diary recordings', 'Detailed AI feedback'],
     },
+    {
+      id: 'premium-annual',
+      name: 'Premium — Annual',
+      price: 39,
+      originalPrice: 59.88,
+      interval: 'year',
+      stripePriceId: 'price_test_annual',
+      features: ['Everything in Premium', '2 months free'],
+    },
   ],
   StripeService: {
     createCheckoutSession: (...args: any[]) => mockCreateCheckoutSession(...args),
@@ -216,5 +225,37 @@ describe('PricingCards', () => {
     // Premium plan shows "Current Plan" instead
     const upgradeButton = screen.queryByText('Upgrade Now');
     expect(upgradeButton).not.toBeInTheDocument();
+  });
+
+  it('switches to the annual plan via the billing toggle', () => {
+    render(<PricingCards currentPlan="free" />);
+
+    // Monthly by default
+    expect(screen.getByText('$4.99')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Annual'));
+
+    // Annual price + strikethrough original + per-month equivalent
+    expect(screen.getByText('$39')).toBeInTheDocument();
+    expect(screen.getByText('$59.88')).toBeInTheDocument();
+    expect(screen.getByText(/3\.25\/mo/)).toBeInTheDocument();
+  });
+
+  it('checks out with the annual price ID when annual is selected', async () => {
+    render(<PricingCards currentPlan="free" />);
+
+    fireEvent.click(screen.getByText('Annual'));
+    fireEvent.click(screen.getByText('Upgrade Now'));
+
+    await waitFor(() => {
+      expect(mockCreateCheckoutSession).toHaveBeenCalledWith('price_test_annual', 'user-123');
+    });
+  });
+
+  it('treats an annual subscriber as premium (Manage Billing, no Upgrade)', () => {
+    render(<PricingCards currentPlan="premium-annual" />);
+
+    expect(screen.queryByText('Upgrade Now')).not.toBeInTheDocument();
+    expect(screen.getByText('Manage Billing')).toBeInTheDocument();
   });
 });
