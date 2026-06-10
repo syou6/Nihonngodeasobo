@@ -26,6 +26,21 @@ function scoreColor(score: number): string {
   return 'text-red-600';
 }
 
+// Emotional reaction headline — makes each score feel like a win/near-miss
+// (dopamine loop) instead of a flat number.
+function reaction(score: number): { emoji: string; text: string } {
+  if (score >= 90) return { emoji: '🎉', text: 'Native-like!' };
+  if (score >= 80) return { emoji: '✅', text: "Nailed the drop!" };
+  if (score >= 60) return { emoji: '👍', text: 'So close — almost there' };
+  if (score >= 40) return { emoji: '💪', text: 'Keep going — you can feel it' };
+  return { emoji: '🎧', text: 'Listen again, then retry' };
+}
+
+const WORD_BEST_PREFIX = 'pitchWordBest:';
+function readWordBest(word: string): number {
+  return Number(localStorage.getItem(WORD_BEST_PREFIX + word)) || 0;
+}
+
 // Actionable feedback from the detected vs target accent nucleus.
 function coachText(
   result: { userNucleus: number; targetNucleus: number; accuracy: number },
@@ -49,6 +64,8 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
   const { user } = useAuthStore();
   const [wordIndex, setWordIndex] = useState(0);
   const [scoredCount, setScoredCount] = useState(0); // scorings this session → Karte pull
+  const [isNewBest, setIsNewBest] = useState(false); // beat your personal best for this word
+  const [prevBest, setPrevBest] = useState(0);
   const [phase, setPhase] = useState<Phase>('ready');
   const [frames, setFrames] = useState<PitchFrame[]>([]);
   const [accuracy, setAccuracy] = useState<number | null>(null);
@@ -134,6 +151,16 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
       mastered.add(word);
       localStorage.setItem('pitchMastered', JSON.stringify([...mastered]));
     }
+    // Per-word personal best — a chase mechanic ("beat your best") that keeps
+    // users retrying instead of bouncing.
+    const best = readWordBest(word);
+    setPrevBest(best);
+    if (result.accuracy > best) {
+      localStorage.setItem(WORD_BEST_PREFIX + word, String(result.accuracy));
+      setIsNewBest(true);
+    } else {
+      setIsNewBest(false);
+    }
     setPhase('result');
     setScoredCount((c) => c + 1);
     trackEvent('pitch_scored', { word, accuracy: result.accuracy });
@@ -197,11 +224,41 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
             className="rounded-2xl border border-gray-200 bg-white p-5"
           >
             <div className="text-center mb-4">
-              <div className={`text-5xl font-black ${scoreColor(accuracy)}`}>
+              {/* Emotional reaction + pop animation = the dopamine hit per score */}
+              <motion.div
+                key={`react-${scoredCount}`}
+                initial={{ scale: 0.4, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 14 }}
+                className="text-3xl mb-1"
+              >
+                {reaction(accuracy).emoji}
+              </motion.div>
+              <p className={`text-base font-extrabold mb-2 ${accuracy >= 80 ? 'text-green-700' : accuracy >= 60 ? 'text-amber-700' : 'text-gray-700'}`}>
+                {reaction(accuracy).text}
+              </p>
+              <motion.div
+                key={`score-${scoredCount}`}
+                initial={{ scale: 0.7 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 200, damping: 12 }}
+                className={`text-5xl font-black ${scoreColor(accuracy)}`}
+              >
                 {accuracy}
                 <span className="text-2xl text-gray-400">/100</span>
-              </div>
-              <p className="text-sm text-gray-500 mt-1">Pitch accuracy</p>
+              </motion.div>
+              {/* Personal-best chase */}
+              {isNewBest ? (
+                <motion.p
+                  initial={{ y: 6, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  className="text-xs font-bold text-indigo-600 mt-1"
+                >
+                  🎯 New personal best for this word!{prevBest > 0 ? ` (was ${prevBest})` : ''}
+                </motion.p>
+              ) : prevBest > 0 ? (
+                <p className="text-xs text-gray-400 mt-1">Your best: {prevBest} — beat it 💪</p>
+              ) : null}
             </div>
 
             {coach && (
@@ -261,8 +318,15 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
           </motion.div>
         )}
 
+        {/* Mic denied → don't dead-end. Keep them learning by ear so the session
+            (and the Karte data path) isn't lost over a permission prompt. */}
         {error && (
-          <p className="text-sm text-red-600 text-center">{error}</p>
+          <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 text-center">
+            <p className="text-sm font-medium text-amber-900">🎤 No mic? You can still train your ear.</p>
+            <p className="text-xs text-amber-700/90 mt-1">
+              Tap <b>Listen to a native</b> above and learn the pitch shape — or allow mic access in your browser to get scored.
+            </p>
+          </div>
         )}
 
         {/* Controls */}
