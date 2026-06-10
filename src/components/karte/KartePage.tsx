@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Lock, Loader2, Stethoscope } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useSubscription } from '../../hooks/useSubscription';
-import { getKarteData, getGuestAttemptCount, type KarteData } from '../../lib/pitchAttempts';
+import { getKarteData, getGuestKarteData, getGuestAttemptCount, type KarteData } from '../../lib/pitchAttempts';
 import { PRACTICE_WORDS } from '../pitch/practiceWords';
 import { trackEvent } from '../../lib/analytics';
 
@@ -45,7 +45,11 @@ export const KartePage: React.FC<KartePageProps> = ({ onBack, onViewChange }) =>
 
   useEffect(() => {
     trackEvent('karte_viewed');
-    if (!user) { setLoading(false); return; }
+    if (!user) {
+      if (getGuestKarteData().patterns.length > 0) trackEvent('karte_save_gate_shown');
+      setLoading(false);
+      return;
+    }
     getKarteData(user.id)
       .then(setKarte)
       .catch(() => setKarte(null))
@@ -57,24 +61,55 @@ export const KartePage: React.FC<KartePageProps> = ({ onBack, onViewChange }) =>
     onViewChange('pricing');
   };
 
-  // ---- Guest: their attempts are local-only; karte starts at signup ----
+  // ---- Guest: show the REAL diagnosis from local attempts + a save-gate.
+  // This is the registration carrot — endowment/loss-aversion on a karte they
+  // can see and feel they own, but lose when they close the tab. ----
   if (!user) {
+    const g = getGuestKarteData();
     const n = getGuestAttemptCount();
+    // Not enough to diagnose yet → nudge to keep scoring.
+    if (g.patterns.length === 0) {
+      return (
+        <div className="max-w-2xl mx-auto p-4 sm:p-6 text-center">
+          <Stethoscope className="w-10 h-10 text-indigo-500 mx-auto mb-3" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Your Pitch Karte</h1>
+          <p className="text-gray-600 mb-1">{n > 0 ? `${n} recordings so far.` : 'No recordings yet.'}</p>
+          <p className="text-sm text-gray-500 mb-5">Score a few words and your personal diagnosis appears here.</p>
+          <button onClick={() => { window.location.href = '/app.html?guest=true'; }}
+            className="bg-indigo-600 text-white font-bold px-6 py-3 rounded-xl hover:bg-indigo-500">
+            🎯 Score some words
+          </button>
+        </div>
+      );
+    }
+    const worst = g.patterns[0];
     return (
-      <div className="max-w-2xl mx-auto p-4 sm:p-6 text-center">
-        <Stethoscope className="w-10 h-10 text-indigo-500 mx-auto mb-3" />
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Your Pitch Karte</h1>
-        <p className="text-gray-600 mb-4">
-          {n > 0
-            ? `${n} attempts recorded on this device — create a free account and we'll turn them into your diagnosis.`
-            : 'Score a few words in the Pitch Trainer, then your personal diagnosis starts here.'}
-        </p>
-        <button
-          onClick={() => { window.location.href = '/app.html?signup=true'; }}
-          className="bg-indigo-600 text-white font-bold px-6 py-3 rounded-xl hover:bg-indigo-500"
-        >
-          Create free account →
-        </button>
+      <div className="max-w-2xl mx-auto p-4 sm:p-6 space-y-4">
+        <h1 className="text-xl font-bold text-gray-900">Your Pitch Karte 📋</h1>
+        <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-500 text-white p-6 text-center">
+          <p className="text-sm text-white/80 mb-1">Your Pitch Accent Score</p>
+          <p className="text-5xl font-black">{g.headlineScore}<span className="text-2xl text-white/70">%</span></p>
+          <p className="text-xs text-white/70 mt-2">native-like · from your {g.totalAttempts} recordings on this device</p>
+        </div>
+        <div className="rounded-2xl bg-white border border-red-100 p-5">
+          <p className="text-xs text-gray-400 mb-1">Weakest pattern</p>
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-gray-900">{worst.pattern}</span>
+            <span className="text-sm font-bold text-red-600">{worst.accuracy}%</span>
+          </div>
+          <p className="text-sm text-gray-700 mt-1">{patternDiagnosis(worst.pattern, worst.accuracy)}</p>
+        </div>
+        {/* Save gate — loss aversion */}
+        <div className="rounded-2xl border-2 border-dashed border-indigo-200 bg-indigo-50/60 p-5 text-center">
+          <p className="font-bold text-gray-900">⚠️ Saved only on this device — gone when you close the tab.</p>
+          <p className="text-sm text-gray-500 mt-1">Create a free account to keep your Karte, track progress, and unlock your full diagnosis.</p>
+          <button
+            onClick={() => { trackEvent('karte_save_gate_signup_click'); window.location.href = '/app.html?signup=true'; }}
+            className="inline-block mt-3 bg-indigo-600 text-white text-sm font-bold px-6 py-3 rounded-full hover:bg-indigo-500"
+          >
+            Save my Karte — free →
+          </button>
+        </div>
       </div>
     );
   }

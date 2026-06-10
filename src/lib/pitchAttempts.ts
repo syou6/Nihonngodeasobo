@@ -75,16 +75,9 @@ export interface KarteData {
 
 const MIN_PATTERN_SAMPLE = 3; // never diagnose a pattern from 1-2 noisy attempts
 
-export async function getKarteData(userId: string): Promise<KarteData> {
-  const { data, error } = await supabase
-    .from('pitch_attempts')
-    .select('word, reading, pattern_name, target_nucleus, detected_nucleus, accuracy, created_at')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(500);
-  if (error) throw error;
-  const rows = (data || []) as PitchAttempt[];
-
+// Aggregate an attempt list (newest-first) into KarteData. Shared by the server
+// (member) and localStorage (guest) paths so the diagnosis is identical.
+function aggregate(rows: PitchAttempt[]): KarteData {
   const byPattern = new Map<string, { sum: number; n: number; errors: number }>();
   for (const r of rows) {
     const key = r.pattern_name || '不明';
@@ -120,6 +113,22 @@ export async function getKarteData(userId: string): Promise<KarteData> {
     : 0;
 
   return { totalAttempts: rows.length, headlineScore, patterns, insufficientPatterns, wrongWords, recent: rows };
+}
+
+export async function getKarteData(userId: string): Promise<KarteData> {
+  const { data, error } = await supabase
+    .from('pitch_attempts')
+    .select('word, reading, pattern_name, target_nucleus, detected_nucleus, accuracy, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(500);
+  if (error) throw error;
+  return aggregate((data || []) as PitchAttempt[]);
+}
+
+/** Karte from the guest's localStorage attempts — the registration carrot. */
+export function getGuestKarteData(): KarteData {
+  return aggregate([...readGuestAttempts()].reverse());
 }
 
 /**

@@ -205,18 +205,19 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
               </p>
             )}
 
-            {/* Guest karte nudge — soft, never blocks scoring */}
-            {!user && getGuestAttemptCount() >= 3 && (
+            {/* Guest karte nudge — soft, never blocks scoring. After ~5 attempts a
+                real diagnosis exists, so send them to SEE it (the registration carrot). */}
+            {!user && getGuestAttemptCount() >= 5 && (
               <div className="mb-4 rounded-xl bg-indigo-50 border border-indigo-100 p-3 text-center">
                 <p className="text-sm text-indigo-900 font-medium">
-                  📋 {getGuestAttemptCount()} attempts recorded — but they aren't being saved.
+                  📋 Your Pitch Karte is ready — {getGuestAttemptCount()} recordings analyzed.
                 </p>
-                <button
-                  onClick={() => { window.location.href = '/app.html?signup=true'; }}
-                  className="mt-2 text-sm font-bold text-indigo-600 hover:text-indigo-700"
+                <a
+                  href="/app.html?guest=true&view=karte"
+                  className="mt-2 inline-block text-sm font-bold text-indigo-600 hover:text-indigo-700"
                 >
-                  Create a free account to start your Pitch Karte →
-                </button>
+                  See your diagnosis →
+                </a>
               </div>
             )}
 

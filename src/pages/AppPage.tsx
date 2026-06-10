@@ -41,7 +41,10 @@ const ViewFallback = () => (
 export const AppPage: React.FC = () => {
   const [currentView, setCurrentView] = useState('home');
   // Guest experience leads with pitch (the shareable aha); diary is secondary.
-  const [guestTab, setGuestTab] = useState<'pitch' | 'diary'>('pitch');
+  // 'karte' is reachable via ?view=karte (the registration carrot after the aha).
+  const [guestTab, setGuestTab] = useState<'pitch' | 'diary' | 'karte'>(
+    () => (new URLSearchParams(window.location.search).get('view') === 'karte' ? 'karte' : 'pitch'),
+  );
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showAuthFormState, setShowAuthFormState] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
@@ -286,7 +289,11 @@ export const AppPage: React.FC = () => {
                     </button>
                   </div>
 
-                  {guestTab === 'pitch' ? (
+                  {guestTab === 'karte' ? (
+                    <Suspense fallback={<ViewFallback />}>
+                      <KartePage onBack={() => setGuestTab('pitch')} onViewChange={() => setGuestTab('pitch')} />
+                    </Suspense>
+                  ) : guestTab === 'pitch' ? (
                     <Suspense fallback={<ViewFallback />}>
                       <PitchPractice onBack={() => setGuestTab('diary')} />
                     </Suspense>
