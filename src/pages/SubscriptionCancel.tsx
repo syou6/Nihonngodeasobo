@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle, ArrowRight, Crown, Mic, TrendingUp, BookOpen, Shield, Clock } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Crown, Mic, TrendingUp, BookOpen, Shield } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 
 export const SubscriptionCancel: React.FC = () => {
@@ -33,10 +33,10 @@ export const SubscriptionCancel: React.FC = () => {
           {/* What you're missing */}
           <div className="space-y-3 text-left mb-6">
             {[
-              { icon: Mic, text: 'Unlimited diary recordings', free: '3/month on free' },
-              { icon: TrendingUp, text: 'Detailed AI grammar corrections', free: 'Basic only on free' },
-              { icon: BookOpen, text: 'Unlimited JLPT speaking practice', free: '1/day on free' },
-              { icon: Shield, text: 'Permanent diary storage', free: 'Deleted after 7 days on free' },
+              { icon: Mic, text: 'Unlimited voice pitch scoring', free: '5/day on free' },
+              { icon: TrendingUp, text: 'Instant drop-location coaching', free: 'Basic only on free' },
+              { icon: BookOpen, text: 'Full curriculum + minimal pairs', free: 'Intro words on free' },
+              { icon: Shield, text: 'Streak & per-pattern progress', free: 'Not tracked on free' },
             ].map(({ icon: Icon, text, free }) => (
               <div key={text} className="flex items-start gap-3 p-3 bg-orange-50 rounded-lg">
                 <Icon className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
@@ -53,8 +53,8 @@ export const SubscriptionCancel: React.FC = () => {
             <Crown className="w-6 h-6 mx-auto mb-2" />
             <p className="text-sm font-bold mb-1">Limited Time: 50% OFF</p>
             <div className="flex items-center justify-center gap-2">
-              <span className="text-lg line-through opacity-70">$9.99</span>
-              <span className="text-2xl font-black">$4.99</span>
+              <span className="text-lg line-through opacity-70">$8.99</span>
+              <span className="text-2xl font-black">$4.49</span>
               <span className="text-sm opacity-80">/month</span>
             </div>
             <p className="text-xs opacity-80 mt-1">Use code NIHONGO50OFF at checkout</p>
@@ -83,11 +83,11 @@ export const SubscriptionCancel: React.FC = () => {
           <p className="text-xs text-gray-400 uppercase tracking-wider mb-3">What premium users say</p>
           <div className="space-y-3">
             <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-sm text-gray-700 italic">"The AI feedback improved my JLPT score by 2 levels in 3 months!"</p>
+              <p className="text-sm text-gray-700 italic">"I finally stopped sounding foreign — seeing my pitch vs the native made it click."</p>
               <p className="text-xs text-gray-400 mt-1">— Maria, N2 learner from Brazil</p>
             </div>
             <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-sm text-gray-700 italic">"Daily speaking practice made me confident enough to work in Japan."</p>
+              <p className="text-sm text-gray-700 italic">"The honest scoring catches the drop I always got wrong. Nothing else does this."</p>
               <p className="text-xs text-gray-400 mt-1">— Thomas, N3 learner from Germany</p>
             </div>
           </div>
