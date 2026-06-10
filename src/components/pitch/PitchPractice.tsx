@@ -23,11 +23,16 @@ import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../lib/supabase';
 import { loadNativeContours, type ContourMap } from '../../lib/native-contours';
 import { buildShareCard } from '../../lib/share-card';
+import { getVariant } from '../../lib/ab';
 import { trackEvent } from '../../lib/analytics';
 
 import { PRACTICE_WORDS } from './practiceWords';
 
 const WORD_LIST = PRACTICE_WORDS.map((w) => w.word);
+// Guests practice a meaningful free slice; creating a (free) account unlocks
+// the full curriculum — the concrete reason to sign up.
+const GUEST_WORD_LIMIT = 20;
+const GUEST_WORD_LIST = WORD_LIST.slice(0, GUEST_WORD_LIMIT);
 
 type Phase = 'ready' | 'recording' | 'result';
 
@@ -94,6 +99,10 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
   const userId = useAuthStore((s) => s.user?.id) ?? null;
   const isGuest = !userId;
 
+  // A/B: when to show the guest signup prompt. 'peak' = first mastery or 3
+  // scored reps (value peak); 'first_score' = right after the first score.
+  const promptVariant = useRef(getVariant('signup_prompt_trigger', ['peak', 'first_score'] as const)).current;
+
   // This-session stats for the wrap-up summary.
   const [showSummary, setShowSummary] = useState(false);
   const [signupPrompt, setSignupPrompt] = useState<{ reason: 'mastered' | 'engaged' } | null>(null);
@@ -128,8 +137,11 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
   // state on an interval — decouples React re-renders from the detection rate.
   const liveBufferRef = useRef<PitchFrame[]>([]);
   const liveTimerRef = useRef<number | null>(null);
+  // Single words take ~1-2s; auto-stop so a forgotten Stop doesn't feed 30s of
+  // room noise into the scorer.
+  const autoStopRef = useRef<number | null>(null);
 
-  const { word, reading } = PRACTICE_WORDS[wordIndex];
+  const { word, reading, meaning } = PRACTICE_WORDS[wordIndex];
   const pitchData = usePitchAccent(word, reading);
   const isLoadingAccent = pitchData === null;
   // Minimal pair: another curriculum word with the same reading (箸/橋, 雨/飴).
@@ -155,6 +167,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
   // Stop the mic if the component unmounts mid-recording.
   useEffect(() => {
     return () => {
+      if (autoStopRef.current !== null) clearTimeout(autoStopRef.current);
       stopLiveFlush();
       trackerRef.current?.stop();
       releaseMic();
@@ -227,6 +240,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
       liveTimerRef.current = window.setInterval(() => {
         setLiveFrames(liveBufferRef.current.slice());
       }, 100);
+      autoStopRef.current = window.setTimeout(() => stopRecording(), 6000);
     } catch {
       setError('Microphone access was denied. Please allow mic access and try again.');
       releaseMic();
@@ -237,6 +251,10 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
     const tracker = trackerRef.current;
     if (!tracker || !pitchData) return;
 
+    if (autoStopRef.current !== null) {
+      clearTimeout(autoStopRef.current);
+      autoStopRef.current = null;
+    }
     stopLiveFlush();
     const captured = tracker.stop();
     releaseMic();
@@ -273,24 +291,30 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
     setPhase('result');
     trackEvent('pitch_scored', { word, accuracy: result.accuracy });
 
-    // Convert at the value peak: once a guest has clearly "got it" (first word
-    // mastered, or a few scored reps), invite them to save progress — once per
-    // session so it never nags.
-    if (
-      isGuest &&
-      !sessionStorage.getItem('pitchSignupPromptSeen') &&
-      (justMastered || attemptsNow >= 3)
-    ) {
+    // Convert at the value peak: invite the guest to save progress — once per
+    // session so it never nags. The trigger point is A/B tested.
+    const shouldPrompt =
+      promptVariant === 'first_score' ? attemptsNow >= 1 : justMastered || attemptsNow >= 3;
+    if (isGuest && !sessionStorage.getItem('pitchSignupPromptSeen') && shouldPrompt) {
       const reason = justMastered ? 'mastered' : 'engaged';
       sessionStorage.setItem('pitchSignupPromptSeen', '1');
       setSignupPrompt({ reason });
-      trackEvent('pitch_guest_signup_prompt', { reason, attempts: attemptsNow, mastered: masteredNow });
+      trackEvent('pitch_guest_signup_prompt', {
+        reason,
+        attempts: attemptsNow,
+        mastered: masteredNow,
+        ab_signup_prompt_trigger: promptVariant,
+      });
     }
   };
 
   const goToSignup = (source: string) => {
     flushRemote();
-    trackEvent('pitch_guest_signup_click', { source, totalMastered: mastered });
+    trackEvent('pitch_guest_signup_click', {
+      source,
+      totalMastered: mastered,
+      ab_signup_prompt_trigger: promptVariant,
+    });
     window.location.href = '/app.html?signup=true';
   };
 
@@ -341,9 +365,10 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
   };
 
   // Resurface the nearest word the learner hasn't mastered yet (≥80), rather
-  // than marching through the curriculum in a fixed loop.
+  // than marching through the curriculum in a fixed loop. Guests cycle within
+  // the free slice; an account unlocks the rest.
   const nextWord = () => {
-    setWordIndex((i) => nextWordIndex(WORD_LIST, progress, i));
+    setWordIndex((i) => nextWordIndex(isGuest ? GUEST_WORD_LIST : WORD_LIST, progress, i));
     resetAttempt();
   };
 
@@ -361,7 +386,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
         <div>
           <h1 className="text-xl font-bold text-gray-900">Pitch Accent Practice</h1>
           <p className="text-sm text-gray-500">
-            Word {wordIndex + 1} of {PRACTICE_WORDS.length}
+            Word {wordIndex + 1} of {isGuest ? GUEST_WORD_LIMIT : PRACTICE_WORDS.length}
             {wordMastered && <span className="ml-2 text-green-600 font-semibold">✓ mastered</span>}
           </p>
         </div>
@@ -388,7 +413,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
       >
         {/* Target word + expected pattern (green/red overlay after an attempt) */}
         <div className="flex justify-center">
-          <PitchWordCard word={word} reading={reading} detectedPattern={matches} pairWith={pairWith} />
+          <PitchWordCard word={word} reading={reading} english={meaning} detectedPattern={matches} pairWith={pairWith} />
         </div>
 
         {/* Result: score + recorded contour vs expected bands */}
@@ -527,6 +552,18 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
                 <ChevronRight className="w-5 h-5 ml-2" />
               </Button>
             </div>
+          )}
+
+          {isGuest && phase !== 'recording' && (
+            <button
+              onClick={() => goToSignup('word_gate')}
+              className="text-xs text-gray-400 hover:text-brand-600 transition-colors"
+            >
+              🔒 Guest preview: {GUEST_WORD_LIMIT} of {PRACTICE_WORDS.length} words ·{' '}
+              <span className="font-semibold text-brand-600 underline underline-offset-2">
+                unlock all free
+              </span>
+            </button>
           )}
 
           {sessionAttempts > 0 && phase !== 'recording' && (

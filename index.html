@@ -273,7 +273,7 @@
                 <img src="/logo.png" alt="NihonGo mascot" class="w-24 h-24 md:w-28 md:h-28 float drop-shadow-xl"/>
             </div>
 
-            <h1 class="text-5xl md:text-8xl font-extrabold tracking-tight leading-[0.92] text-gradient-warm">
+            <h1 id="hero-headline" class="text-5xl md:text-8xl font-extrabold tracking-tight leading-[0.92] text-gradient-warm">
                 Stop Sounding<br/>Like a Foreigner.
             </h1>
 
@@ -855,9 +855,25 @@
 
     // ── 4. Conversion analytics (GA4 events) ────────────────────────────────
     // Lets us see the funnel in GA4: land -> scroll -> which CTA -> app.
-    function track(name, params) {
-        if (typeof window.gtag === 'function') window.gtag('event', name, params || {});
+
+    // Hero headline A/B: one variant per device, attached to every event so the
+    // land→CTA rate is segmentable by lp_variant in GA4.
+    var lpVariant = 'a';
+    try {
+        lpVariant = localStorage.getItem('ab:lp_hero') || (Math.random() < 0.5 ? 'a' : 'b');
+        localStorage.setItem('ab:lp_hero', lpVariant);
+    } catch (e) { /* storage unavailable — stay on control */ }
+    if (lpVariant === 'b') {
+        var h = document.getElementById('hero-headline');
+        if (h) h.innerHTML = 'Your Grammar Is Fine.<br/>Your Pitch Isn’t.';
     }
+
+    function track(name, params) {
+        params = params || {};
+        params.lp_variant = lpVariant;
+        if (typeof window.gtag === 'function') window.gtag('event', name, params);
+    }
+    track('lp_view', {});
 
     // CTA clicks: every link into the app, labelled by section + intent.
     function sectionOf(el) {

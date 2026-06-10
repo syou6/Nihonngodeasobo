@@ -87,12 +87,14 @@ export const PricingCards: React.FC<PricingCardsProps> = ({ currentPlan = 'free'
         <div className="inline-flex items-center bg-gray-100 rounded-full p-1">
           <button
             onClick={() => setInterval('month')}
+            aria-pressed={interval === 'month'}
             className={`px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${interval === 'month' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
           >
             Monthly
           </button>
           <button
             onClick={() => setInterval('year')}
+            aria-pressed={interval === 'year'}
             className={`px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${interval === 'year' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
           >
             Annual
