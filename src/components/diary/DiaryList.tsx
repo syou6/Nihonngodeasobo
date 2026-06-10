@@ -499,7 +499,7 @@ export const DiaryList: React.FC<DiaryListProps> = ({ isGuest, onViewChange }) =
                             className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-500 to-purple-500 text-white text-sm font-bold rounded-xl hover:from-brand-600 hover:to-purple-600 transition-all shadow-md"
                           >
                             <Crown className="w-4 h-4" />
-                            Upgrade to Premium — ¥980/month
+                            Upgrade to Premium — $8.99/month
                           </button>
                         </div>
                       </div>

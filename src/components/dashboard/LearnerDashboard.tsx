@@ -8,7 +8,6 @@ import {
   Mic,
   Calendar,
   TrendingUp,
-  MessageCircle,
   Crown,
   Lock,
   Zap,
@@ -287,7 +286,7 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
                 className="mt-3 w-full py-2 rounded-lg bg-gradient-to-r from-brand-500 to-purple-500 text-white text-sm font-bold hover:from-brand-600 hover:to-purple-600 transition-all flex items-center justify-center gap-2"
               >
                 <Crown className="w-4 h-4" />
-                Upgrade to Premium — ¥980/month
+                Upgrade to Premium — $8.99/month
               </button>
             )}
           </motion.div>
@@ -316,11 +315,10 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {[
-              { icon: Mic, label: 'Unlimited diary recordings' },
-              { icon: Zap, label: 'Detailed AI grammar corrections' },
-              { icon: TrendingUp, label: 'JLPT speaking practice (unlimited)' },
-              { icon: MessageCircle, label: 'Teacher sharing & feedback' },
-              { icon: Calendar, label: 'Unlimited diary storage' },
+              { icon: Mic, label: 'Unlimited voice pitch scoring' },
+              { icon: Zap, label: 'Instant drop-location coaching' },
+              { icon: TrendingUp, label: 'Full curriculum + minimal pairs' },
+              { icon: Calendar, label: 'Streak & per-pattern progress' },
             ].map(({ icon: Icon, label }) => (
               <div key={label} className="flex items-center gap-2.5 text-sm text-gray-500">
                 <div className="relative flex-shrink-0">
@@ -336,7 +334,7 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
             className="mt-4 w-full py-2.5 rounded-xl bg-gradient-to-r from-brand-500 to-purple-500 text-white text-sm font-bold hover:from-brand-600 hover:to-purple-600 transition-all flex items-center justify-center gap-2 shadow-md"
           >
             <Crown className="w-4 h-4" />
-            Unlock Premium — ¥980/month
+            Unlock Premium — $8.99/month
           </button>
         </motion.div>
       )}
