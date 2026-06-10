@@ -301,7 +301,7 @@ export const AppPage: React.FC = () => {
                     </Suspense>
                   ) : guestTab === 'pitch' ? (
                     <Suspense fallback={<ViewFallback />}>
-                      <PitchPractice onBack={() => setGuestTab('diary')} />
+                      <PitchPractice onBack={() => setGuestTab('diary')} onViewKarte={() => setGuestTab('karte')} />
                     </Suspense>
                   ) : (
                     <>
@@ -444,7 +444,7 @@ export const AppPage: React.FC = () => {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <PitchPractice onBack={() => setCurrentView('home')} />
+              <PitchPractice onBack={() => setCurrentView('home')} onViewKarte={() => setCurrentView('karte')} />
             </motion.div>
           )}
 

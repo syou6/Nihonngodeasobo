@@ -8,7 +8,7 @@ import { usePitchAccent } from '../../hooks/usePitchAccent';
 import { PitchTracker, type PitchFrame } from '../../lib/pitch-tracker';
 import { comparePitchToPattern } from '../../lib/pitch-analyzer';
 import { trackEvent } from '../../lib/analytics';
-import { logAttempt, getGuestAttemptCount } from '../../lib/pitchAttempts';
+import { logAttempt } from '../../lib/pitchAttempts';
 import { useAuthStore } from '../../stores/authStore';
 
 import { PRACTICE_WORDS } from './practiceWords';
@@ -17,6 +17,7 @@ type Phase = 'ready' | 'recording' | 'result';
 
 interface PitchPracticeProps {
   onBack: () => void;
+  onViewKarte?: () => void;
 }
 
 function scoreColor(score: number): string {
@@ -42,9 +43,12 @@ function coachText(
   return `Target: ${target}. But ${you}.`;
 }
 
-export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
+const KARTE_UNLOCK = 5; // scores needed to "unlock" the first Karte reveal
+
+export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKarte }) => {
   const { user } = useAuthStore();
   const [wordIndex, setWordIndex] = useState(0);
+  const [scoredCount, setScoredCount] = useState(0); // scorings this session → Karte pull
   const [phase, setPhase] = useState<Phase>('ready');
   const [frames, setFrames] = useState<PitchFrame[]>([]);
   const [accuracy, setAccuracy] = useState<number | null>(null);
@@ -131,6 +135,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
       localStorage.setItem('pitchMastered', JSON.stringify([...mastered]));
     }
     setPhase('result');
+    setScoredCount((c) => c + 1);
     trackEvent('pitch_scored', { word, accuracy: result.accuracy });
     // Karte foundation: log every attempt (server for members, localStorage for
     // guests — backfilled at signup).
@@ -205,21 +210,43 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
               </p>
             )}
 
-            {/* Guest karte nudge — soft, never blocks scoring. After ~5 attempts a
-                real diagnosis exists, so send them to SEE it (the registration carrot). */}
-            {!user && getGuestAttemptCount() >= 3 && (
-              <div className="mb-4 rounded-xl bg-indigo-50 border border-indigo-100 p-3 text-center">
-                <p className="text-sm text-indigo-900 font-medium">
-                  📋 Your Pitch Karte is ready — {getGuestAttemptCount()} recordings analyzed.
-                </p>
-                <a
-                  href="/app.html?guest=true&view=karte"
-                  className="mt-2 inline-block text-sm font-bold text-indigo-600 hover:text-indigo-700"
-                >
-                  See your diagnosis →
-                </a>
-              </div>
-            )}
+            {/* Karte pull — give the scoring loop a visible GOAL so users don't just
+                drill aimlessly and bounce. Progress bar until KARTE_UNLOCK, then a
+                prominent reveal that pulls them into their diagnosis (the carrot). */}
+            {(() => {
+              const goKarte = () => {
+                trackEvent('karte_pull_click', { scored: scoredCount });
+                if (onViewKarte) onViewKarte();
+                else window.location.href = '/app.html?guest=true&view=karte';
+              };
+              if (scoredCount >= KARTE_UNLOCK) {
+                return (
+                  <button onClick={goKarte} className="w-full mb-4">
+                    <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-500 text-white p-4 text-center shadow-md">
+                      <p className="font-bold">🎉 Your Pitch Karte is ready</p>
+                      <p className="text-xs text-white/80 mt-0.5">See exactly which patterns you're getting wrong</p>
+                      <span className="inline-block mt-2 bg-white text-indigo-600 text-sm font-bold px-5 py-2 rounded-full">
+                        See my diagnosis →
+                      </span>
+                    </div>
+                  </button>
+                );
+              }
+              return (
+                <div className="mb-4 rounded-xl bg-indigo-50 border border-indigo-100 p-3">
+                  <div className="flex items-center justify-between text-xs font-medium text-indigo-900 mb-1.5">
+                    <span>📋 Pitch Karte unlocking</span>
+                    <span>{scoredCount}/{KARTE_UNLOCK}</span>
+                  </div>
+                  <div className="h-2 bg-indigo-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-indigo-500 rounded-full transition-all" style={{ width: `${(scoredCount / KARTE_UNLOCK) * 100}%` }} />
+                  </div>
+                  <p className="text-xs text-indigo-700/80 mt-1.5 text-center">
+                    {KARTE_UNLOCK - scoredCount} more word{KARTE_UNLOCK - scoredCount === 1 ? '' : 's'} to unlock your diagnosis
+                  </p>
+                </div>
+              );
+            })()}
 
             {pitchData && (
               <PitchContourGraph
