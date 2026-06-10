@@ -14,7 +14,7 @@ Settings → Environment Variables に移動して、以下を追加：
 - **Name**: `VITE_STRIPE_PUBLIC_KEY`
 - **Value**: 
 ```
-pk_live_51S0guDLPb2fukwSMiEXRrqNdpWRAFUGtCHUNQyGtKV0qCvJaEhupONgd47bsZKxs4i45JQFJzz9aHRHK1ISnqzlP00kEKZqzqh
+pk_live_YOUR_PUBLISHABLE_KEY_FROM_STRIPE_DASHBOARD
 ```
 - **Environment**: Production ✅
 

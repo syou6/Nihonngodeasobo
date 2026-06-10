@@ -110,20 +110,20 @@ Core diary functionality with notification triggers.
 #### Client-side (.env)
 ```bash
 # Already configured in your .env file:
-VITE_VAPID_PUBLIC_KEY=BPbbeE9gPuQBaFzqzQ6sODqkCH4gODBWF2yNnCXQIr_ym1dvle_Gl_U2_QcdK-sG7KTRqCf9sKQZJw_F4B_bZwI
-VITE_VAPID_PRIVATE_KEY=BvVLEzrNTqZmsodEnfjIHHGLTRuVQmwzx-cEJIGrpWw
+VITE_VAPID_PUBLIC_KEY=YOUR_VAPID_PUBLIC_KEY
+VITE_VAPID_PRIVATE_KEY=YOUR_VAPID_PRIVATE_KEY
 
 # Firebase configuration (already set):
 VITE_FIREBASE_PROJECT_ID=ai-voce-40094
-VITE_FIREBASE_API_KEY=AIzaSyBDB0gVI82wwhp7Khd5T5jgxyqGD96XPJM
+VITE_FIREBASE_API_KEY=YOUR_FIREBASE_API_KEY_FROM_FIREBASE_CONSOLE
 # ... other Firebase settings
 ```
 
 #### Edge Functions (supabase/.env.local)
 ```bash
 # VAPID Keys (already configured)
-VAPID_PUBLIC_KEY=BPbbeE9gPuQBaFzqzQ6sODqkCH4gODBWF2yNnCXQIr_ym1dvle_Gl_U2_QcdK-sG7KTRqCf9sKQZJw_F4B_bZwI
-VAPID_PRIVATE_KEY=BvVLEzrNTqZmsodEnfjIHHGLTRuVQmwzx-cEJIGrpWw
+VAPID_PUBLIC_KEY=YOUR_VAPID_PUBLIC_KEY
+VAPID_PRIVATE_KEY=YOUR_VAPID_PRIVATE_KEY
 
 # FCM Server Key (TO BE ADDED)
 # Get this from Firebase Console > Project Settings > Cloud Messaging

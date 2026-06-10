@@ -1,55 +1,70 @@
-# 日本語であそぼ (AI Voice Journal)
+# 日本語であそぼ — Japanese Pitch-Accent Trainer
 
-AI を活用した日本語学習アプリ。音声で日記を録音し、NVIDIA NIM (LLM) がフィードバックを提供します。
+A web app for practising **Japanese pitch accent (高低アクセント)**. Record a word,
+see your own pitch contour drawn against a native speaker's, and get honest
+drop-detection scoring and coaching — so you can hear and fix where your pitch
+rises and falls.
 
-## 技術スタック
+A secondary **AI voice diary** tab remains for free-form speaking practice with
+AI text feedback.
 
-- **フロントエンド:** React 18 + TypeScript + Vite + Tailwind CSS
-- **状態管理:** Zustand
-- **バックエンド:** Supabase (認証・DB・Edge Functions)
-- **AI:** NVIDIA NIM / qwen2.5-72b-instruct (テキストフィードバック)
-- **音声/ピッチ解析:** クライアント側 (pitchy + hatsuon)
-- **決済:** Stripe
-- **通知:** Firebase Cloud Messaging
-- **テスト:** Vitest + Playwright
+## Key features
 
-## 主な機能
+- **Pitch trainer (the core):** listen to a native reference, record a word, and
+  compare your live pitch contour to the real native F0 curve. Honest
+  drop-detection scoring + coaching, not just a pass/fail.
+- **66-word curriculum** with adaptive review and mastery tracking; progress syncs
+  to the cloud once signed in.
+- **Session summaries** and a shareable result card.
+- **Guest mode:** try the trainer straight from the landing page with no signup
+  (the "Score My Pitch" flow).
+- **Free tier with daily limits:** 30 of 66 words and 5 voice scorings/day.
+  **Premium** unlocks the full curriculum and unlimited scoring at **$8.99/month**
+  or **$59/year**.
+- **Voice diary (secondary):** record a spoken diary entry and receive AI text
+  feedback via a Supabase Edge Function (NVIDIA NIM / Gemini-style LLM).
+- PWA support with optional push notifications.
 
-- 音声日記の録音と AI フィードバック
-- Versant 練習 (Part E / Part F)
-- 保護者・先生向けダッシュボード
-- 高齢者向け UI モード
-- ゲストモード (未登録でも試用可能)
-- サブスクリプション (Stripe)
-- PWA 対応・プッシュ通知
+## Tech stack
 
-## セットアップ
+- **Frontend:** React 18 + TypeScript + Vite + Tailwind CSS (Framer Motion for
+  animation)
+- **State:** Zustand
+- **Pitch analysis:** [`pitchy`](https://www.npmjs.com/package/pitchy) +
+  [`hatsuon`](https://www.npmjs.com/package/hatsuon), run client-side / on-device
+- **Backend:** Supabase (Auth, Postgres, Storage, Edge Functions)
+- **AI feedback (diary):** Supabase Edge Function (`gemini-ai`) backed by NVIDIA NIM
+- **Payments:** Stripe
+- **Notifications:** Firebase Cloud Messaging / Web Push (optional)
+- **Testing:** Vitest (unit) + Playwright (E2E)
+
+## Local development
 
 ```bash
 npm install
-cp .env.example .env  # 環境変数を設定
-npm run dev
+cp .env.example .env   # fill in Supabase (and optionally Stripe) values
+npm run dev            # start the dev server
+npm test               # run unit tests (vitest)
+npm run build          # production build
+npm run test:e2e       # run Playwright E2E tests
 ```
 
-### 環境変数
+Minimum to run locally: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. The
+NVIDIA NIM key for diary feedback lives on the server side (Supabase Edge
+Function), not in the client:
 
-| 変数名 | 説明 |
-|--------|------|
-| `VITE_SUPABASE_URL` | Supabase プロジェクト URL |
-| `VITE_SUPABASE_ANON_KEY` | Supabase Anon Key |
-NVIDIA NIM の API キーは Supabase Edge Function 側で管理:
 ```bash
 supabase secrets set NVIDIA_API_KEY=your_key
-# モデル変更は任意（既定: qwen/qwen2.5-72b-instruct）
+# model override is optional (default: qwen/qwen2.5-72b-instruct)
 supabase secrets set NVIDIA_MODEL=qwen/qwen2.5-72b-instruct
 ```
 
-## スクリプト
+See [`.env.example`](./.env.example) for the full list of environment variables.
 
-| コマンド | 説明 |
-|----------|------|
-| `npm run dev` | 開発サーバー起動 |
-| `npm run build` | プロダクションビルド |
-| `npm run test` | ユニットテスト実行 |
-| `npm run test:e2e` | E2E テスト実行 |
-| `npm run test:all` | 全テスト実行 |
+## Documentation
+
+- [`docs/PLAN.md`](./docs/PLAN.md) — implementation plan / roadmap (post pitch-accent pivot).
+- [`docs/REVENUE.md`](./docs/REVENUE.md) — revenue model and conversion funnel.
+- [`docs/APPLY_MIGRATIONS.md`](./docs/APPLY_MIGRATIONS.md) — applying Supabase migrations (incl. pitch progress / cloud sync).
+- [`docs/architecture.md`](./docs/architecture.md) — system architecture diagram.
+- [`docs/setup/`](./docs/setup/) — deployment & integration guides (Supabase, Stripe, Vercel env, Google OAuth, Firebase/FCM, push notifications).
