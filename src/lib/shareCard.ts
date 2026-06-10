@@ -1,7 +1,7 @@
 import type { PitchFrame } from './pitch-tracker';
 
-// Generates a polished 1080×1080 share card (PNG) of a pitch-accent result —
-// the viral loop: "I scored X% — can you sound more native?" → friends try.
+// Generates a premium 1080×1350 (portrait, social-optimized) share card of a
+// pitch-accent result — the viral loop "I scored X% — can you sound more native?".
 // Pure canvas, no dependency.
 
 export interface ShareCardInput {
@@ -11,23 +11,25 @@ export interface ShareCardInput {
   pattern: string;        // 平板 / 頭高 / 中高 / 尾高
   patternEn: string;      // Heiban / Atamadaka / ...
   frames: PitchFrame[];   // the user's recorded pitch
+  targetNucleus: number;  // expected drop position (0 = heiban)
+  moraCount: number;
 }
 
 const W = 1080;
-const H = 1080;
+const H = 1350;
 const JP_FONT = "'Hiragino Sans','Hiragino Kaku Gothic ProN','Yu Gothic','Noto Sans JP',sans-serif";
 const UI_FONT = "'Plus Jakarta Sans','Inter',system-ui,sans-serif";
 
 function bandColor(score: number): string {
-  if (score >= 80) return '#34D399'; // green
-  if (score >= 60) return '#FBBF24'; // amber
-  return '#FB7185'; // rose
+  if (score >= 80) return '#34D399';
+  if (score >= 60) return '#FBBF24';
+  return '#FB7185';
 }
-function reactionEmoji(score: number): string {
-  if (score >= 90) return '🎉';
-  if (score >= 80) return '✅';
-  if (score >= 60) return '👍';
-  return '💪';
+function reaction(score: number): string {
+  if (score >= 90) return '🎉 Native-like!';
+  if (score >= 80) return '✅ Nailed the drop';
+  if (score >= 60) return '👍 So close';
+  return '💪 Keep training';
 }
 
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
@@ -40,26 +42,98 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.closePath();
 }
 
-// Draw the user's pitch contour (normalized) inside a panel.
-function drawContour(ctx: CanvasRenderingContext2D, frames: PitchFrame[], x: number, y: number, w: number, h: number) {
+// The native target contour as a smooth stepped line (low→high, drop after nucleus).
+function targetPoints(nucleus: number, moraCount: number): number[] {
+  // value per mora: 1 = high, 0 = low. Heiban (nucleus 0): low on mora1 then high.
+  const vals: number[] = [];
+  for (let m = 1; m <= moraCount; m++) {
+    if (nucleus === 0) vals.push(m === 1 ? 0 : 1);
+    else if (m === 1) vals.push(nucleus === 1 ? 1 : 0);
+    else vals.push(m <= nucleus ? 1 : 0);
+  }
+  return vals;
+}
+
+function drawContours(
+  ctx: CanvasRenderingContext2D,
+  frames: PitchFrame[],
+  nucleus: number,
+  moraCount: number,
+  x: number, y: number, w: number, h: number,
+) {
+  // Native target line (dashed white)
+  const tv = targetPoints(nucleus, moraCount);
+  if (tv.length >= 1) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.lineWidth = 7;
+    ctx.setLineDash([14, 12]);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    tv.forEach((v, i) => {
+      const px = x + (tv.length === 1 ? 0.5 : i / (tv.length - 1)) * w;
+      const py = y + h - (v * 0.78 + 0.11) * h;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // User's recorded contour (solid orange)
   const voiced = frames.filter((f): f is PitchFrame & { pitch: number } => f.pitch != null && f.pitch > 0 && f.clarity > 0.3);
-  if (voiced.length < 2) return;
-  const hzs = voiced.map((f) => f.pitch);
-  const min = Math.min(...hzs);
-  const max = Math.max(...hzs);
-  const range = Math.max(1, max - min);
-  ctx.strokeStyle = '#FDBA74'; // warm orange line
-  ctx.lineWidth = 10;
-  ctx.lineJoin = 'round';
+  if (voiced.length >= 2) {
+    const hzs = voiced.map((f) => f.pitch);
+    const min = Math.min(...hzs), max = Math.max(...hzs);
+    const range = Math.max(1, max - min);
+    const grad = ctx.createLinearGradient(x, 0, x + w, 0);
+    grad.addColorStop(0, '#FDBA74');
+    grad.addColorStop(1, '#FB923C');
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 12;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.shadowColor = 'rgba(251,146,60,0.5)';
+    ctx.shadowBlur = 24;
+    ctx.beginPath();
+    voiced.forEach((f, i) => {
+      const px = x + (i / (voiced.length - 1)) * w;
+      const py = y + h - ((f.pitch - min) / range * 0.78 + 0.11) * h;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    });
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+}
+
+function drawScoreRing(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, score: number) {
+  const start = -Math.PI / 2;
+  const end = start + (score / 100) * 2 * Math.PI;
+  // track
+  ctx.lineWidth = 26;
   ctx.lineCap = 'round';
+  ctx.strokeStyle = 'rgba(255,255,255,0.16)';
   ctx.beginPath();
-  voiced.forEach((f, i) => {
-    const px = x + (i / (voiced.length - 1)) * w;
-    const py = y + h - ((f.pitch - min) / range) * h;
-    if (i === 0) ctx.moveTo(px, py);
-    else ctx.lineTo(px, py);
-  });
+  ctx.arc(cx, cy, r, 0, 2 * Math.PI);
   ctx.stroke();
+  // progress
+  ctx.strokeStyle = bandColor(score);
+  ctx.shadowColor = bandColor(score);
+  ctx.shadowBlur = 30;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, start, end);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  // number
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = `900 150px ${UI_FONT}`;
+  ctx.textBaseline = 'middle';
+  ctx.fillText(String(score), cx, cy - 6);
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.font = `700 40px ${UI_FONT}`;
+  ctx.fillText('/ 100', cx, cy + 78);
+  ctx.textBaseline = 'alphabetic';
 }
 
 export async function generateShareCard(input: ShareCardInput): Promise<Blob> {
@@ -68,68 +142,89 @@ export async function generateShareCard(input: ShareCardInput): Promise<Blob> {
   canvas.height = H;
   const ctx = canvas.getContext('2d')!;
 
-  // Background: indigo→violet gradient + soft radial glow
-  const g = ctx.createLinearGradient(0, 0, W, H);
-  g.addColorStop(0, '#4F46E5');
-  g.addColorStop(1, '#7C3AED');
+  // Background gradient + dual glow
+  const g = ctx.createLinearGradient(0, 0, W * 0.4, H);
+  g.addColorStop(0, '#4338CA');
+  g.addColorStop(0.55, '#5B21B6');
+  g.addColorStop(1, '#3B0764');
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
-  const glow = ctx.createRadialGradient(W * 0.8, H * 0.15, 0, W * 0.8, H * 0.15, 700);
-  glow.addColorStop(0, 'rgba(255,122,89,0.35)');
-  glow.addColorStop(1, 'rgba(255,122,89,0)');
-  ctx.fillStyle = glow;
+  const glow1 = ctx.createRadialGradient(W * 0.85, H * 0.1, 0, W * 0.85, H * 0.1, 760);
+  glow1.addColorStop(0, 'rgba(255,122,89,0.30)');
+  glow1.addColorStop(1, 'rgba(255,122,89,0)');
+  ctx.fillStyle = glow1;
+  ctx.fillRect(0, 0, W, H);
+  const glow2 = ctx.createRadialGradient(W * 0.1, H * 0.9, 0, W * 0.1, H * 0.9, 700);
+  glow2.addColorStop(0, 'rgba(99,102,241,0.35)');
+  glow2.addColorStop(1, 'rgba(99,102,241,0)');
+  ctx.fillStyle = glow2;
   ctx.fillRect(0, 0, W, H);
 
   // Header
-  ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = `800 italic 46px ${UI_FONT}`;
+  ctx.font = `800 italic 50px ${UI_FONT}`;
   ctx.textAlign = 'left';
-  ctx.fillText('🍣 NihonGo', 72, 110);
-  ctx.fillStyle = 'rgba(255,255,255,0.7)';
-  ctx.font = `700 30px ${UI_FONT}`;
-  ctx.textAlign = 'right';
-  ctx.fillText('PITCH ACCENT', W - 72, 108);
-
-  // Word + reading (center top)
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#FFFFFF';
-  ctx.font = `800 200px ${JP_FONT}`;
-  ctx.fillText(input.word, W / 2, 360);
-  ctx.fillStyle = 'rgba(255,255,255,0.75)';
-  ctx.font = `600 56px ${JP_FONT}`;
-  ctx.fillText(input.reading, W / 2, 430);
+  ctx.fillText('🍣 NihonGo', 80, 130);
   ctx.fillStyle = 'rgba(255,255,255,0.55)';
-  ctx.font = `700 34px ${UI_FONT}`;
-  ctx.fillText(`${input.pattern} · ${input.patternEn}`, W / 2, 482);
+  ctx.font = `700 28px ${UI_FONT}`;
+  ctx.textAlign = 'right';
+  ctx.fillText('PITCH ACCENT TRAINER', W - 80, 128);
 
-  // Contour panel
-  const px = 110, py = 520, pw = W - 220, ph = 180;
-  ctx.fillStyle = 'rgba(255,255,255,0.10)';
-  roundRect(ctx, px, py, pw, ph, 28);
-  ctx.fill();
-  drawContour(ctx, input.frames, px + 40, py + 30, pw - 80, ph - 60);
-
-  // Score
-  ctx.textAlign = 'center';
-  ctx.font = `90px ${UI_FONT}`;
-  ctx.fillText(reactionEmoji(input.score), W / 2, 820);
-  ctx.fillStyle = bandColor(input.score);
-  ctx.font = `900 190px ${UI_FONT}`;
-  ctx.fillText(String(input.score), W / 2 - 40, 960);
-  ctx.fillStyle = 'rgba(255,255,255,0.6)';
-  ctx.font = `700 64px ${UI_FONT}`;
-  ctx.textAlign = 'left';
-  ctx.fillText('/100', W / 2 + 130, 960);
-
-  // CTA footer
+  // Word hero
   ctx.textAlign = 'center';
   ctx.fillStyle = '#FFFFFF';
+  ctx.font = `800 230px ${JP_FONT}`;
+  ctx.fillText(input.word, W / 2, 460);
+  ctx.fillStyle = 'rgba(255,255,255,0.78)';
+  ctx.font = `600 60px ${JP_FONT}`;
+  ctx.fillText(input.reading, W / 2, 540);
+
+  // Pattern pill
+  const pillText = `${input.pattern}  ${input.patternEn}`;
+  ctx.font = `700 36px ${UI_FONT}`;
+  const pw = ctx.measureText(pillText).width + 64;
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  roundRect(ctx, W / 2 - pw / 2, 580, pw, 64, 32);
+  ctx.fill();
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillText(pillText, W / 2, 623);
+
+  // Contour panel (glass) with native vs you + legend
+  const px = 90, py = 700, pwid = W - 180, ph = 240;
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  roundRect(ctx, px, py, pwid, ph, 32);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 2;
+  roundRect(ctx, px, py, pwid, ph, 32);
+  ctx.stroke();
+  drawContours(ctx, input.frames, input.targetNucleus, input.moraCount, px + 50, py + 40, pwid - 100, ph - 80);
+  // legend
+  ctx.textAlign = 'left';
+  ctx.font = `700 26px ${UI_FONT}`;
+  ctx.fillStyle = '#FB923C';
+  ctx.fillText('—  you', px + 40, py + ph - 18);
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.fillText('- - native', px + 200, py + ph - 18);
+
+  // Score ring (hero)
+  drawScoreRing(ctx, W / 2, 1090, 118, input.score);
+
+  // Reaction (under the ring)
+  ctx.textAlign = 'center';
+  ctx.fillStyle = bandColor(input.score);
   ctx.font = `800 46px ${UI_FONT}`;
-  ctx.fillText('Can you sound more native?', W / 2, 1015);
-  ctx.fillStyle = 'rgba(255,255,255,0.8)';
-  ctx.font = `600 34px ${UI_FONT}`;
-  ctx.fillText('Score your pitch free → nihongo.amorjp.com', W / 2, 1058);
+  ctx.fillText(reaction(input.score), W / 2, 1270);
+
+  // CTA pill
+  const cta = 'Can you sound more native?  →  nihongo.amorjp.com';
+  ctx.font = `700 30px ${UI_FONT}`;
+  const cw = ctx.measureText(cta).width + 64;
+  ctx.fillStyle = 'rgba(255,255,255,0.14)';
+  roundRect(ctx, W / 2 - cw / 2, 1298, cw, 56, 28);
+  ctx.fill();
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillText(cta, W / 2, 1335);
 
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/png');
@@ -138,10 +233,6 @@ export async function generateShareCard(input: ShareCardInput): Promise<Blob> {
 
 const SHARE_URL = 'https://nihongo.amorjp.com/?utm_source=share_card';
 
-/**
- * Share the result card via the native share sheet (mobile) with a file, or
- * fall back to downloading the PNG. Returns the method used.
- */
 export async function shareResult(input: ShareCardInput): Promise<'shared' | 'downloaded'> {
   const blob = await generateShareCard(input);
   const file = new File([blob], `nihongo-pitch-${input.word}.png`, { type: 'image/png' });
@@ -153,7 +244,7 @@ export async function shareResult(input: ShareCardInput): Promise<'shared' | 'do
       await nav.share({ files: [file], text, title: 'My NihonGo pitch score' });
       return 'shared';
     } catch {
-      // user cancelled or share failed → fall through to download
+      // cancelled → fall through to download
     }
   }
   const url = URL.createObjectURL(blob);

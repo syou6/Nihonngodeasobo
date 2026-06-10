@@ -99,6 +99,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
   const [phase, setPhase] = useState<Phase>('ready');
   const [frames, setFrames] = useState<PitchFrame[]>([]);
   const [accuracy, setAccuracy] = useState<number | null>(null);
+  const [targetNucleus, setTargetNucleus] = useState(0);
   const [matches, setMatches] = useState<(boolean | null)[] | undefined>(undefined);
   const [coach, setCoach] = useState<string | null>(null);
   const [streak, setStreak] = useState(() => {
@@ -168,6 +169,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
     setFrames(captured);
     setMatches(result.matches);
     setAccuracy(result.accuracy);
+    setTargetNucleus(result.targetNucleus);
     setCoach(coachText(result, pitchData.morae));
     const newStreak = result.accuracy >= 80 ? streak + 1 : 0;
     setStreak(newStreak);
@@ -440,7 +442,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
                         word, reading, score: accuracy,
                         pattern: pitchData.patternName ?? '',
                         patternEn: PATTERN_EN[pitchData.patternName ?? ''] ?? '',
-                        frames,
+                        frames, targetNucleus, moraCount: pitchData.morae.length,
                       });
                     } catch { /* user cancelled */ }
                   }}
