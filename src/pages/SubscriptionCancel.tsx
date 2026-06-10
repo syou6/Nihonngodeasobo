@@ -1,9 +1,34 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle, ArrowRight, Crown, Mic, TrendingUp, BookOpen, Shield } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Crown, Mic, TrendingUp, BookOpen, Shield, Loader2 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
+import { pricingPlans, StripeService, ONBOARDING_COUPON_ID } from '../lib/stripe';
+import { useAuthStore } from '../stores/authStore';
+import { trackEvent } from '../lib/analytics';
+import toast from 'react-hot-toast';
 
 export const SubscriptionCancel: React.FC = () => {
+  const { user } = useAuthStore();
+  const [loading, setLoading] = useState(false);
+
+  // Win-back: this button starts a checkout with the 50% coupon actually applied
+  // (the page previously promised 50% but linked to the full-price pricing modal).
+  const claimDiscount = async () => {
+    const monthly = pricingPlans.find((p) => p.id === 'premium');
+    if (!monthly?.stripePriceId || !user?.id || !ONBOARDING_COUPON_ID) {
+      window.location.href = '/app.html?view=pricing';
+      return;
+    }
+    setLoading(true);
+    trackEvent('begin_checkout', { plan: 'premium', source: 'cancel_winback' });
+    try {
+      await StripeService.createCheckoutSession(monthly.stripePriceId, user.id, ONBOARDING_COUPON_ID);
+    } catch {
+      toast.error('Something went wrong. Please try again.');
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex items-center justify-center py-8 px-4">
       <motion.div
@@ -57,15 +82,20 @@ export const SubscriptionCancel: React.FC = () => {
               <span className="text-2xl font-black">$4.49</span>
               <span className="text-sm opacity-80">/month</span>
             </div>
-            <p className="text-xs opacity-80 mt-1">Use code NIHONGO50OFF at checkout</p>
+            <p className="text-xs opacity-80 mt-1">Discount applied automatically at checkout</p>
           </div>
 
           <Button
-            onClick={() => window.location.href = '/app.html?view=pricing'}
+            onClick={claimDiscount}
             variant="primary"
             className="w-full mb-3"
+            disabled={loading}
           >
-            <Crown className="w-4 h-4 mr-2" />
+            {loading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Crown className="w-4 h-4 mr-2" />
+            )}
             Get Premium at 50% OFF
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
