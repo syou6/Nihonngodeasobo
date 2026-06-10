@@ -166,7 +166,7 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
                 <div className="text-[10px] uppercase tracking-wider text-white/70">streak</div>
               </div>
             ) : (
-              <span className="flex-shrink-0 ml-4 bg-white text-primary font-bold text-sm px-5 py-2.5 rounded-full">Start →</span>
+              <span className="flex-shrink-0 ml-4 bg-white text-indigo-600 font-bold text-sm px-5 py-2.5 rounded-full">Start →</span>
             );
           })()}
         </div>
