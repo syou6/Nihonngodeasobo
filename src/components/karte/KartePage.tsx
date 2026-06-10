@@ -4,6 +4,7 @@ import { ArrowLeft, Lock, Loader2, Stethoscope } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useSubscription } from '../../hooks/useSubscription';
 import { getKarteData, getGuestKarteData, getGuestAttemptCount, type KarteData } from '../../lib/pitchAttempts';
+import { startTrialIfEligible } from '../../lib/subscription';
 import { PRACTICE_WORDS } from '../pitch/practiceWords';
 import { trackEvent } from '../../lib/analytics';
 
@@ -39,7 +40,7 @@ const Blur: React.FC<{ locked: boolean; children: React.ReactNode }> = ({ locked
 
 export const KartePage: React.FC<KartePageProps> = ({ onBack, onViewChange }) => {
   const { user } = useAuthStore();
-  const { isPremium } = useSubscription();
+  const { isPremium, isTrialing, trialEndsAt } = useSubscription();
   const [karte, setKarte] = useState<KarteData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -50,11 +51,18 @@ export const KartePage: React.FC<KartePageProps> = ({ onBack, onViewChange }) =>
       setLoading(false);
       return;
     }
+    // Reverse trial: a registered user's first Karte view starts their 14 days
+    // of full access (fire-and-forget; no-op if already trialed/paid).
+    void startTrialIfEligible(user.id).then((started) => { if (started) trackEvent('trial_started'); });
     getKarteData(user.id)
       .then(setKarte)
       .catch(() => setKarte(null))
       .finally(() => setLoading(false));
   }, [user]);
+
+  const trialDaysLeft = trialEndsAt
+    ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000))
+    : 0;
 
   const lockTap = (section: string) => {
     trackEvent('karte_section_lock_tapped', { section });
@@ -157,6 +165,24 @@ export const KartePage: React.FC<KartePageProps> = ({ onBack, onViewChange }) =>
         <button onClick={onBack} className="text-gray-400 hover:text-gray-600"><ArrowLeft className="w-5 h-5" /></button>
         <h1 className="text-xl font-bold text-gray-900">Your Pitch Karte 📋</h1>
       </div>
+
+      {/* Trial countdown — full access ticking down (loss aversion building) */}
+      {isTrialing && (
+        <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-center text-sm">
+          <span className="font-bold text-amber-800">🔓 Full Karte unlocked — {trialDaysLeft} day{trialDaysLeft === 1 ? '' : 's'} left in your free trial.</span>
+          <button onClick={() => onViewChange('pricing')} className="ml-2 font-bold text-indigo-600 hover:text-indigo-700">Keep it →</button>
+        </div>
+      )}
+      {/* Trial ended (had a trial, no longer premium) — the loss moment */}
+      {!isPremium && trialEndsAt && trialDaysLeft === 0 && (
+        <button onClick={() => { trackEvent('karte_section_lock_tapped', { section: 'trial_ended' }); onViewChange('pricing'); }} className="w-full">
+          <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-center">
+            <p className="font-bold text-gray-900">Your free trial ended — your full diagnosis is locked.</p>
+            <p className="text-sm text-gray-600 mt-1">Your {karte?.totalAttempts ?? 0} recordings and progress are safe. Keep your Karte for <b>$4.49/mo</b> (50% off).</p>
+            <span className="inline-block mt-2 bg-indigo-600 text-white text-sm font-bold px-5 py-2 rounded-full">Reactivate →</span>
+          </div>
+        </button>
+      )}
 
       {/* 1. Headline score — always free */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}

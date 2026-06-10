@@ -12,6 +12,8 @@ import type { UsageLimits } from '../lib/subscription';
 // Simple in-memory cache to avoid duplicate API calls across components
 let cachedResult: {
   isPremium: boolean;
+  isTrialing: boolean;
+  trialEndsAt: string | null;
   limits: UsageLimits;
   usage: { diaryCount: number; aiFeedbackCount: number; speakingPracticeCount: number };
   userId: string;
@@ -23,6 +25,8 @@ const CACHE_TTL = 60_000; // 1 minute
 export function useSubscription() {
   const { user } = useAuthStore();
   const [isPremium, setIsPremium] = useState(false);
+  const [isTrialing, setIsTrialing] = useState(false);
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const [limits, setLimits] = useState<UsageLimits>(getLimits(false));
   const [usage, setUsage] = useState({
     diaryCount: 0,
@@ -45,6 +49,8 @@ export function useSubscription() {
       Date.now() - cachedResult.timestamp < CACHE_TTL
     ) {
       setIsPremium(cachedResult.isPremium);
+      setIsTrialing(cachedResult.isTrialing);
+      setTrialEndsAt(cachedResult.trialEndsAt);
       setLimits(cachedResult.limits);
       setUsage(cachedResult.usage);
       setLoading(false);
@@ -65,6 +71,8 @@ export function useSubscription() {
 
         cachedResult = {
           isPremium: sub.isPremium,
+          isTrialing: sub.isTrialing,
+          trialEndsAt: sub.trialEndsAt,
           limits: newLimits,
           usage: monthlyUsage,
           userId: user.id,
@@ -72,6 +80,8 @@ export function useSubscription() {
         };
 
         setIsPremium(sub.isPremium);
+        setIsTrialing(sub.isTrialing);
+        setTrialEndsAt(sub.trialEndsAt);
         setLimits(newLimits);
         setUsage(monthlyUsage);
       } catch {
@@ -102,5 +112,5 @@ export function useSubscription() {
     cachedResult = null;
   };
 
-  return { isPremium, limits, usage, loading, checkAction, trackUsage };
+  return { isPremium, isTrialing, trialEndsAt, limits, usage, loading, checkAction, trackUsage };
 }

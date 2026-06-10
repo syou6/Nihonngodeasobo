@@ -27,23 +27,51 @@ const PREMIUM_LIMITS: UsageLimits = {
   storageRetentionDays: null,
 };
 
-export async function getSubscriptionStatus(userId: string): Promise<{ isPremium: boolean; planId: string }> {
+export interface SubStatus {
+  isPremium: boolean;        // paid OR trialing (full access)
+  planId: string;
+  isTrialing: boolean;
+  trialEndsAt: string | null;
+}
+
+export async function getSubscriptionStatus(userId: string): Promise<SubStatus> {
   try {
     const { data } = await supabase
       .from('subscriptions')
-      .select('plan_id, status, current_period_end')
+      .select('plan_id, status, current_period_end, trial_ends_at')
       .eq('user_id', userId)
       .maybeSingle();
 
-    if (data && data.plan_id === 'premium' && data.status === 'active') {
-      const endDate = data.current_period_end ? new Date(data.current_period_end) : null;
-      if (!endDate || endDate > new Date()) {
-        return { isPremium: true, planId: 'premium' };
-      }
-    }
-    return { isPremium: false, planId: 'free' };
+    const now = new Date();
+    const paid =
+      !!data && data.plan_id === 'premium' && data.status === 'active' &&
+      (!data.current_period_end || new Date(data.current_period_end) > now);
+    const trialEndsAt: string | null = data?.trial_ends_at ?? null;
+    const isTrialing = !paid && !!trialEndsAt && new Date(trialEndsAt) > now;
+
+    return {
+      isPremium: paid || isTrialing,
+      planId: paid ? 'premium' : 'free',
+      isTrialing,
+      trialEndsAt,
+    };
   } catch {
-    return { isPremium: false, planId: 'free' };
+    return { isPremium: false, planId: 'free', isTrialing: false, trialEndsAt: null };
+  }
+}
+
+/**
+ * Start the 14-day reverse trial once (called when the user first opens their
+ * Karte). Server-side SECURITY DEFINER RPC — no client write to subscriptions.
+ * Returns true if a trial was newly granted.
+ */
+export async function startTrialIfEligible(_userId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.rpc('start_trial');
+    if (error) return false;
+    return data === true;
+  } catch {
+    return false;
   }
 }
 
