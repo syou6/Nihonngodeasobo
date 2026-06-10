@@ -53,6 +53,7 @@ export const PricingCards: React.FC<PricingCardsProps> = ({ currentPlan = 'free'
 
   const freePlan = pricingPlans.find(p => p.id === 'free')!;
   const premiumPlan = pricingPlans.find(p => p.id === 'premium')!;
+  const annualPlan = pricingPlans.find(p => p.id === 'premium-annual');
   const isPremiumUser = currentPlan === 'premium';
 
   return (
@@ -167,6 +168,21 @@ export const PricingCards: React.FC<PricingCardsProps> = ({ currentPlan = 'free'
                 'Upgrade Now'
               )}
             </Button>
+          )}
+
+          {/* Annual option — 2 months free vs monthly */}
+          {!isPremiumUser && annualPlan?.stripePriceId && (
+            <button
+              onClick={() => handleSubscribe(annualPlan.id, annualPlan.stripePriceId)}
+              disabled={loading === annualPlan.id}
+              className="mt-3 w-full text-center text-sm font-semibold text-indigo-600 hover:text-indigo-700 disabled:opacity-50"
+            >
+              {loading === annualPlan.id ? (
+                <Loader2 className="w-4 h-4 animate-spin inline" />
+              ) : (
+                <>Or $59/year — save 2 months →</>
+              )}
+            </button>
           )}
         </motion.div>
       </div>
