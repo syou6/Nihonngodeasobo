@@ -430,7 +430,7 @@ export const AppPage: React.FC = () => {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <PitchPractice onBack={() => setCurrentView('home')} />
+              <PitchPractice onBack={() => setCurrentView('home')} onUpgrade={() => setCurrentView('pricing')} />
             </motion.div>
           )}
 

@@ -139,6 +139,18 @@ describe('PitchPractice', () => {
     expect(sessionStorage.getItem('pitchSignupPromptSeen')).toBe('1');
   });
 
+  it('shows the paywall instead of recording once the daily cap is reached', async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    localStorage.setItem('pitchDailyScorings', JSON.stringify({ date: today, count: 5 }));
+
+    render(<PitchPractice onBack={vi.fn()} />);
+    fireEvent.click(screen.getByText('Record & say it'));
+
+    expect(await screen.findByText(/daily limit reached/)).toBeInTheDocument();
+    // The mic was never started.
+    expect(trackerStart).not.toHaveBeenCalled();
+  });
+
   it('calls onBack when the back button is clicked', () => {
     const onBack = vi.fn();
     render(<PitchPractice onBack={onBack} />);

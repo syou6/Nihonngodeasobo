@@ -20,24 +20,30 @@ import {
   type PitchProgress,
 } from '../../lib/pitch-progress';
 import { useAuthStore } from '../../stores/authStore';
+import { useSubscription } from '../../hooks/useSubscription';
 import { supabase } from '../../lib/supabase';
 import { loadNativeContours, type ContourMap } from '../../lib/native-contours';
 import { buildShareCard } from '../../lib/share-card';
 import { getVariant } from '../../lib/ab';
+import {
+  canScore,
+  recordScoring,
+  scoringsRemaining,
+  wordLimitFor,
+  FREE_DAILY_SCORINGS,
+} from '../../lib/pitch-limits';
 import { trackEvent } from '../../lib/analytics';
 
 import { PRACTICE_WORDS } from './practiceWords';
 
 const WORD_LIST = PRACTICE_WORDS.map((w) => w.word);
-// Guests practice a meaningful free slice; creating a (free) account unlocks
-// the full curriculum — the concrete reason to sign up.
-const GUEST_WORD_LIMIT = 20;
-const GUEST_WORD_LIST = WORD_LIST.slice(0, GUEST_WORD_LIMIT);
 
 type Phase = 'ready' | 'recording' | 'result';
 
 interface PitchPracticeProps {
   onBack: () => void;
+  /** Navigate to the in-app pricing view (logged-in users). Guests go to signup. */
+  onUpgrade?: () => void;
 }
 
 function scoreColor(score: number): string {
@@ -63,7 +69,7 @@ function coachText(
   return `Target: ${target}. But ${you}.`;
 }
 
-export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
+export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onUpgrade }) => {
   const [wordIndex, setWordIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>('ready');
   const [frames, setFrames] = useState<PitchFrame[]>([]);
@@ -98,6 +104,16 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
 
   const userId = useAuthStore((s) => s.user?.id) ?? null;
   const isGuest = !userId;
+  const { isPremium, loading: subLoading } = useSubscription();
+  const tier: 'guest' | 'free' | 'premium' = isGuest ? 'guest' : isPremium ? 'premium' : 'free';
+  // While the subscription is still resolving, don't flash limits at a user who
+  // may turn out to be premium — fail open until we know.
+  const limitsKnown = isGuest || !subLoading;
+  const tierWordLimit = wordLimitFor(tier);
+  const tierWordCount = Math.min(PRACTICE_WORDS.length, tierWordLimit);
+  const tierWordList = WORD_LIST.slice(0, tierWordCount);
+  const [paywall, setPaywall] = useState<null | 'daily_limit'>(null);
+  const [remainingToday, setRemainingToday] = useState(() => scoringsRemaining(isPremium));
 
   // A/B: when to show the guest signup prompt. 'peak' = first mastery or 3
   // scored reps (value peak); 'first_score' = right after the first score.
@@ -222,6 +238,12 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
 
   const startRecording = async () => {
     if (!pitchData) return;
+    // The upgrade moment: free scoring is capped per day (as priced).
+    if (limitsKnown && !canScore(isPremium)) {
+      setPaywall('daily_limit');
+      trackEvent('pitch_paywall_hit', { reason: 'daily_limit', tier });
+      return;
+    }
     markIntroSeen();
     setError(null);
     try {
@@ -291,6 +313,11 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
     setPhase('result');
     trackEvent('pitch_scored', { word, accuracy: result.accuracy });
 
+    if (!isPremium) {
+      recordScoring();
+      setRemainingToday(scoringsRemaining(false));
+    }
+
     // Convert at the value peak: invite the guest to save progress — once per
     // session so it never nags. The trigger point is A/B tested.
     const shouldPrompt =
@@ -316,6 +343,18 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
       ab_signup_prompt_trigger: promptVariant,
     });
     window.location.href = '/app.html?signup=true';
+  };
+
+  // Guests upgrade by signing up first; logged-in users go to the pricing view.
+  const handleUpgrade = (source: string) => {
+    trackEvent('pitch_upgrade_click', { source, tier });
+    if (isGuest) {
+      goToSignup(source);
+    } else if (onUpgrade) {
+      onUpgrade();
+    } else {
+      window.location.href = '/app.html?view=pricing';
+    }
   };
 
   const openSummary = () => {
@@ -368,7 +407,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
   // than marching through the curriculum in a fixed loop. Guests cycle within
   // the free slice; an account unlocks the rest.
   const nextWord = () => {
-    setWordIndex((i) => nextWordIndex(isGuest ? GUEST_WORD_LIST : WORD_LIST, progress, i));
+    setWordIndex((i) => nextWordIndex(tierWordList, progress, i));
     resetAttempt();
   };
 
@@ -386,7 +425,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
         <div>
           <h1 className="text-xl font-bold text-gray-900">Pitch Accent Practice</h1>
           <p className="text-sm text-gray-500">
-            Word {wordIndex + 1} of {isGuest ? GUEST_WORD_LIMIT : PRACTICE_WORDS.length}
+            Word {wordIndex + 1} of {tierWordCount}
             {wordMastered && <span className="ml-2 text-green-600 font-semibold">✓ mastered</span>}
           </p>
         </div>
@@ -554,15 +593,20 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
             </div>
           )}
 
-          {isGuest && phase !== 'recording' && (
+          {limitsKnown && tier !== 'premium' && phase !== 'recording' && (
             <button
-              onClick={() => goToSignup('word_gate')}
+              onClick={() => (isGuest ? goToSignup('word_gate') : handleUpgrade('word_gate'))}
               className="text-xs text-gray-400 hover:text-brand-600 transition-colors"
             >
-              🔒 Guest preview: {GUEST_WORD_LIMIT} of {PRACTICE_WORDS.length} words ·{' '}
+              🔒 {isGuest ? 'Guest preview' : 'Free plan'}: {tierWordCount} of {PRACTICE_WORDS.length} words ·{' '}
               <span className="font-semibold text-brand-600 underline underline-offset-2">
-                unlock all free
+                {isGuest ? 'unlock more free' : 'unlock all 66'}
               </span>
+              {remainingToday !== Infinity && (
+                <span className="ml-2 text-gray-400">
+                  🎙 {remainingToday}/{FREE_DAILY_SCORINGS} scorings left today
+                </span>
+              )}
             </button>
           )}
 
@@ -592,6 +636,18 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
         />
       )}
 
+      {paywall && (
+        <PaywallModal
+          isGuest={isGuest}
+          remainingTomorrow={FREE_DAILY_SCORINGS}
+          onUpgrade={() => handleUpgrade('paywall_daily_limit')}
+          onDismiss={() => {
+            trackEvent('pitch_paywall_dismiss', { reason: paywall, tier });
+            setPaywall(null);
+          }}
+        />
+      )}
+
       {signupPrompt && (
         <GuestSignupPrompt
           reason={signupPrompt.reason}
@@ -608,6 +664,63 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
     </div>
   );
 };
+
+interface PaywallModalProps {
+  isGuest: boolean;
+  remainingTomorrow: number;
+  onUpgrade: () => void;
+  onDismiss: () => void;
+}
+
+// Shown when the free daily scoring cap is reached — the natural upgrade moment.
+const PaywallModal: React.FC<PaywallModalProps> = ({
+  isGuest,
+  remainingTomorrow,
+  onUpgrade,
+  onDismiss,
+}) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl"
+    >
+      <button
+        onClick={onDismiss}
+        className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
+        aria-label="Close"
+      >
+        <X className="w-5 h-5" />
+      </button>
+
+      <div className="text-center">
+        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100">
+          <Mic className="h-7 w-7 text-amber-500" />
+        </div>
+        <h2 className="text-xl font-bold text-gray-900">You're on a roll — daily limit reached</h2>
+        <p className="mt-2 text-sm text-gray-600">
+          Free includes <strong>{remainingTomorrow} voice scorings a day</strong> (resets tomorrow).
+          Premium removes the cap and unlocks all 66 words, minimal pairs, and progress tracking.
+        </p>
+      </div>
+
+      <div className="mt-5 flex flex-col gap-2">
+        <Button onClick={onUpgrade} variant="primary" size="lg" className="w-full">
+          {isGuest ? 'Create account & go unlimited' : 'Go unlimited — $8.99/mo'}
+        </Button>
+        <button
+          onClick={onDismiss}
+          className="text-sm text-gray-400 hover:text-gray-600 underline underline-offset-2"
+        >
+          Come back tomorrow
+        </button>
+      </div>
+      <p className="mt-3 text-center text-xs text-gray-400">
+        $59/yr saves 45% · cancel anytime
+      </p>
+    </motion.div>
+  </div>
+);
 
 interface GuestSignupPromptProps {
   reason: 'mastered' | 'engaged';
