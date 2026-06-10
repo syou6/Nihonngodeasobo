@@ -301,6 +301,32 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
               </p>
             )}
 
+            {/* Viral share — high & visible (the win moment). Prominent on good
+                scores; a polished card → friends try → organic growth. */}
+            {pitchData && (
+              <button
+                onClick={async () => {
+                  trackEvent('share_score_click', { accuracy });
+                  try {
+                    await shareResult({
+                      word, reading, score: accuracy,
+                      pattern: pitchData.patternName ?? '',
+                      patternEn: PATTERN_EN[pitchData.patternName ?? ''] ?? '',
+                      frames, targetNucleus, moraCount: pitchData.morae.length, streak,
+                    });
+                  } catch { /* user cancelled */ }
+                }}
+                className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold mb-4 transition-colors ${
+                  accuracy >= 80
+                    ? 'text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 shadow-md'
+                    : 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100'
+                }`}
+              >
+                <Share2 className="w-4 h-4" />
+                {accuracy >= 80 ? 'Share this win — challenge a friend 🔥' : 'Share my score'}
+              </button>
+            )}
+
             {/* Karte pull — give the scoring loop a visible GOAL so users don't just
                 drill aimlessly and bounce. Progress bar until KARTE_UNLOCK, then a
                 prominent reveal that pulls them into their diagnosis (the carrot). */}
@@ -432,26 +458,6 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
                   <ChevronRight className="w-5 h-5 ml-2" />
                 </Button>
               </div>
-              {/* Viral share — a polished result card → friends try → organic growth */}
-              {accuracy !== null && pitchData && (
-                <button
-                  onClick={async () => {
-                    trackEvent('share_score_click', { accuracy });
-                    try {
-                      await shareResult({
-                        word, reading, score: accuracy,
-                        pattern: pitchData.patternName ?? '',
-                        patternEn: PATTERN_EN[pitchData.patternName ?? ''] ?? '',
-                        frames, targetNucleus, moraCount: pitchData.morae.length, streak,
-                      });
-                    } catch { /* user cancelled */ }
-                  }}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors"
-                >
-                  <Share2 className="w-4 h-4" />
-                  Share my score — challenge a friend
-                </button>
-              )}
             </div>
           )}
         </div>
