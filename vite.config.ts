@@ -24,6 +24,9 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'app.html'),
+        // The static LP. Single source of truth — dev serves it at / and the
+        // build emits it as dist/index.html (it used to be duplicated in public/).
+        landing: resolve(__dirname, 'index.html'),
       },
       output: {
         manualChunks: {
