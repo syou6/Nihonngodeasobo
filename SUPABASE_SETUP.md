@@ -8,7 +8,7 @@
 4. 以下を追加：
 
 ```
-STRIPE_SECRET_KEY=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
+STRIPE_SECRET_KEY=sk_live_YOUR_SECRET_KEY_FROM_STRIPE_DASHBOARD
 ```
 
 ## 2. Edge Functionsをデプロイ

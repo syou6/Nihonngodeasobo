@@ -26,7 +26,7 @@ VITE_STRIPE_FAMILY_PRICE_ID=price_1S1e7qLPb2fukwSMKQ5qGgug
 ### 2. Supabase Edge Functions環境変数（要設定）
 Supabaseダッシュボード > Project Settings > Edge Functions > Secretsで設定：
 ```env
-STRIPE_SECRET_KEY=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
+STRIPE_SECRET_KEY=sk_live_YOUR_SECRET_KEY_FROM_STRIPE_DASHBOARD
 ```
 
 ## 🚀 次のステップ
