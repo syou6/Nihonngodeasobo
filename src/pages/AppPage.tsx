@@ -273,13 +273,13 @@ export const AppPage: React.FC = () => {
                   <div className="flex gap-2 mb-6 bg-white rounded-full p-1 shadow-sm w-fit mx-auto">
                     <button
                       onClick={() => setGuestTab('pitch')}
-                      className={`px-5 py-2 rounded-full text-sm font-bold transition-colors ${guestTab === 'pitch' ? 'bg-primary text-white' : 'text-gray-500 hover:text-gray-900'}`}
+                      className={`px-5 py-2 rounded-full text-sm font-bold transition-colors ${guestTab === 'pitch' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-900'}`}
                     >
                       🎯 Pitch Trainer
                     </button>
                     <button
                       onClick={() => setGuestTab('diary')}
-                      className={`px-5 py-2 rounded-full text-sm font-bold transition-colors ${guestTab === 'diary' ? 'bg-primary text-white' : 'text-gray-500 hover:text-gray-900'}`}
+                      className={`px-5 py-2 rounded-full text-sm font-bold transition-colors ${guestTab === 'diary' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-900'}`}
                     >
                       🎙 Voice Diary
                     </button>
