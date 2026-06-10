@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mic, Square, ArrowLeft, RotateCcw, ChevronRight, Loader2, Volume2, Trophy, Share2, X } from 'lucide-react';
+import { Mic, Square, ArrowLeft, RotateCcw, ChevronRight, Loader2, Volume2, Trophy, Share2, X, Sparkles } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { PitchWordCard } from './PitchWordCard';
 import { PitchContourGraph } from './PitchContourGraph';
@@ -92,9 +92,11 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
   };
 
   const userId = useAuthStore((s) => s.user?.id) ?? null;
+  const isGuest = !userId;
 
   // This-session stats for the wrap-up summary.
   const [showSummary, setShowSummary] = useState(false);
+  const [signupPrompt, setSignupPrompt] = useState<{ reason: 'mastered' | 'engaged' } | null>(null);
   const [sessionAttempts, setSessionAttempts] = useState(0);
   const [sessionMastered, setSessionMastered] = useState(0);
   const sessionWordsRef = useRef<Set<string>>(new Set());
@@ -172,18 +174,21 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
   }, []);
 
   // On login, pull cloud progress and reconcile it with this device's local
-  // record (best-of per word), then persist the merge both ways.
+  // record (best-of per word), then persist the merge both ways — including
+  // pushing up anything earned as a guest before signup, so "save your
+  // progress" actually holds.
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
     (async () => {
       const remote = await fetchRemoteProgress(supabase, userId);
       if (cancelled) return;
-      setProgress((local) => {
-        const merged = mergeProgress(local, remote);
-        saveProgress(merged);
-        return merged;
-      });
+      const merged = mergeProgress(progressRef.current, remote);
+      progressRef.current = merged;
+      setProgress(merged);
+      saveProgress(merged);
+      const words = Object.keys(merged);
+      if (words.length > 0) void upsertRemoteProgress(supabase, userId, merged, words);
     })();
     return () => {
       cancelled = true;
@@ -260,11 +265,33 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
     }
 
     sessionWordsRef.current.add(word);
-    setSessionAttempts((n) => n + 1);
+    const attemptsNow = sessionAttempts + 1;
+    const masteredNow = sessionMastered + (justMastered ? 1 : 0);
+    setSessionAttempts(attemptsNow);
     if (justMastered) setSessionMastered((n) => n + 1);
 
     setPhase('result');
     trackEvent('pitch_scored', { word, accuracy: result.accuracy });
+
+    // Convert at the value peak: once a guest has clearly "got it" (first word
+    // mastered, or a few scored reps), invite them to save progress — once per
+    // session so it never nags.
+    if (
+      isGuest &&
+      !sessionStorage.getItem('pitchSignupPromptSeen') &&
+      (justMastered || attemptsNow >= 3)
+    ) {
+      const reason = justMastered ? 'mastered' : 'engaged';
+      sessionStorage.setItem('pitchSignupPromptSeen', '1');
+      setSignupPrompt({ reason });
+      trackEvent('pitch_guest_signup_prompt', { reason, attempts: attemptsNow, mastered: masteredNow });
+    }
+  };
+
+  const goToSignup = (source: string) => {
+    flushRemote();
+    trackEvent('pitch_guest_signup_click', { source, totalMastered: mastered });
+    window.location.href = '/app.html?signup=true';
   };
 
   const openSummary = () => {
@@ -527,6 +554,91 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack }) => {
           onDone={onBack}
         />
       )}
+
+      {signupPrompt && (
+        <GuestSignupPrompt
+          reason={signupPrompt.reason}
+          mastered={mastered}
+          totalWords={PRACTICE_WORDS.length}
+          streak={streak}
+          onSignup={() => goToSignup(`prompt_${signupPrompt.reason}`)}
+          onDismiss={() => {
+            trackEvent('pitch_guest_signup_dismiss', { reason: signupPrompt.reason });
+            setSignupPrompt(null);
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+interface GuestSignupPromptProps {
+  reason: 'mastered' | 'engaged';
+  mastered: number;
+  totalWords: number;
+  streak: number;
+  onSignup: () => void;
+  onDismiss: () => void;
+}
+
+const GuestSignupPrompt: React.FC<GuestSignupPromptProps> = ({
+  reason,
+  mastered,
+  totalWords,
+  streak,
+  onSignup,
+  onDismiss,
+}) => {
+  const headline =
+    reason === 'mastered'
+      ? mastered === 1
+        ? 'You just mastered your first word! 🎉'
+        : `${mastered} words mastered! 🎉`
+      : "You're getting the hang of this 🎯";
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl"
+      >
+        <button
+          onClick={onDismiss}
+          className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
+          aria-label="Close"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <div className="text-center">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-brand-50">
+            <Sparkles className="h-7 w-7 text-brand-600" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900">{headline}</h2>
+          {/* Loss aversion: their progress lives only on this device until they sign up. */}
+          <p className="mt-2 text-sm text-gray-600">
+            Create a free account to <strong>save your progress</strong>
+            {streak > 1 ? <> and your 🔥{streak} streak</> : null}, sync across devices,
+            and keep unlocking all {totalWords} words.
+          </p>
+          <p className="mt-1 text-xs text-gray-400">
+            Right now it's only saved on this device — clearing your browser loses it.
+          </p>
+        </div>
+
+        <div className="mt-5 flex flex-col gap-2">
+          <Button onClick={onSignup} variant="primary" size="lg" className="w-full">
+            Create my free account
+          </Button>
+          <button
+            onClick={onDismiss}
+            className="text-sm text-gray-400 hover:text-gray-600 underline underline-offset-2"
+          >
+            Keep practicing as guest
+          </button>
+        </div>
+        <p className="mt-3 text-center text-xs text-gray-400">No card required · takes 10 seconds</p>
+      </motion.div>
     </div>
   );
 };
@@ -612,16 +724,18 @@ const SessionSummary: React.FC<SessionSummaryProps> = ({
               Done
             </Button>
           </div>
-          {isGuest && (
-            <a
-              href="/app.html?signup=true"
-              onClick={() => trackEvent('pitch_summary_signup_click', { totalMastered })}
-              className="mt-1 block text-center text-sm font-semibold text-brand-600 hover:text-brand-700 underline underline-offset-2"
-            >
-              Save your {totalMastered > 0 ? `${totalMastered}-word progress` : 'progress'} — create a free account
-            </a>
-          )}
         </div>
+
+        {isGuest && (
+          <a
+            href="/app.html?signup=true"
+            onClick={() => trackEvent('pitch_summary_signup_click', { totalMastered })}
+            className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-brand-50 px-4 py-3 text-sm font-bold text-brand-700 hover:bg-brand-100 transition-colors"
+          >
+            <Sparkles className="h-4 w-4" />
+            Save your {totalMastered > 0 ? `${totalMastered}-word progress` : 'progress'} — create a free account
+          </a>
+        )}
       </motion.div>
     </div>
   );

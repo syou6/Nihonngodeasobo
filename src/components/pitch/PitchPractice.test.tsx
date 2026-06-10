@@ -35,6 +35,7 @@ vi.mock('../../lib/pitch-tracker', () => ({
 describe('PitchPractice', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     trackerStart.mockClear();
     trackerStop.mockClear();
     // Grant a fake mic stream.
@@ -122,6 +123,20 @@ describe('PitchPractice', () => {
     // Once listened, the first-run nudge is gone.
     await waitFor(() => expect(screen.queryByText(/Start here/)).not.toBeInTheDocument());
     expect(localStorage.getItem('pitchIntroSeen')).toBe('1');
+  });
+
+  it('prompts a guest to create an account at the value peak (first mastery)', async () => {
+    render(<PitchPractice onBack={vi.fn()} />);
+
+    fireEvent.click(screen.getByText('Record & say it'));
+    await waitFor(() => expect(trackerStart).toHaveBeenCalled());
+    fireEvent.click(screen.getByText('Stop'));
+
+    // Mocked score 92 masters the word → guest conversion prompt appears.
+    expect(await screen.findByText(/mastered your first word/)).toBeInTheDocument();
+    expect(screen.getByText('Create my free account')).toBeInTheDocument();
+    // Shown only once per session.
+    expect(sessionStorage.getItem('pitchSignupPromptSeen')).toBe('1');
   });
 
   it('calls onBack when the back button is clicked', () => {
