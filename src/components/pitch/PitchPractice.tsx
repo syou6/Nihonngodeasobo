@@ -41,6 +41,31 @@ function readWordBest(word: string): number {
   return Number(localStorage.getItem(WORD_BEST_PREFIX + word)) || 0;
 }
 
+// Celebration burst for a high score — the peak dopamine moment. Deterministic
+// particles (fixed angles), no dependency.
+const CONFETTI = ['🎉', '✨', '🎊', '⭐️', '🟣', '🟡', '🔵', '🟠', '🎉', '✨', '⭐️', '🎊'];
+const Confetti: React.FC<{ fire: number }> = ({ fire }) =>
+  fire ? (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      {CONFETTI.map((c, i) => {
+        const angle = (i / CONFETTI.length) * 2 * Math.PI;
+        const dx = Math.cos(angle) * 120;
+        const dy = Math.sin(angle) * 120 - 40;
+        return (
+          <motion.span
+            key={`${fire}-${i}`}
+            className="absolute left-1/2 top-6 text-xl"
+            initial={{ x: 0, y: 0, opacity: 1, scale: 0.6 }}
+            animate={{ x: dx, y: dy + 160, opacity: 0, scale: 1.1, rotate: i * 40 }}
+            transition={{ duration: 1.1, ease: 'easeOut' }}
+          >
+            {c}
+          </motion.span>
+        );
+      })}
+    </div>
+  ) : null;
+
 // Actionable feedback from the detected vs target accent nucleus.
 function coachText(
   result: { userNucleus: number; targetNucleus: number; accuracy: number },
@@ -66,6 +91,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
   const [scoredCount, setScoredCount] = useState(0); // scorings this session → Karte pull
   const [isNewBest, setIsNewBest] = useState(false); // beat your personal best for this word
   const [prevBest, setPrevBest] = useState(0);
+  const [confetti, setConfetti] = useState(0); // bump to fire a celebration burst
   const [phase, setPhase] = useState<Phase>('ready');
   const [frames, setFrames] = useState<PitchFrame[]>([]);
   const [accuracy, setAccuracy] = useState<number | null>(null);
@@ -161,6 +187,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
     } else {
       setIsNewBest(false);
     }
+    if (result.accuracy >= 90) setConfetti((c) => c + 1); // celebrate the win
     setPhase('result');
     setScoredCount((c) => c + 1);
     trackEvent('pitch_scored', { word, accuracy: result.accuracy });
@@ -221,8 +248,9 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="rounded-2xl border border-gray-200 bg-white p-5"
+            className="relative rounded-2xl border border-gray-200 bg-white p-5 overflow-hidden"
           >
+            <Confetti fire={confetti} />
             <div className="text-center mb-4">
               {/* Emotional reaction + pop animation = the dopamine hit per score */}
               <motion.div
