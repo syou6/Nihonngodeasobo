@@ -22,6 +22,7 @@ vi.mock('lucide-react', () => {
   const mockIcon = (name: string) => (props: any) => <span data-testid={`icon-${name}`} className={props.className} />;
   return {
     Mic: mockIcon('mic'),
+    AudioLines: mockIcon('audiolines'),
     Brain: mockIcon('brain'),
     TrendingUp: mockIcon('trending'),
     ChevronRight: mockIcon('chevron'),
