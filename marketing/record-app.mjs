@@ -61,7 +61,7 @@ try {
     recordVideo: { dir: REC, size: { width: 540, height: 960 } },
   });
   const page = await ctx.newPage();
-  await page.goto(`http://localhost:${PORT}/app.html?guest=true`, { waitUntil: 'networkidle', timeout: 30000 });
+  await page.goto(`http://localhost:${PORT}/app.html?guest=true&w=${encodeURIComponent(word)}`, { waitUntil: 'networkidle', timeout: 30000 });
   // Clean the chrome for a focused product shot: hide the guest banner + tabs,
   // tint the page background to the brand, center the trainer.
   await page.addStyleTag({ content: `
