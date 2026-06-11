@@ -77,21 +77,19 @@ type StepType =
   | 'your-plan'
   | 'paywall';
 
+// Pitch-focused 2-minute flow. The old JLPT/exam steps (jlpt-level, target-level,
+// study-duration, learning-style, stats-fear, timeline, commitment) are retired —
+// they don't serve a pitch-accent trainer and made the flow long. The proven
+// quiz→diagnosis→paywall shape is kept. State for the cut steps keeps its
+// defaults, so onComplete + the diagnosis/plan/paywall renders still work.
 const STEPS: StepType[] = [
   'welcome',
   'name',
   'motivation',
-  'jlpt-level',
-  'study-duration',
   'struggles',
   'daily-time',
-  'learning-style',
   'diagnosis',
   'pain-point',
-  'stats-fear',
-  'target-level',
-  'timeline',
-  'commitment',
   'building-plan',
   'your-plan',
   'paywall',
@@ -172,7 +170,8 @@ function calculateDiagnosisScore(
   // Low daily time = progress risk
   if (dailyTime === '5') score += 10;
 
-  // Speaking struggle = highest risk for this app
+  // Pitch accent = the highest-risk gap for this app (the brand promise)
+  if (struggles.includes('pitch')) score += 15;
   if (struggles.includes('speaking')) score += 10;
   if (struggles.includes('motivation')) score += 5;
 
@@ -185,6 +184,13 @@ function calculateDiagnosisScore(
 }
 
 function getPainMessage(struggles: string[]): { title: string; message: string } {
+  if (struggles.includes('pitch')) {
+    return {
+      title: 'Pitch accent is the #1 thing that gives you away',
+      message:
+        'You can have perfect grammar and still sound foreign — because Japanese is a pitch-accent language and your ear can\'t catch your own pitch errors. Natives rarely correct you, so the mistakes fossilize. Without seeing your pitch, you can\'t fix it.',
+    };
+  }
   if (struggles.includes('speaking')) {
     return {
       title: 'Speaking anxiety is the #1 reason learners quit',
@@ -892,7 +898,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, show
               <p className="text-xs text-gray-500 text-center italic">
                 "I studied Japanese for 2 years with textbooks but couldn't hold a basic conversation. I was about to give up."
               </p>
-              <p className="text-xs text-gray-400 text-center mt-2">— Sarah, N3 learner from the US</p>
+              <p className="text-xs text-gray-400 text-center mt-2">— Sarah, learner from the US</p>
             </div>
             <Button variant="primary" size="lg" onClick={handleNext} className="w-full">
               How can I fix this?
@@ -1059,10 +1065,10 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, show
             <p className="text-sm text-gray-400 mb-6">Analyzing your profile</p>
             <div className="space-y-3 max-w-xs mx-auto">
               {[
-                { label: `Analyzing ${jlptLevel || 'N4'} level gaps`, delay: 0 },
-                { label: 'Matching learning style', delay: 800 },
-                { label: 'Setting difficulty curve', delay: 1600 },
-                { label: 'Personalizing AI feedback', delay: 2400 },
+                { label: 'Analyzing your pitch patterns', delay: 0 },
+                { label: 'Mapping your weak spots', delay: 800 },
+                { label: 'Building your drill queue', delay: 1600 },
+                { label: 'Personalizing your Pitch Karte', delay: 2400 },
               ].map((item, i) => (
                 <LoadingItem key={i} label={item.label} delay={item.delay} />
               ))}
@@ -1072,53 +1078,39 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, show
 
       // ── YOUR PLAN ────────────────────────────────────────────────────────
       case 'your-plan': {
-        const motivationLabel = motivation
-          .map((m) => MOTIVATIONS.find((x) => x.id === m)?.label)
+        const focusLabel = struggles
+          .map((s) => STRUGGLES.find((x) => x.id === s)?.label)
           .filter(Boolean)
           .slice(0, 2)
-          .join(' & ');
-        const timelineLabel = TIMELINES.find((t) => t.id === timeline)?.label || '6 months';
+          .join(' & ') || 'pitch accent';
 
         return (
           <>
             <div className="text-center mb-4">
               <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold mb-4">
                 <CheckCircle className="w-4 h-4" />
-                Your plan is ready!
+                Your Pitch Karte plan is ready!
               </div>
               <h2 className="text-2xl font-bold text-gray-900">
-                {displayName}'s Japanese Plan
+                {displayName}'s plan to sound native
               </h2>
             </div>
             <div className="bg-white border border-gray-200 rounded-2xl p-5 mb-6 space-y-4">
               {[
-                { label: 'Current Level', value: jlptLevel || 'N4', color: 'text-brand-600' },
-                { label: 'Target Level', value: targetLevel || 'N3', color: 'text-green-600' },
-                { label: 'Daily Practice', value: `${dailyTime || '10'} min/day`, color: 'text-gray-900' },
-                { label: 'Timeline', value: timelineLabel, color: 'text-gray-900' },
+                { label: 'Goal', value: 'Sound native', color: 'text-green-600' },
+                { label: 'Focus', value: focusLabel, color: 'text-brand-600' },
+                { label: 'Daily practice', value: `${dailyTime || '10'} min/day`, color: 'text-gray-900' },
+                { label: 'Method', value: 'Pitch Karte + drills', color: 'text-gray-900' },
               ].map((row, i) => (
                 <div key={i} className="flex items-center justify-between">
                   <span className="text-sm text-gray-500">{row.label}</span>
                   <span className={`font-bold ${row.color}`}>{row.value}</span>
                 </div>
               ))}
-              {motivationLabel && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">Focus</span>
-                  <span className="font-bold text-gray-900">{motivationLabel}</span>
-                </div>
-              )}
               <div className="border-t border-gray-100 pt-4">
                 <p className="text-xs text-gray-500 text-center">
-                  AI feedback customized for{' '}
-                  <span className="font-semibold">{jlptLevel || 'N4'}</span> with focus on{' '}
-                  <span className="font-semibold">
-                    {struggles
-                      .map((s) => STRUGGLES.find((x) => x.id === s)?.label)
-                      .filter(Boolean)
-                      .slice(0, 2)
-                      .join(' & ') || 'speaking'}
-                  </span>
+                  Honest pitch scoring on your own voice, a diagnosis of exactly which
+                  patterns you get wrong, and drills built from your errors.
                 </p>
               </div>
             </div>

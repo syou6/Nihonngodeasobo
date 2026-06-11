@@ -166,7 +166,7 @@ describe('WelcomeGuide (OnboardingFlow)', () => {
     expect(nextBtn).not.toBeDisabled();
   });
 
-  it('navigates to JLPT level step after motivation', () => {
+  it('navigates to the struggles step after motivation (pitch-first flow)', () => {
     render(<WelcomeGuide onComplete={mockOnComplete} />);
     fireEvent.click(screen.getByText("Let's Go"));
     fireEvent.change(screen.getByPlaceholderText('Your first name'), { target: { value: 'Test' } });
@@ -174,9 +174,8 @@ describe('WelcomeGuide (OnboardingFlow)', () => {
     fireEvent.click(screen.getByText('Anime & Manga'));
     fireEvent.click(screen.getByText('Next'));
 
-    expect(screen.getByText(/current level/i)).toBeInTheDocument();
-    expect(screen.getByText('N5 - Beginner')).toBeInTheDocument();
-    expect(screen.getByText('N1 - Proficient')).toBeInTheDocument();
+    expect(screen.getByText(/struggle with most/i)).toBeInTheDocument();
+    expect(screen.getByText('Sounding foreign (pitch accent)')).toBeInTheDocument();
   });
 
   it('shows Skip button on question screens', () => {
@@ -214,41 +213,30 @@ describe('WelcomeGuide (OnboardingFlow)', () => {
     fireEvent.click(screen.getByText('Anime & Manga'));
     fireEvent.click(screen.getByText('Next'));
 
-    // Select level
-    fireEvent.click(screen.getByText('N3 - Intermediate'));
-
-    // Skip
+    // Skip from the struggles step
     fireEvent.click(screen.getByText('Skip'));
 
     const savedData = JSON.parse(localStorage.getItem('onboardingData') || '{}');
     expect(savedData.name).toBe('Alex');
-    expect(savedData.jlptLevel).toBe('N3');
     expect(savedData.motivation).toContain('anime');
   });
 
   it('navigates through diagnosis screen with score', () => {
     render(<WelcomeGuide onComplete={mockOnComplete} />);
 
-    // Navigate: welcome -> name -> motivation -> jlpt -> duration -> struggles -> daily -> style -> diagnosis
+    // New pitch flow: welcome -> name -> motivation -> struggles -> daily-time -> diagnosis
     fireEvent.click(screen.getByText("Let's Go"));
     fireEvent.change(screen.getByPlaceholderText('Your first name'), { target: { value: 'Test' } });
     fireEvent.click(screen.getByText('Next'));
     fireEvent.click(screen.getByText('Anime & Manga'));
     fireEvent.click(screen.getByText('Next'));
-    fireEvent.click(screen.getByText('N4 - Elementary'));
-    fireEvent.click(screen.getByText('Next'));
-    fireEvent.click(screen.getByText('Just getting started'));
-    fireEvent.click(screen.getByText('Next'));
-    fireEvent.click(screen.getByText('Speaking confidence'));
+    fireEvent.click(screen.getByText('Sounding foreign (pitch accent)'));
     fireEvent.click(screen.getByText('Next'));
     fireEvent.click(screen.getByText('5 minutes'));
-    fireEvent.click(screen.getByText('Next'));
-    fireEvent.click(screen.getByText('Speaking out loud'));
     fireEvent.click(screen.getByText('Next'));
 
     // Diagnosis screen
     expect(screen.getByText(/Learning Profile/)).toBeInTheDocument();
     expect(screen.getByText('/ 100')).toBeInTheDocument();
-    expect(screen.getByText('Speaking confidence')).toBeInTheDocument();
   });
 });
