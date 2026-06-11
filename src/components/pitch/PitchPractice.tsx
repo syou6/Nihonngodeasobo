@@ -226,13 +226,13 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Pitch Accent Practice</h1>
-          <p className="text-sm text-gray-500">
+          <h1 className="font-display text-xl font-extrabold text-ink">Pitch Trainer</h1>
+          <p className="text-sm text-gray-400 font-medium">
             Word {wordIndex + 1} of {PRACTICE_WORDS.length}
           </p>
         </div>
         {streak > 0 && (
-          <div className="ml-auto inline-flex items-center gap-1 rounded-full bg-orange-50 text-orange-600 font-bold text-sm px-3 py-1">
+          <div className="ml-auto inline-flex items-center gap-1 rounded-full bg-accent-300/20 text-accent-500 font-bold text-sm px-3 py-1">
             🔥 {streak}
           </div>
         )}
@@ -254,7 +254,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="relative rounded-2xl border border-gray-200 bg-white p-5 overflow-hidden"
+            className="relative rounded-3xl bg-white p-5 shadow-card ring-1 ring-gray-100 overflow-hidden"
           >
             <Confetti fire={confetti} />
             <div className="text-center mb-4">

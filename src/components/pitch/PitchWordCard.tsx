@@ -91,18 +91,26 @@ export function PitchWordCard({ word, reading, detectedPattern, compact = false,
   }
 
   return (
-    <div className="rounded-3xl border border-gray-200 bg-white px-6 py-7 shadow-sm flex flex-col items-center gap-4 w-full max-w-sm">
+    <div className="relative rounded-3xl bg-white px-6 py-8 shadow-card ring-1 ring-gray-100 flex flex-col items-center gap-5 w-full max-w-sm overflow-hidden">
+      {/* soft brand glow at the top */}
+      <div className="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 w-64 h-32 bg-brand-100/60 blur-3xl rounded-full" />
+
       {/* Word heading */}
-      <div className="flex flex-col items-center gap-1">
-        <span className="text-6xl font-extrabold text-gray-900 leading-none">{word}</span>
+      <div className="relative flex flex-col items-center gap-1.5">
         {pitchData && (
-          <span className="text-lg text-gray-500">{pitchData.reading}</span>
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-700 bg-brand-50 px-3 py-1 rounded-full mb-1">
+            {pitchData.patternName}
+          </span>
+        )}
+        <span className="font-display text-7xl font-extrabold text-ink leading-none">{word}</span>
+        {pitchData && (
+          <span className="text-lg text-gray-500 font-medium">{pitchData.reading}</span>
         )}
         {english && <span className="text-sm text-gray-400">{english}</span>}
       </div>
 
       {pairWith && (
-        <span className="inline-flex items-center gap-1 text-xs font-bold text-orange-600 bg-orange-50 px-3 py-1 rounded-full">
+        <span className="relative inline-flex items-center gap-1 text-xs font-bold text-accent-500 bg-accent-300/20 px-3 py-1 rounded-full">
           ⚖️ minimal pair with {pairWith}
         </span>
       )}
@@ -119,7 +127,7 @@ export function PitchWordCard({ word, reading, detectedPattern, compact = false,
             patternName={pitchData.patternName}
             detectedPattern={detectedPattern}
           />
-          <p className="text-sm text-gray-500 text-center leading-relaxed">
+          <p className="relative text-sm text-gray-500 text-center leading-relaxed">
             {accentTip(pitchData.patternName, pitchData.morae, pitchData.pattern)}
           </p>
         </>
