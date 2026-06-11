@@ -11,7 +11,7 @@ import {
   Crown,
   Lock,
   Zap,
-  AlertTriangle,
+  ClipboardList,
 } from 'lucide-react';
 import { useSubscription } from '../../hooks/useSubscription';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -25,7 +25,7 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
   const [recentComments, setRecentComments] = useState<any[]>([]);
   const { entries, fetchEntries } = useDiaryStore();
   const { user } = useAuthStore();
-  const { isPremium, usage, limits } = useSubscription();
+  const { isPremium } = useSubscription();
   const today = new Date();
 
   const greeting = () => {
@@ -63,9 +63,6 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
     setRecentComments(sortedComments);
   }, [entries, user]);
 
-  const userDiaryCount = entries.filter(entry => entry.user_id === user?.id).length;
-  const isFirstTime = userDiaryCount === 0;
-
   const num = (k: string) => Number(localStorage.getItem(k)) || 0;
   const pitchStats = {
     streak: num('pitchStreak'),
@@ -77,54 +74,6 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      {/* First-time user guide */}
-      {isFirstTime && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-brand-50 to-purple-50 rounded-xl p-6 border border-brand-200"
-        >
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-brand-100 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Mic className="w-6 h-6 text-brand-600" />
-            </div>
-            <div className="flex-1">
-              <h2 className="text-lg font-bold text-gray-900 mb-1">
-                Record your first diary!
-              </h2>
-              <p className="text-sm text-gray-600 mb-4">
-                Tap the button below and speak about your day in Japanese. Even one sentence is fine — AI will give you feedback.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Button
-                  variant="primary"
-                  size="md"
-                  onClick={() => onViewChange('record')}
-                  className="flex items-center gap-2"
-                >
-                  <Mic className="w-4 h-4" />
-                  Record Now
-                </Button>
-                <Button
-                  variant="outline"
-                  size="md"
-                  onClick={() => onViewChange('practice')}
-                  className="flex items-center gap-2"
-                >
-                  <TrendingUp className="w-4 h-4" />
-                  Try JLPT Practice
-                </Button>
-              </div>
-            </div>
-          </div>
-          <div className="mt-4 pt-4 border-t border-brand-200/50">
-            <p className="text-xs text-gray-500">
-              Not sure what to say? Try: "きょう は いい てんき です" (Today is nice weather)
-            </p>
-          </div>
-        </motion.div>
-      )}
-
       {/* Welcome */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -149,12 +98,12 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ scale: 1.01 }}
         onClick={() => onViewChange('pitch')}
-        className="relative overflow-hidden rounded-2xl p-6 cursor-pointer text-white shadow-lg"
-        style={{ background: 'linear-gradient(135deg, #4F46E5, #6366F1)' }}
+        className="relative overflow-hidden rounded-3xl p-6 cursor-pointer text-white shadow-soft bg-brand-gradient"
       >
-        <div className="flex items-center justify-between">
+        <div className="pointer-events-none absolute -top-10 -right-6 w-40 h-40 bg-white/10 blur-2xl rounded-full" />
+        <div className="relative flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-extrabold mb-1">🎯 Train Your Pitch</h2>
+            <h2 className="font-display text-2xl font-extrabold mb-1">🎯 Train Your Pitch</h2>
             <p className="text-sm text-white/80">Record a word, see your pitch vs a native, fix what sounds foreign.</p>
           </div>
           {(() => {
@@ -165,31 +114,27 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
                 <div className="text-[10px] uppercase tracking-wider text-white/70">streak</div>
               </div>
             ) : (
-              <span className="flex-shrink-0 ml-4 bg-white text-indigo-600 font-bold text-sm px-5 py-2.5 rounded-full">Start →</span>
+              <span className="flex-shrink-0 ml-4 bg-white text-brand-600 font-bold text-sm px-5 py-2.5 rounded-full">Start →</span>
             );
           })()}
         </div>
       </motion.div>
 
-      {/* Quick Actions */}
+      {/* Quick Actions — pitch-focused */}
       <div className="grid grid-cols-2 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
           whileHover={{ scale: 1.01 }}
-          onClick={() => onViewChange('record')}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 cursor-pointer hover:border-brand-200 transition-colors"
+          onClick={() => onViewChange('pitch')}
+          className="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 p-5 cursor-pointer hover:ring-brand-200 transition-all"
         >
-          <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center mb-3">
-            <Mic className="w-5 h-5 text-red-500" />
+          <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center mb-3">
+            <Mic className="w-5 h-5 text-brand-600" />
           </div>
-          <h2 className="font-semibold text-gray-900 mb-1">
-            {EN.parentDashboard.recordPrompt}
-          </h2>
-          <p className="text-sm text-gray-500">
-            {EN.parentDashboard.recordSubPrompt}
-          </p>
+          <h2 className="font-display font-bold text-ink mb-1">Score a word</h2>
+          <p className="text-sm text-gray-500">Say it, see your pitch vs native</p>
         </motion.div>
 
         <motion.div
@@ -197,101 +142,17 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           whileHover={{ scale: 1.01 }}
-          onClick={() => onViewChange('diary')}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 cursor-pointer hover:border-brand-200 transition-colors"
+          onClick={() => onViewChange('karte')}
+          className="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 p-5 cursor-pointer hover:ring-brand-200 transition-all"
         >
-          <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mb-3">
-            <Calendar className="w-5 h-5 text-blue-500" />
+          <div className="w-10 h-10 bg-accent-300/20 rounded-xl flex items-center justify-center mb-3">
+            <ClipboardList className="w-5 h-5 text-accent-500" />
           </div>
-          <h2 className="font-semibold text-gray-900 mb-1">
-            {EN.parentDashboard.viewDiaries}
-          </h2>
-          <p className="text-sm text-gray-500">
-            {EN.parentDashboard.viewDiariesDesc}
-          </p>
+          <h2 className="font-display font-bold text-ink mb-1">My Pitch Karte</h2>
+          <p className="text-sm text-gray-500">Your per-pattern diagnosis</p>
         </motion.div>
       </div>
 
-      {/* Usage & Upgrade Banner (free users only) */}
-      {!isPremium && (() => {
-        const diaryPct = limits.diaryLimit === Infinity ? 0 : usage.diaryCount / (limits.diaryLimit as number);
-        const isAtLimit = usage.diaryCount >= (limits.diaryLimit as number);
-        const isNearLimit = !isAtLimit && diaryPct >= 0.6;
-
-        const bannerBg = isAtLimit
-          ? 'bg-gradient-to-r from-red-50 to-orange-50 border-red-300'
-          : isNearLimit
-            ? 'bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-300'
-            : 'bg-gradient-to-r from-brand-50 to-purple-50 border-brand-200';
-
-        const labelColor = isAtLimit ? 'text-red-700' : isNearLimit ? 'text-orange-700' : 'text-gray-700';
-
-        return (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.12 }}
-            className={`rounded-xl border p-4 ${bannerBg}`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-1.5">
-                {isAtLimit && <AlertTriangle className="w-4 h-4 text-red-600" />}
-                {isNearLimit && <AlertTriangle className="w-4 h-4 text-orange-500" />}
-                <span className={`text-sm font-semibold ${labelColor}`}>
-                  {isAtLimit
-                    ? "You've hit your limit!"
-                    : isNearLimit
-                      ? 'Running low on free recordings'
-                      : 'Monthly Usage'}
-                </span>
-              </div>
-              <button
-                onClick={() => onViewChange('pricing')}
-                className="text-xs font-bold text-brand-600 hover:text-brand-700 underline underline-offset-2"
-              >
-                Upgrade →
-              </button>
-            </div>
-
-            {isAtLimit && (
-              <p className="text-xs text-red-600 mb-3 font-medium">
-                You cannot record any more diaries this month. Upgrade to Premium for unlimited recordings.
-              </p>
-            )}
-
-            <div className="flex gap-3">
-              <div className={`flex-1 rounded-lg px-3 py-2 ${isAtLimit ? 'bg-red-100/80' : 'bg-white/80'}`}>
-                <div className="text-xs text-gray-500">Diaries</div>
-                <div className={`text-sm font-bold ${isAtLimit ? 'text-red-700' : isNearLimit ? 'text-orange-700' : 'text-gray-900'}`}>
-                  {usage.diaryCount}/{limits.diaryLimit === Infinity ? '∞' : limits.diaryLimit}
-                </div>
-              </div>
-              <div className="flex-1 bg-white/80 rounded-lg px-3 py-2">
-                <div className="text-xs text-gray-500">AI Feedback</div>
-                <div className="text-sm font-bold text-gray-900">
-                  {usage.aiFeedbackCount}/{limits.aiAnalysisLimit === Infinity ? '∞' : limits.aiAnalysisLimit}
-                </div>
-              </div>
-              <div className="flex-1 bg-white/80 rounded-lg px-3 py-2">
-                <div className="text-xs text-gray-500">Practice</div>
-                <div className="text-sm font-bold text-gray-900">
-                  {usage.speakingPracticeCount}/{limits.speakingPracticeLimit === Infinity ? '∞' : limits.speakingPracticeLimit}
-                </div>
-              </div>
-            </div>
-
-            {(isAtLimit || isNearLimit) && (
-              <button
-                onClick={() => onViewChange('pricing')}
-                className="mt-3 w-full py-2 rounded-lg bg-gradient-to-r from-brand-500 to-purple-500 text-white text-sm font-bold hover:from-brand-600 hover:to-purple-600 transition-all flex items-center justify-center gap-2"
-              >
-                <Crown className="w-4 h-4" />
-                Upgrade to Premium — $8.99/month
-              </button>
-            )}
-          </motion.div>
-        );
-      })()}
 
       {/* Premium features you're missing (free users only) */}
       {!isPremium && (
