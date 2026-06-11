@@ -114,7 +114,14 @@ const KARTE_UNLOCK = 5; // scores needed to "unlock" the first Karte reveal
 
 export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKarte }) => {
   const { user } = useAuthStore();
-  const [wordIndex, setWordIndex] = useState(0);
+  // Optional deep-link to a specific word: ?w=<word> (used by the marketing
+  // recorder + future drill-queue links).
+  const [wordIndex, setWordIndex] = useState(() => {
+    const w = new URLSearchParams(window.location.search).get('w');
+    if (!w) return 0;
+    const i = PRACTICE_WORDS.findIndex((x) => x.word === w);
+    return i >= 0 ? i : 0;
+  });
   const [scoredCount, setScoredCount] = useState(0); // scorings this session → Karte pull
   const [isNewBest, setIsNewBest] = useState(false); // beat your personal best for this word
   const [prevBest, setPrevBest] = useState(0);
