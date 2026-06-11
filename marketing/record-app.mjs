@@ -86,23 +86,37 @@ try {
 
   const webm = path.join(REC, (await readdir(REC)).find((f) => f.endsWith('.webm')));
 
-  // 4) frame it: caption hook banner (top) + BGM + end url. The webm is already
-  // 1080x1920, so no scale/crop — just overlays.
+  // 4) EDIT it like a TikTok: timed captions that narrate the footage (hook →
+  // tension → honest-score punchline), a slow push-in zoom for life, a punch-zoom
+  // on the score reveal, BGM + a CTA pill at the end. Recording timeline (from the
+  // script above): word card ~0-1.8s, recording ~1.8-4.1s, result/score ~4.3s+.
   const music = path.join(MK, 'audio', 'music_130.mp3');
   const hasMusic = existsSync(music);
   const outFile = path.join(OUT, `NihonGo_real_${word}.mp4`);
-  const cap = hookText.replace(/'/g, '’').replace(/:/g, '\\:');
+
+  // captions: [start, end, text, color]
+  const caption = (t0, t1, text, color = 'white', y = 120, size = 60) => {
+    const safe = text.replace(/'/g, '’').replace(/:/g, '\\:');
+    return `drawtext=text='${safe}':fontcolor=${color}:fontsize=${size}:font='Helvetica':x=(w-text_w)/2:y=${y}:` +
+      `box=1:boxcolor=black@0.62:boxborderw=22:line_spacing=14:enable='between(t,${t0},${t1})'`;
+  };
 
   const vf = [
-    `scale=1080:1920:flags=lanczos`,
-    `drawbox=x=0:y=0:w=1080:h=210:color=0x1e1b4b@0.82:t=fill`,
-    `drawtext=text='${cap}':fontcolor=white:fontsize=56:font='Helvetica':x=(w-text_w)/2:y=58:line_spacing=16`,
-    `drawtext=text='Score your pitch FREE  ·  nihongo.amorjp.com':fontcolor=white:fontsize=38:font='Helvetica':x=(w-text_w)/2:y=h-120:box=1:boxcolor=0x4F46E5@0.95:boxborderw=24`,
+    `scale=1188:2112:flags=lanczos`, // 1.1x oversize for a push-in headroom
+    // slow Ken Burns push-in across the whole clip + a stronger punch on the score reveal (4.3-6s)
+    `zoompan=z='if(between(in_time,4.3,6.0), min(1.04+(in_time-4.3)*0.06,1.16), min(1.03+in_time*0.004,1.10))':d=1:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1080x1920:fps=30`,
+    caption(0, 1.9, 'You think you sound native.', 'white', 150, 54),
+    caption(1.9, 4.2, 'So you test your pitch...', 'white', 150, 54),
+    caption(4.3, 9.5, 'It scores you HONESTLY.', '#FDBA74', 150, 60),
+    caption(6.2, 9.5, 'Most apps just say you are perfect.', 'white', 232, 40),
+    // CTA pill only at the end
+    `drawtext=text='Score your pitch FREE  ·  nihongo.amorjp.com':fontcolor=white:fontsize=38:font='Helvetica':x=(w-text_w)/2:y=h-130:box=1:boxcolor=0x4F46E5@0.96:boxborderw=24:enable='between(t,5.5,9.5)'`,
+    `fade=t=in:st=0:d=0.4`,
   ].join(',');
 
   if (hasMusic) {
     await run('ffmpeg', ['-y', '-i', webm, '-i', music,
-      '-filter_complex', `[0:v]${vf}[v];[1:a]volume=0.2,afade=t=in:st=0:d=1,afade=t=out:st=8:d=1[a]`,
+      '-filter_complex', `[0:v]${vf}[v];[1:a]volume=0.22,afade=t=in:st=0:d=0.6,afade=t=out:st=8.4:d=1.1[a]`,
       '-map', '[v]', '-map', '[a]', '-t', '9.5',
       '-c:v', 'libx264', '-crf', '18', '-preset', 'slow', '-pix_fmt', 'yuv420p',
       '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', outFile]);
