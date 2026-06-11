@@ -24,12 +24,6 @@ interface PitchPracticeProps {
   onViewKarte?: () => void;
 }
 
-function scoreColor(score: number): string {
-  if (score >= 80) return 'text-green-600';
-  if (score >= 50) return 'text-amber-600';
-  return 'text-red-600';
-}
-
 // Emotional reaction headline — makes each score feel like a win/near-miss
 // (dopamine loop) instead of a flat number.
 function reaction(score: number): { emoji: string; text: string } {
@@ -44,6 +38,35 @@ const WORD_BEST_PREFIX = 'pitchWordBest:';
 function readWordBest(word: string): number {
   return Number(localStorage.getItem(WORD_BEST_PREFIX + word)) || 0;
 }
+
+// Score ring — matches the share card's hero ring for brand consistency.
+function ringColor(score: number): string {
+  if (score >= 80) return '#16a34a';
+  if (score >= 60) return '#d97706';
+  return '#e11d48';
+}
+const ScoreRing: React.FC<{ score: number; spin: number }> = ({ score, spin }) => {
+  const r = 56, c = 2 * Math.PI * r;
+  return (
+    <div className="relative mx-auto" style={{ width: 140, height: 140 }}>
+      <svg width="140" height="140" viewBox="0 0 140 140" className="-rotate-90">
+        <circle cx="70" cy="70" r={r} fill="none" stroke="#eef2ff" strokeWidth="12" />
+        <motion.circle
+          key={spin}
+          cx="70" cy="70" r={r} fill="none" stroke={ringColor(score)} strokeWidth="12" strokeLinecap="round"
+          strokeDasharray={c}
+          initial={{ strokeDashoffset: c }}
+          animate={{ strokeDashoffset: c - (score / 100) * c }}
+          transition={{ duration: 0.9, ease: 'easeOut' }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="font-display text-4xl font-black" style={{ color: ringColor(score) }}>{score}</span>
+        <span className="text-xs text-gray-400 font-semibold -mt-1">/ 100</span>
+      </div>
+    </div>
+  );
+};
 
 // Celebration burst for a high score — the peak dopamine moment. Deterministic
 // particles (fixed angles), no dependency.
@@ -268,19 +291,10 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
               >
                 {reaction(accuracy).emoji}
               </motion.div>
-              <p className={`text-base font-extrabold mb-2 ${accuracy >= 80 ? 'text-green-700' : accuracy >= 60 ? 'text-amber-700' : 'text-gray-700'}`}>
+              <p className={`text-base font-extrabold mb-3 ${accuracy >= 80 ? 'text-green-700' : accuracy >= 60 ? 'text-amber-700' : 'text-gray-700'}`}>
                 {reaction(accuracy).text}
               </p>
-              <motion.div
-                key={`score-${scoredCount}`}
-                initial={{ scale: 0.7 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 200, damping: 12 }}
-                className={`text-5xl font-black ${scoreColor(accuracy)}`}
-              >
-                {accuracy}
-                <span className="text-2xl text-gray-400">/100</span>
-              </motion.div>
+              <ScoreRing score={accuracy} spin={scoredCount} />
               {/* Personal-best chase */}
               {isNewBest ? (
                 <motion.p
