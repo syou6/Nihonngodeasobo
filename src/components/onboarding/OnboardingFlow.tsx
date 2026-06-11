@@ -25,7 +25,7 @@ import {
   GraduationCap,
   Volume2,
   PenTool,
-  Eye,
+  AudioLines,
   Headphones,
   MessageCircle,
   Timer,
@@ -125,10 +125,10 @@ const STUDY_DURATIONS = [
 ];
 
 const STRUGGLES = [
+  { id: 'pitch', label: 'Sounding foreign (pitch accent)', icon: AudioLines },
   { id: 'speaking', label: 'Speaking confidence', icon: Mic },
   { id: 'listening', label: 'Listening comprehension', icon: Headphones },
   { id: 'grammar', label: 'Grammar patterns', icon: PenTool },
-  { id: 'kanji', label: 'Kanji reading', icon: Eye },
   { id: 'vocabulary', label: 'Vocabulary retention', icon: BookOpen },
   { id: 'motivation', label: 'Staying motivated', icon: Zap },
 ];
@@ -1149,10 +1149,10 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, show
                 Special Onboarding Offer — Limited Time
               </div>
               <h1 className="text-3xl font-black text-white mb-3 leading-tight">
-                Transform Your<br />Japanese!
+                Stop Sounding<br />Foreign.
               </h1>
               <p className="text-purple-100 text-sm leading-relaxed max-w-xs mx-auto">
-                Join 500+ learners mastering Japanese with our AI-powered system
+                Fix the #1 thing that gives you away — your pitch accent — with honest scoring on your own voice.
               </p>
             </div>
 
@@ -1160,17 +1160,15 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, show
             <div className="px-4 -mt-6 mb-4">
               <div className="bg-white rounded-2xl shadow-lg p-5 border border-gray-100">
                 <div className="flex items-start gap-3">
-                  <span className="text-3xl">🎁</span>
+                  <span className="text-3xl">📋</span>
                   <div>
                     <h3 className="font-bold text-gray-900 text-base leading-snug">
-                      Your Personalized Study Plan is Ready!
+                      Your Pitch Karte plan is ready, {displayName}!
                     </h3>
                     <p className="text-sm text-gray-500 mt-1 leading-relaxed">
-                      Based on your assessment, we've built a custom path from{' '}
-                      <span className="font-semibold text-purple-600">{jlptLevel || 'your current level'}</span>
-                      {' '}to{' '}
-                      <span className="font-semibold text-green-600">{targetLevel && targetLevel !== jlptLevel ? targetLevel : jlptLevel === 'N1' ? 'N1 Mastery' : ({'N5':'N4','N4':'N3','N3':'N2','N2':'N1'} as Record<string,string>)[jlptLevel || 'N5'] || 'your goal'}</span>
-                      {' '}— tailored just for {displayName}.
+                      Premium unlocks your full <span className="font-semibold text-purple-600">per-pattern diagnosis</span>,
+                      a <span className="font-semibold text-purple-600">drill queue built from your own errors</span>, and
+                      <span className="font-semibold text-green-600"> before/after progress</span> — so you fix what makes you sound foreign, fast.
                     </p>
                   </div>
                 </div>
