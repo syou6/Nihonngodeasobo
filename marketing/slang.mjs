@@ -17,11 +17,14 @@ const OUT = path.join(MK, 'out-slang');
 const REC = path.join(MK, '.recslang');
 const W = 1080, H = 1920;
 
-// word, reading, p (accent nucleus — VERIFIED in pitch-accents.json), meaning, usage
+// Real slang natives use. Pitch (p = accent nucleus) confirmed with the founder
+// (native speaker) — pure slang isn't in the accent dict, so a native verified it.
 const WORDS = [
-  { word: '最高', reading: 'さいこう', p: 0, en: 'awesome / the best', use: 'これ最高！ = this is awesome!' },
-  { word: '嘘',   reading: 'うそ',     p: 1, en: 'no way! / for real?', use: 'え、嘘！ = wait, no way!' },
-  { word: '馬鹿', reading: 'ばか',     p: 1, en: 'silly / you dummy (playful)', use: 'ばか！ = you dummy!' },
+  { word: 'やばい',   reading: 'やばい',   p: 0, en: 'insane / amazing / OMG', use: 'この寿司やばい = this sushi is insane' },
+  { word: 'まじ',     reading: 'まじ',     p: 1, en: 'seriously / for real?', use: 'まじで？ = are you for real?' },
+  { word: 'うざい',   reading: 'うざい',   p: 0, en: 'annoying / so extra', use: 'あいつうざい = that guy is so annoying' },
+  { word: 'だるい',   reading: 'だるい',   p: 1, en: 'ugh / cant be bothered', use: '学校だるい = school is such a drag' },
+  { word: 'めっちゃ', reading: 'めっちゃ', p: 0, en: 'super / so', use: 'めっちゃ好き = I super like it' },
 ];
 
 const SMALL = new Set([...'ゃゅょぁぃぅぇぉ']);
@@ -60,16 +63,16 @@ body{background:linear-gradient(160deg,#4338CA 0%,#5B21B6 55%,#3B0764 100%)}
 const stages = [];
 // intro
 stages.push({ dur: 2.4, html: `
-  <div class="num">📚 STOP talking like a textbook</div>
-  <div style="font-size:88px;font-weight:800;line-height:1.1">Reaction words<br>natives ACTUALLY use</div>
-  <div style="font-size:42px;color:rgba(255,255,255,.7);margin-top:30px">…with the right pitch 👇</div>` });
+  <div class="num">📚 your textbook won't teach you this</div>
+  <div style="font-size:96px;font-weight:800;line-height:1.08">Japanese SLANG<br>natives really use</div>
+  <div style="font-size:42px;color:rgba(255,255,255,.7);margin-top:30px">…and how to pitch it right 👇</div>` });
 // words
 WORDS.forEach((e, i) => {
   const ms = morae(e.reading); const pat = pattern(e.p, ms.length);
   stages.push({ dur: 3.0, html: `
     <div class="num">${i + 1} / ${WORDS.length}</div>
     <div class="word jp">${e.word}</div>
-    <div class="read jp">${e.reading}</div>
+    ${e.word === e.reading ? '' : `<div class="read jp">${e.reading}</div>`}
     <div class="en">${e.en}</div>
     <div class="card">${contourSVG(ms, pat)}</div>
     <div class="use jp">${e.use}</div>` });
