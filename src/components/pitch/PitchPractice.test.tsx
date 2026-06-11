@@ -44,7 +44,7 @@ describe('PitchPractice', () => {
 
   it('shows the target word and a record control', () => {
     render(<PitchPractice onBack={vi.fn()} />);
-    expect(screen.getByText('Pitch Accent Practice')).toBeInTheDocument();
+    expect(screen.getByText('Pitch Trainer')).toBeInTheDocument();
     expect(screen.getByText('Record & say it')).toBeInTheDocument();
   });
 
