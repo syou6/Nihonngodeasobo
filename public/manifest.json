@@ -1,15 +1,33 @@
 {
-  "name": "NihonGo - Master Japanese with AI",
+  "name": "NihonGo — Japanese Pitch Accent Trainer",
   "short_name": "NihonGo",
-  "description": "AI-powered Japanese learning app. Voice diaries, AI feedback, and JLPT practice.",
+  "description": "Stop sounding foreign. Record a word, see your pitch vs a native speaker, and get honest pitch-accent scoring. Free to start.",
+  "lang": "en",
+  "dir": "ltr",
   "theme_color": "#4F46E5",
-  "background_color": "#ffffff",
+  "background_color": "#4338CA",
   "display": "standalone",
   "orientation": "portrait",
   "scope": "/",
-  "start_url": "/app.html",
+  "start_url": "/app.html?source=pwa",
   "id": "nihongo-pwa",
   "categories": ["education", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Pitch Trainer",
+      "short_name": "Pitch",
+      "description": "Score your pitch accent now",
+      "url": "/app.html?guest=true&source=pwa_shortcut",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "My Pitch Karte",
+      "short_name": "Karte",
+      "description": "See your pitch diagnosis",
+      "url": "/app.html?view=karte&source=pwa_shortcut",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ],
   "icons": [
     {
       "src": "/icon-192x192.png",
