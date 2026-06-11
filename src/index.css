@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Brand typography: Inter body, Plus Jakarta Sans display headings */
+@layer base {
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: #F8F8FB;
+    color: #141527;
+  }
+  h1, h2, h3, .font-display {
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
 /* アニメーション */
 @keyframes blob {
   0% {

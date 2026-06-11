@@ -10,7 +10,6 @@ import { Header } from '../components/navigation/Header';
 import { LearnerDashboard } from '../components/dashboard/LearnerDashboard';
 import { PWAInstallPrompt } from '../components/PWAInstallPrompt';
 import { GuestBanner } from '../components/guest/GuestBanner';
-import { GuestDiaryList } from '../components/guest/GuestDiaryList';
 import { WelcomeGuide } from '../components/onboarding/WelcomeGuide';
 import { OnboardingFlow } from '../components/onboarding/OnboardingFlow';
 import { HelpButton } from '../components/help/HelpButton';
@@ -42,7 +41,7 @@ export const AppPage: React.FC = () => {
   const [currentView, setCurrentView] = useState('home');
   // Guest experience leads with pitch (the shareable aha); diary is secondary.
   // 'karte' is reachable via ?view=karte (the registration carrot after the aha).
-  const [guestTab, setGuestTab] = useState<'pitch' | 'diary' | 'karte'>(
+  const [guestTab, setGuestTab] = useState<'pitch' | 'karte'>(
     () => (new URLSearchParams(window.location.search).get('view') === 'karte' ? 'karte' : 'pitch'),
   );
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -249,7 +248,7 @@ export const AppPage: React.FC = () => {
   if (isGuestMode && !user) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <GuestBanner showTries={guestTab === 'diary'} />
+        <GuestBanner showTries={false} />
         <div className="container mx-auto px-4 py-8">
           <AnimatePresence mode="wait">
             {showOnboarding ? (
@@ -273,25 +272,19 @@ export const AppPage: React.FC = () => {
                 transition={{ duration: 0.3 }}
               >
                 <div className="max-w-4xl mx-auto">
-                  {/* Guest tabs: pitch trainer leads (the shareable aha), diary secondary */}
-                  <div className="flex gap-2 mb-6 bg-white rounded-full p-1 shadow-sm w-fit mx-auto">
+                  {/* Guest tabs — pitch-focused: trainer (the aha) + Karte (the carrot) */}
+                  <div className="flex gap-2 mb-6 bg-white rounded-full p-1 shadow-card w-fit mx-auto">
                     <button
                       onClick={() => setGuestTab('pitch')}
-                      className={`px-5 py-2 rounded-full text-sm font-bold transition-colors ${guestTab === 'pitch' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-900'}`}
+                      className={`px-6 py-2.5 rounded-full text-sm font-bold transition-colors ${guestTab === 'pitch' ? 'bg-brand-600 text-white' : 'text-gray-500 hover:text-gray-900'}`}
                     >
                       🎯 Pitch Trainer
                     </button>
                     <button
                       onClick={() => setGuestTab('karte')}
-                      className={`px-5 py-2 rounded-full text-sm font-bold transition-colors ${guestTab === 'karte' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-900'}`}
+                      className={`px-6 py-2.5 rounded-full text-sm font-bold transition-colors ${guestTab === 'karte' ? 'bg-brand-600 text-white' : 'text-gray-500 hover:text-gray-900'}`}
                     >
                       📋 My Karte
-                    </button>
-                    <button
-                      onClick={() => setGuestTab('diary')}
-                      className={`px-5 py-2 rounded-full text-sm font-bold transition-colors ${guestTab === 'diary' ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-900'}`}
-                    >
-                      🎙 Voice Diary
                     </button>
                   </div>
 
@@ -299,30 +292,10 @@ export const AppPage: React.FC = () => {
                     <Suspense fallback={<ViewFallback />}>
                       <KartePage onBack={() => setGuestTab('pitch')} onViewChange={() => setGuestTab('pitch')} />
                     </Suspense>
-                  ) : guestTab === 'pitch' ? (
-                    <Suspense fallback={<ViewFallback />}>
-                      <PitchPractice onBack={() => setGuestTab('diary')} onViewKarte={() => setGuestTab('karte')} />
-                    </Suspense>
                   ) : (
-                    <>
-                      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
-                            <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
-                          </div>
-                          <div>
-                            <h2 className="text-xl font-bold text-gray-900">
-                              Record Your Diary
-                            </h2>
-                            <p className="text-sm text-gray-500">Speak in Japanese — AI will give you feedback</p>
-                          </div>
-                        </div>
-                        <Suspense fallback={<ViewFallback />}>
-                          <VoiceRecorder isGuest />
-                        </Suspense>
-                      </div>
-                      <GuestDiaryList />
-                    </>
+                    <Suspense fallback={<ViewFallback />}>
+                      <PitchPractice onBack={() => setGuestTab('karte')} onViewKarte={() => setGuestTab('karte')} />
+                    </Suspense>
                   )}
                 </div>
               </motion.div>

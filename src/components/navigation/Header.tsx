@@ -8,10 +8,7 @@ import { EN } from '../../i18n/en';
 import {
   LogOut,
   Settings,
-  Calendar,
   Home,
-  Mic,
-  BookOpen,
   AudioLines,
   ClipboardList,
   Crown
@@ -27,15 +24,12 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
   const { isGuestMode } = useGuestStore();
   const { isPremium } = useSubscription();
 
-  const isLearner = user?.role === 'learner';
-
+  // Pitch-focused: the old diary/record/JLPT-practice items are retired from the
+  // nav so the product reads as a single-purpose pitch-accent trainer.
   const navigation = [
     { id: 'home', label: EN.nav.home, icon: Home, show: true },
     { id: 'pitch', label: EN.nav.pitch, icon: AudioLines, show: true },
     { id: 'karte', label: EN.nav.karte, icon: ClipboardList, show: !isGuestMode },
-    { id: 'record', label: EN.nav.record, icon: Mic, show: isLearner || isGuestMode },
-    { id: 'diary', label: EN.nav.diary, icon: Calendar, show: true },
-    { id: 'practice', label: EN.nav.practice, icon: BookOpen, show: true },
     { id: 'settings', label: EN.nav.settings, icon: Settings, show: !isGuestMode },
   ];
 
