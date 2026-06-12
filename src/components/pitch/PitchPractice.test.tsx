@@ -58,8 +58,8 @@ describe('PitchPractice', () => {
 
     fireEvent.click(screen.getByText('Stop'));
 
-    // Score from the mocked comparator is rendered.
-    expect(await screen.findByText('92')).toBeInTheDocument();
+    // Score from the mocked comparator is rendered (now in the "92% native" bar).
+    expect(await screen.findByText((_, el) => el?.textContent?.replace(/\s/g, '') === '92%native')).toBeInTheDocument();
     expect(screen.getByText('Retry')).toBeInTheDocument();
     expect(screen.getByText('Next')).toBeInTheDocument();
     expect(trackerStop).toHaveBeenCalled();
