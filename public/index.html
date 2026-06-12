@@ -17,9 +17,9 @@
     window.gtag('config', 'G-79GNWZ3865');
   }
 </script>
-<title>Japanese Pitch Accent Trainer — Stop Sounding Foreign | NihonGo</title>
+<title>Can You Hear It? Japanese Pitch Accent Game | NihonGo</title>
 <meta name="description" content="Train your Japanese pitch accent. Record a word, see your pitch vs a native speaker, and fix what makes you sound foreign. 箸 or 橋? — your pitch decides. Free to start.">
-<meta property="og:title" content="Japanese Pitch Accent Trainer — Stop Sounding Foreign | NihonGo">
+<meta property="og:title" content="Can You Hear It? Japanese Pitch Accent Game | NihonGo">
 <meta property="og:description" content="Train your Japanese pitch accent. Record a word, see your pitch vs a native speaker, and fix what makes you sound foreign. 箸 or 橋? — your pitch decides.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://nihongo.amorjp.com">
@@ -246,7 +246,7 @@
             <a class="text-sm font-medium text-gray-500 hover:text-primary transition-colors" href="#pricing">Pricing</a>
         </div>
         <div class="flex items-center gap-4">
-            <a id="nav-try-guest" href="/app.html?guest=true" class="hidden sm:block text-sm font-semibold text-gray-700 px-6 py-2 hover:text-primary transition-colors">Try as Guest</a>
+            <a id="nav-try-guest" href="/app.html?guest=true&view=ear" class="hidden sm:block text-sm font-semibold text-gray-700 px-6 py-2 hover:text-primary transition-colors">Try as Guest</a>
             <a id="nav-start-free" href="/app.html?signup=true" class="bg-primary text-white font-bold px-6 py-2.5 rounded-full hover:bg-primary-light hover:shadow-lg hover:shadow-primary/25 transition-all transform hover:scale-105">
                 Start Free
             </a>
@@ -262,55 +262,42 @@
 
         <div class="max-w-5xl mx-auto text-center space-y-7">
             <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white shadow-sm border border-accent/30 text-accent text-xs font-bold uppercase tracking-[0.2em]">
-                <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
-                </span>
-                Japanese Pitch Accent Trainer
+                🎮 Japanese pitch accent — but actually fun
             </div>
 
-            <div class="flex justify-center">
-                <img src="/logo.png" alt="NihonGo mascot" class="w-24 h-24 md:w-28 md:h-28 float drop-shadow-xl"/>
+            <!-- The fascination: same sounds, different pitch, different word -->
+            <div class="flex items-center justify-center gap-4 sm:gap-8 pt-2">
+                <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/60 border border-gray-100 px-6 py-5 sm:px-9 sm:py-7">
+                    <div class="text-6xl sm:text-7xl font-black text-ink leading-none">箸</div>
+                    <div class="text-accent font-bold mt-1 text-sm sm:text-base">🥢 chopsticks</div>
+                    <div class="font-mono text-xs text-gray-400 mt-1">HIGH-low</div>
+                </div>
+                <div class="text-4xl sm:text-5xl font-black text-gray-300">≠</div>
+                <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/60 border border-gray-100 px-6 py-5 sm:px-9 sm:py-7">
+                    <div class="text-6xl sm:text-7xl font-black text-ink leading-none">橋</div>
+                    <div class="text-green-600 font-bold mt-1 text-sm sm:text-base">🌉 bridge</div>
+                    <div class="font-mono text-xs text-gray-400 mt-1">low-HIGH</div>
+                </div>
             </div>
+            <p class="text-base sm:text-lg text-gray-500">Same sounds <span class="font-semibold text-ink">「はし」</span>. The <span class="text-accent font-bold">pitch</span> changes the meaning.</p>
 
-            <h1 class="text-5xl md:text-8xl font-extrabold tracking-tight leading-[0.92] text-gradient-warm">
-                Stop Sounding<br/>Like a Foreigner.
+            <h1 class="text-5xl md:text-8xl font-extrabold tracking-tight leading-[0.92] text-gradient-warm pt-2">
+                Can you<br/>hear it?
             </h1>
 
             <p class="max-w-2xl mx-auto text-lg md:text-xl text-gray-500 font-light leading-relaxed">
-                Your grammar is fine — but your <strong class="text-ink font-semibold">pitch</strong> gives you away. Record a word, see your pitch vs a native speaker, and fix what makes you sound foreign. <span class="text-ink font-semibold">箸</span> or <span class="text-ink font-semibold">橋</span>? Your pitch decides.
+                The 60-second game that trains your ear — then your voice — to stop sounding foreign in Japanese. <span class="text-ink font-semibold">No mic. No signup.</span>
             </p>
 
             <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-                <a href="/app.html?guest=true" class="w-full sm:w-auto px-10 py-5 bg-primary text-white font-extrabold text-lg rounded-2xl shadow-lg shadow-primary/25 hover:scale-105 transition-all inline-block text-center">
-                    Score My Pitch — Free
+                <a href="/app.html?guest=true&view=ear" class="w-full sm:w-auto px-10 py-5 bg-primary text-white font-extrabold text-lg rounded-2xl shadow-lg shadow-primary/25 hover:scale-105 transition-all inline-block text-center">
+                    👂 Play the Ear Test — Free
                 </a>
-                <a href="/app.html?guest=true" class="w-full sm:w-auto px-10 py-5 bg-white text-ink font-bold text-lg rounded-2xl border border-gray-200 hover:border-accent/40 hover:bg-accent-soft/40 transition-all flex items-center justify-center gap-2 shadow-sm">
-                    <span class="material-symbols-outlined">mic</span>
-                    Try as Guest
+                <a href="/app.html?guest=true&view=pitch" class="w-full sm:w-auto px-10 py-5 bg-white text-ink font-bold text-lg rounded-2xl border border-gray-200 hover:border-accent/40 hover:bg-accent-soft/40 transition-all flex items-center justify-center gap-2 shadow-sm">
+                    🎤 Train your voice
                 </a>
             </div>
-            <p class="text-sm text-gray-400">No credit card required &mdash; free forever &mdash; <span class="text-primary font-semibold">from $8.99/mo</span> to go unlimited</p>
-        </div>
-
-        <!-- App Preview: real screenshot in a phone frame + floating feedback card -->
-        <div class="mt-20 md:mt-24 max-w-md mx-auto relative">
-            <div class="absolute -inset-10 bg-gradient-to-tr from-primary/15 via-accent/10 to-transparent blur-3xl -z-10 rounded-full"></div>
-            <div class="phone-frame max-w-[300px] mx-auto">
-                <img src="/lp-shots/pitch_mock.png" alt="NihonGo — Japanese pitch accent trainer showing your pitch vs a native speaker"/>
-            </div>
-            <!-- floating annotation -->
-            <div class="hidden sm:flex items-start gap-3 absolute -right-6 top-1/3 bg-white rounded-2xl shadow-xl shadow-gray-300/40 border border-gray-100 p-4 max-w-[230px] text-left">
-                <span class="material-symbols-outlined text-accent">graphic_eq</span>
-                <div>
-                    <div class="text-xs font-bold text-ink">See your pitch vs native</div>
-                    <div class="text-[11px] text-gray-500 mt-0.5">Record a word — instantly compare your contour.</div>
-                </div>
-            </div>
-            <div class="hidden sm:flex items-center gap-2 absolute -left-4 bottom-16 bg-white rounded-full shadow-xl shadow-gray-300/40 border border-gray-100 px-4 py-2">
-                <span class="material-symbols-outlined text-green-500 text-lg">check_circle</span>
-                <span class="text-xs font-bold text-ink">92% pitch match</span>
-            </div>
+            <p class="text-sm text-gray-400">Free forever &mdash; no card &mdash; <span class="text-primary font-semibold">$8.99/mo</span> to go unlimited</p>
         </div>
     </section>
 
@@ -670,14 +657,14 @@
     <!-- Final CTA -->
     <section class="py-24 px-6 relative overflow-hidden hero-gradient">
         <div class="max-w-3xl mx-auto text-center space-y-8">
-            <h2 class="text-4xl md:text-6xl font-black text-gradient leading-tight">Stop Sounding Foreign.</h2>
-            <p class="text-gray-500 text-lg">See your pitch against a native, hear the drop you've been missing, and fix the accent that gives you away. From $0/month.</p>
+            <h2 class="text-4xl md:text-6xl font-black text-gradient leading-tight">Can you hear it?</h2>
+            <p class="text-gray-500 text-lg">Train your ear in 60 seconds, then your voice — and stop sounding foreign in Japanese. No mic, no signup, free forever.</p>
             <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
-                <a href="/app.html?guest=true" class="w-full sm:w-auto px-10 py-5 bg-primary text-white font-black text-lg rounded-xl shadow-lg shadow-primary/25 hover:scale-105 transition-all inline-block text-center">
-                    Score My Pitch — Free
+                <a href="/app.html?guest=true&view=ear" class="w-full sm:w-auto px-10 py-5 bg-primary text-white font-black text-lg rounded-xl shadow-lg shadow-primary/25 hover:scale-105 transition-all inline-block text-center">
+                    👂 Play the Ear Test — Free
                 </a>
-                <a href="/app.html?guest=true" class="w-full sm:w-auto px-10 py-5 bg-white text-gray-700 font-bold text-lg rounded-xl border border-gray-200 hover:border-primary/30 transition-all inline-block text-center shadow-sm">
-                    Try as Guest
+                <a href="/app.html?guest=true&view=pitch" class="w-full sm:w-auto px-10 py-5 bg-white text-gray-700 font-bold text-lg rounded-xl border border-gray-200 hover:border-primary/30 transition-all inline-block text-center shadow-sm">
+                    🎤 Train your voice
                 </a>
             </div>
         </div>
