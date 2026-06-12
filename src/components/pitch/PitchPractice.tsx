@@ -41,6 +41,21 @@ function readWordBest(word: string): number {
   return Number(localStorage.getItem(WORD_BEST_PREFIX + word)) || 0;
 }
 
+const SET_SIZE = 8; // a bounded daily set gives the session a shape (Duolingo "one more")
+
+// Daily streak by set-completion (controllable), not by score>=80 (skill-gated).
+function bumpDailyStreak(): number {
+  const today = new Date().toISOString().slice(0, 10);
+  const last = localStorage.getItem('pitchDailyDate');
+  let s = Number(localStorage.getItem('pitchDailyStreak')) || 0;
+  if (last === today) return s; // already counted today
+  const y = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  s = last === y ? s + 1 : 1;
+  localStorage.setItem('pitchDailyStreak', String(s));
+  localStorage.setItem('pitchDailyDate', today);
+  return s;
+}
+
 // ── Sound design (the biggest sterile tell is silence). Synthesized via the
 // Web Audio API — no asset pipeline. A nailed drop = a bright rising perfect
 // fifth; a miss = a soft, non-judgy low tone. Mutable. ──────────────────────
@@ -196,6 +211,8 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
   const [prevBest, setPrevBest] = useState(0);
   const [confetti, setConfetti] = useState(0); // bump to fire a celebration burst
   const [muted, setMuted] = useState(() => localStorage.getItem('pitchMuted') === '1');
+  const [cleared, setCleared] = useState(false); // hit the daily set → celebration card
+  const [dailyStreak, setDailyStreak] = useState(0);
   const [phase, setPhase] = useState<Phase>('ready');
   const [frames, setFrames] = useState<PitchFrame[]>([]);
   const [accuracy, setAccuracy] = useState<number | null>(null);
@@ -294,7 +311,11 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
     if (result.accuracy >= 90) setConfetti((c) => c + 1); // celebrate the win
     playFeedback(result.accuracy, streak); // the win-moment sound + haptic
     setPhase('result');
-    setScoredCount((c) => c + 1);
+    setScoredCount((c) => {
+      const n = c + 1;
+      if (n === SET_SIZE) { setDailyStreak(bumpDailyStreak()); setCleared(true); } // Daily Clear!
+      return n;
+    });
     trackEvent('pitch_scored', { word, accuracy: result.accuracy });
     // Karte foundation: log every attempt (server for members, localStorage for
     // guests — backfilled at signup).
@@ -313,6 +334,31 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
     resetAttempt();
   };
 
+  // Daily Clear! — the session boundary that creates the "come back tomorrow" pull.
+  if (cleared) {
+    return (
+      <div className="max-w-md mx-auto p-6 text-center min-h-[70vh] flex flex-col items-center justify-center">
+        <Confetti fire={1} />
+        <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 13 }}>
+          <div className="text-6xl mb-3">🎉</div>
+          <h2 className="font-display text-3xl font-extrabold text-ink mb-1">Daily set clear!</h2>
+          <p className="text-gray-500 mb-5">{SET_SIZE} words trained. Your pitch is leveling up.</p>
+          <div className="inline-flex items-center gap-2 rounded-full bg-accent-300/20 text-accent-500 font-bold px-5 py-2 mb-8">
+            🔥 {dailyStreak}-day streak
+          </div>
+        </motion.div>
+        <button onClick={() => { setCleared(false); setScoredCount(0); resetAttempt(); }}
+          className="w-full bg-brand-gradient text-white font-display font-extrabold py-3.5 rounded-2xl shadow-soft mb-3 hover:scale-[1.02] transition-transform">
+          Keep going →
+        </button>
+        <button onClick={onBack} className="w-full bg-white ring-1 ring-gray-200 text-gray-600 font-bold py-3.5 rounded-2xl hover:bg-gray-50">
+          Done for today
+        </button>
+        <p className="text-xs text-gray-300 mt-4">Come back tomorrow to keep your streak 🔒</p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-2xl mx-auto p-4 sm:p-6">
       {/* Header */}
@@ -327,14 +373,23 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
         <div>
           <h1 className="font-display text-xl font-extrabold text-ink">Pitch Trainer</h1>
           <p className="text-sm text-gray-400 font-medium">
-            Word {wordIndex + 1} of {PRACTICE_WORDS.length}
+            Today: {Math.min(scoredCount, SET_SIZE)} / {SET_SIZE} words
           </p>
         </div>
-        {streak > 0 && (
-          <div className="ml-auto inline-flex items-center gap-1 rounded-full bg-accent-300/20 text-accent-500 font-bold text-sm px-3 py-1">
-            🔥 {streak}
-          </div>
-        )}
+        <div className="ml-auto flex items-center gap-2">
+          {streak > 0 && (
+            <div className="inline-flex items-center gap-1 rounded-full bg-accent-300/20 text-accent-500 font-bold text-sm px-3 py-1">
+              🔥 {streak}
+            </div>
+          )}
+          {/* daily-set progress ring */}
+          <svg width="34" height="34" viewBox="0 0 34 34" className="-rotate-90">
+            <circle cx="17" cy="17" r="14" fill="none" stroke="#eef2ff" strokeWidth="4" />
+            <circle cx="17" cy="17" r="14" fill="none" stroke="#4f46e5" strokeWidth="4" strokeLinecap="round"
+              strokeDasharray={2 * Math.PI * 14}
+              strokeDashoffset={2 * Math.PI * 14 * (1 - Math.min(scoredCount, SET_SIZE) / SET_SIZE)} />
+          </svg>
+        </div>
       </div>
 
       <motion.div
