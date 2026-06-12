@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Lock, Loader2, Stethoscope } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useSubscription } from '../../hooks/useSubscription';
-import { getKarteData, getGuestKarteData, getGuestAttemptCount, type KarteData } from '../../lib/pitchAttempts';
+import { getKarteData, getGuestKarteData, getGuestAttemptCount, getEarAccuracy, type KarteData } from '../../lib/pitchAttempts';
 import { startTrialIfEligible } from '../../lib/subscription';
 import { pricingPlans, StripeService, ONBOARDING_COUPON_ID } from '../../lib/stripe';
 import toast from 'react-hot-toast';
@@ -43,6 +43,28 @@ const Locked: React.FC<{ locked: boolean; mask: string; children: React.ReactNod
   locked
     ? <span className="blur-sm select-none pointer-events-none">{mask}</span>
     : <>{children}</>;
+
+// Ear vs Mouth — the emotional hook: you can often HEAR the drop before you can
+// SAY it. Two bars + the gap insight. Only shows once both signals exist.
+const EarMouthGap: React.FC<{ ear: number; mouth: number; onPlayEar?: () => void }> = ({ ear, mouth, onPlayEar }) => {
+  const gap = ear - mouth;
+  const insight = gap >= 15 ? 'Your ear is ahead of your mouth — you can hear the drop, now train your voice to make it.'
+    : gap <= -15 ? 'Your mouth is ahead of your ear — sharpen your ear so you can self-correct.'
+    : 'Ear and mouth are in sync — keep leveling both up.';
+  return (
+    <div className="rounded-2xl bg-white border border-gray-100 p-5">
+      <h2 className="font-semibold text-gray-900 mb-3">👂 Ear vs 🎤 Mouth</h2>
+      {[{ label: '👂 Your ear', v: ear, c: '#4f46e5' }, { label: '🎤 Your mouth', v: mouth, c: '#fb923c' }].map((r) => (
+        <div key={r.label} className="mb-2">
+          <div className="flex justify-between text-sm mb-1"><span className="text-gray-500">{r.label}</span><span className="font-bold" style={{ color: r.c }}>{r.v}%</span></div>
+          <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden"><div className="h-full rounded-full" style={{ width: `${r.v}%`, backgroundColor: r.c }} /></div>
+        </div>
+      ))}
+      <p className="text-xs text-gray-500 mt-3">{insight}</p>
+      {onPlayEar && <button onClick={onPlayEar} className="mt-2 text-sm font-bold text-brand-600">Train your ear →</button>}
+    </div>
+  );
+};
 
 export const KartePage: React.FC<KartePageProps> = ({ onBack, onViewChange }) => {
   const { user } = useAuthStore();
@@ -123,6 +145,9 @@ export const KartePage: React.FC<KartePageProps> = ({ onBack, onViewChange }) =>
           <p className="text-5xl font-black">{g.headlineScore}<span className="text-2xl text-white/70">%</span></p>
           <p className="text-xs text-white/70 mt-2">native-like · from your {g.totalAttempts} recordings on this device</p>
         </div>
+        {getEarAccuracy().total >= 4 && (
+          <EarMouthGap ear={getEarAccuracy().pct} mouth={g.headlineScore} onPlayEar={() => { window.location.href = '/app.html?guest=true&view=ear'; }} />
+        )}
         {worst ? (
           <div className="rounded-2xl bg-white border border-red-100 p-5">
             <p className="text-xs text-gray-400 mb-1">Weakest pattern</p>
@@ -221,6 +246,11 @@ export const KartePage: React.FC<KartePageProps> = ({ onBack, onViewChange }) =>
         <p className="text-5xl font-black">{karte.headlineScore}<span className="text-2xl text-white/70">%</span></p>
         <p className="text-xs text-white/70 mt-2">native-like · based on your last {Math.min(karte.totalAttempts, 50)} recordings</p>
       </motion.div>
+
+      {/* Ear vs Mouth — the gap that only NihonGo can show (it owns both halves) */}
+      {getEarAccuracy().total >= 4 && (
+        <EarMouthGap ear={getEarAccuracy().pct} mouth={karte.headlineScore} onPlayEar={() => onViewChange('ear')} />
+      )}
 
       {/* 2. Completeness meter */}
       <div className="rounded-xl bg-white border border-gray-100 p-3 text-center text-sm text-gray-600">

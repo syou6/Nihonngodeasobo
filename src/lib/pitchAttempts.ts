@@ -31,6 +31,23 @@ export function getGuestAttemptCount(): number {
   return readGuestAttempts().length;
 }
 
+// ---- Ear (perception) accuracy — the second half of the ear-vs-mouth gap, the
+// emotional paid hook ('you can HEAR the drop but can't SAY it yet'). Stored
+// locally; cheap, honest, and impossible to fake. ----
+export function logEarAnswer(correct: boolean): void {
+  try {
+    const c = Number(localStorage.getItem('earCorrect')) || 0;
+    const t = Number(localStorage.getItem('earTotal')) || 0;
+    if (correct) localStorage.setItem('earCorrect', String(c + 1));
+    localStorage.setItem('earTotal', String(t + 1));
+  } catch { /* ignore */ }
+}
+export function getEarAccuracy(): { pct: number; total: number } {
+  const c = Number(localStorage.getItem('earCorrect')) || 0;
+  const t = Number(localStorage.getItem('earTotal')) || 0;
+  return { pct: t > 0 ? Math.round((c / t) * 100) : 0, total: t };
+}
+
 /**
  * Record one scoring attempt. Fire-and-forget: a failed insert must never
  * break the practice loop.

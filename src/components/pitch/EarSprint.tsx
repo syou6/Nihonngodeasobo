@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Volume2, VolumeX, RotateCcw, Mic } from 'lucide-react';
 import { EAR_PAIRS, type MinimalPair, type PairSide } from './earPairs';
 import { playCorrect, playWrong, playClear, isMuted, setMutedFlag } from '../../lib/sfx';
+import { logEarAnswer } from '../../lib/pitchAttempts';
 import { trackEvent } from '../../lib/analytics';
 
 // Ear Sprint — a 60s, no-mic, 2-choice minimal-pair perception game. Never says
@@ -103,6 +104,7 @@ export const EarSprint: React.FC<Props> = ({ onBack, onGoTrainer }) => {
   const answer = (chosePlayed: boolean) => {
     if (!round || lockRef.current || phase !== 'play') return;
     lockRef.current = true;
+    logEarAnswer(chosePlayed); // feeds the ear-vs-mouth gap in the Karte
     if (chosePlayed) {
       const gained = 10 * mult;
       setScore((s) => s + gained);
