@@ -13,6 +13,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { shareResult } from '../../lib/shareCard';
 import { Share2 } from 'lucide-react';
 import { LivePitchLane, type LiveFrame } from './LivePitchLane';
+import { meaningFlipFor } from './earPairs';
 
 const PATTERN_EN: Record<string, string> = { 平板: 'Heiban', 頭高: 'Atamadaka', 中高: 'Nakadaka', 尾高: 'Odaka' };
 
@@ -394,6 +395,24 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
               <div className="mb-4"><MoraChips morae={pitchData?.morae ?? []} matches={matches} spin={scoredCount} /></div>
               <NativeBar score={accuracy} prevBest={prevBest} spin={scoredCount} />
             </div>
+
+            {/* SNAP meaning-flip — the identity jolt: nailing the drop on a homograph
+                doesn't earn a number, it changes WHAT YOU SAID. */}
+            {accuracy >= 70 && (() => {
+              const flip = meaningFlipFor(word);
+              if (!flip) return null;
+              return (
+                <motion.div
+                  initial={{ scale: 0.7, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 220, damping: 14 }}
+                  className="mb-4 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 text-white p-4 text-center shadow-md"
+                >
+                  <p className="font-display text-lg font-extrabold">You said {word} — {flip.en.toUpperCase()}!</p>
+                  <p className="text-xs text-white/80 mt-1">not <span className="line-through opacity-70">{flip.twinWord} {flip.twinEn}</span> — your pitch decided it 🎯</p>
+                </motion.div>
+              );
+            })()}
 
             {/* The one physical cue — what to DO next, not a judgment */}
             {coach && (

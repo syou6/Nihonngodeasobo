@@ -16,6 +16,15 @@ export interface MinimalPair {
   b: PairSide;
 }
 
+// Look up a word's meaning + its minimal-pair twin (for the result "meaning flip").
+export function meaningFlipFor(word: string): { en: string; twinWord: string; twinEn: string } | null {
+  for (const p of EAR_PAIRS) {
+    if (p.a.word === word) return { en: p.a.en, twinWord: p.b.word, twinEn: p.b.en };
+    if (p.b.word === word) return { en: p.b.en, twinWord: p.a.word, twinEn: p.a.en };
+  }
+  return null;
+}
+
 export const EAR_PAIRS: MinimalPair[] = [
   {
     reading: 'あめ',
