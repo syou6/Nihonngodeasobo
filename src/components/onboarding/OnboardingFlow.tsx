@@ -5,7 +5,6 @@ import { LogoWithText } from '../ui/Logo';
 import {
   Mic,
   Brain,
-  TrendingUp,
   ChevronRight,
   BookOpen,
   Sparkles,
@@ -33,7 +32,6 @@ import {
   Shield,
   Lock,
   ArrowRight,
-  BarChart3,
 } from 'lucide-react';
 import { pricingPlans, ONBOARDING_COUPON_ID } from '../../lib/stripe';
 import StripeService from '../../lib/stripe';

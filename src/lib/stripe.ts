@@ -25,10 +25,10 @@ export const pricingPlans: PricingPlan[] = [
     price: 0,
     interval: 'month',
     features: [
-      'Unlimited pitch perception drills',
-      '5 voice scorings per day',
+      'Ear Sprint — the no-mic ear game',
+      'Pitch Karaoke — live pitch lane + SNAP',
       'See your contour vs a native speaker',
-      'All 4 pitch patterns — intro words'
+      'Daily set + streak'
     ]
   },
   {
@@ -38,11 +38,11 @@ export const pricingPlans: PricingPlan[] = [
     interval: 'month',
     stripePriceId: import.meta.env.VITE_STRIPE_PREMIUM_PRICE_ID,
     features: [
-      'Unlimited voice pitch scoring',
-      'Full curated word curriculum',
-      'Instant drop-location coaching',
-      'Streak & per-pattern progress',
-      'Minimal-pair drills (箸/橋, 雨/飴)',
+      'Your ear-vs-mouth gap chart',
+      'Personal drill queue from your errors',
+      'Full Karte — per-pattern diagnosis + history',
+      'Every minimal pair + hard mode',
+      'Unlimited everything',
       'Priority support'
     ]
   },
