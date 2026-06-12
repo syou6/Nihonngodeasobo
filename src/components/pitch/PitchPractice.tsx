@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mic, Square, ArrowLeft, RotateCcw, ChevronRight, Loader2, Volume2 } from 'lucide-react';
+import { Mic, Square, ArrowLeft, RotateCcw, ChevronRight, Loader2, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { PitchWordCard } from './PitchWordCard';
 import { PitchContourGraph } from './PitchContourGraph';
@@ -39,31 +39,99 @@ function readWordBest(word: string): number {
   return Number(localStorage.getItem(WORD_BEST_PREFIX + word)) || 0;
 }
 
-// Score ring — matches the share card's hero ring for brand consistency.
-function ringColor(score: number): string {
-  if (score >= 80) return '#16a34a';
-  if (score >= 60) return '#d97706';
-  return '#e11d48';
+// ── Sound design (the biggest sterile tell is silence). Synthesized via the
+// Web Audio API — no asset pipeline. A nailed drop = a bright rising perfect
+// fifth; a miss = a soft, non-judgy low tone. Mutable. ──────────────────────
+let _actx: AudioContext | null = null;
+function audioCtx(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    if (!_actx) _actx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    if (_actx.state === 'suspended') void _actx.resume();
+    return _actx;
+  } catch { return null; }
 }
-const ScoreRing: React.FC<{ score: number; spin: number }> = ({ score, spin }) => {
-  const r = 56, c = 2 * Math.PI * r;
+function tone(freq: number, start: number, dur: number, gain = 0.12, type: OscillatorType = 'sine') {
+  const ctx = audioCtx();
+  if (!ctx) return;
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+  o.type = type; o.frequency.value = freq;
+  o.connect(g); g.connect(ctx.destination);
+  const t = ctx.currentTime + start;
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(gain, t + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.start(t); o.stop(t + dur + 0.02);
+}
+function isMuted(): boolean { return localStorage.getItem('pitchMuted') === '1'; }
+function playFeedback(accuracy: number, combo = 0) {
+  if (isMuted()) return;
+  if (accuracy >= 80) {
+    // rising perfect fifth, nudged up per combo — the SNAP "ding"
+    const base = 523 * Math.pow(2 ** (1 / 12), Math.min(combo, 7));
+    tone(base, 0, 0.18, 0.13, 'triangle');
+    tone(base * 1.5, 0.08, 0.28, 0.13, 'triangle');
+    if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(18);
+  } else if (accuracy >= 50) {
+    tone(440, 0, 0.16, 0.08, 'sine'); // gentle "almost"
+  } else {
+    tone(294, 0, 0.20, 0.07, 'sine'); // soft low, never a buzzer
+  }
+}
+
+// Per-mora result chips — partial credit made visible (ELSA-style). Green =
+// right, red = wrong, resolving left-to-right. Turns a harsh whole-word verdict
+// into "4 of 5 right, just the drop after し".
+const MoraChips: React.FC<{ morae: string[]; matches?: (boolean | null)[]; spin: number }> = ({ morae, matches, spin }) => (
+  <div className="flex items-center justify-center gap-1.5 flex-wrap">
+    {morae.map((m, i) => {
+      const ok = matches?.[i];
+      const cls = ok === true ? 'bg-green-100 text-green-700 ring-green-200'
+        : ok === false ? 'bg-red-50 text-red-600 ring-red-200'
+        : 'bg-gray-100 text-gray-400 ring-gray-200';
+      return (
+        <motion.span
+          key={`${spin}-${i}`}
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.12 + i * 0.1, type: 'spring', stiffness: 320, damping: 16 }}
+          className={`font-display text-xl font-bold px-3 py-1.5 rounded-xl ring-1 ${cls}`}
+        >
+          {m}
+        </motion.span>
+      );
+    })}
+  </div>
+);
+
+// "You sound N% native" bar — animates up from your personal-best ghost. The
+// value IS the honest accuracy (never inflated); only the FRAME changes from a
+// cold grade to felt progress.
+const NativeBar: React.FC<{ score: number; prevBest: number; spin: number }> = ({ score, prevBest, spin }) => {
+  const col = score >= 80 ? '#16a34a' : score >= 50 ? '#d97706' : '#e11d48';
   return (
-    <div className="relative mx-auto" style={{ width: 140, height: 140 }}>
-      <svg width="140" height="140" viewBox="0 0 140 140" className="-rotate-90">
-        <circle cx="70" cy="70" r={r} fill="none" stroke="#eef2ff" strokeWidth="12" />
-        <motion.circle
+    <div className="w-full max-w-xs mx-auto">
+      <div className="flex items-end justify-between mb-1.5">
+        <span className="text-sm font-semibold text-gray-500">You sound</span>
+        <span className="font-display text-3xl font-black" style={{ color: col }}>{score}%<span className="text-base text-gray-400 font-bold"> native</span></span>
+      </div>
+      <div className="relative h-3 bg-gray-100 rounded-full overflow-hidden">
+        {prevBest > 0 && (
+          <div className="absolute top-0 bottom-0 w-0.5 bg-gray-300 z-10" style={{ left: `${prevBest}%` }} title={`best ${prevBest}`} />
+        )}
+        <motion.div
           key={spin}
-          cx="70" cy="70" r={r} fill="none" stroke={ringColor(score)} strokeWidth="12" strokeLinecap="round"
-          strokeDasharray={c}
-          initial={{ strokeDashoffset: c }}
-          animate={{ strokeDashoffset: c - (score / 100) * c }}
+          className="h-full rounded-full"
+          style={{ backgroundColor: col }}
+          initial={{ width: `${prevBest}%` }}
+          animate={{ width: `${score}%` }}
           transition={{ duration: 0.9, ease: 'easeOut' }}
         />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-display text-4xl font-black" style={{ color: ringColor(score) }}>{score}</span>
-        <span className="text-xs text-gray-400 font-semibold -mt-1">/ 100</span>
       </div>
+      {prevBest > 0 && score > prevBest && (
+        <p className="text-xs font-bold text-green-600 mt-1 text-center">↑ {score - prevBest} past your best!</p>
+      )}
     </div>
   );
 };
@@ -126,6 +194,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
   const [isNewBest, setIsNewBest] = useState(false); // beat your personal best for this word
   const [prevBest, setPrevBest] = useState(0);
   const [confetti, setConfetti] = useState(0); // bump to fire a celebration burst
+  const [muted, setMuted] = useState(() => localStorage.getItem('pitchMuted') === '1');
   const [phase, setPhase] = useState<Phase>('ready');
   const [frames, setFrames] = useState<PitchFrame[]>([]);
   const [accuracy, setAccuracy] = useState<number | null>(null);
@@ -224,6 +293,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
       setIsNewBest(false);
     }
     if (result.accuracy >= 90) setConfetti((c) => c + 1); // celebrate the win
+    playFeedback(result.accuracy, streak); // the win-moment sound + haptic
     setPhase('result');
     setScoredCount((c) => c + 1);
     trackEvent('pitch_scored', { word, accuracy: result.accuracy });
@@ -287,8 +357,17 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
             className="relative rounded-3xl bg-white p-5 shadow-card ring-1 ring-gray-100 overflow-hidden"
           >
             <Confetti fire={confetti} />
+            {/* Mute toggle */}
+            <button
+              onClick={() => { localStorage.setItem('pitchMuted', isMuted() ? '0' : '1'); setMuted(isMuted()); }}
+              className="absolute top-3 right-3 text-gray-300 hover:text-gray-500"
+              aria-label="Toggle sound"
+            >
+              {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+            </button>
+
             <div className="text-center mb-4">
-              {/* Emotional reaction + pop animation = the dopamine hit per score */}
+              {/* Reaction headline (the felt verdict, not a grade) */}
               <motion.div
                 key={`react-${scoredCount}`}
                 initial={{ scale: 0.4, opacity: 0 }}
@@ -298,26 +377,18 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
               >
                 {reaction(accuracy).emoji}
               </motion.div>
-              <p className={`text-base font-extrabold mb-3 ${accuracy >= 80 ? 'text-green-700' : accuracy >= 60 ? 'text-amber-700' : 'text-gray-700'}`}>
+              <p className={`text-base font-extrabold mb-4 ${accuracy >= 80 ? 'text-green-700' : accuracy >= 60 ? 'text-amber-700' : 'text-gray-700'}`}>
                 {reaction(accuracy).text}
               </p>
-              <ScoreRing score={accuracy} spin={scoredCount} />
-              {/* Personal-best chase */}
-              {isNewBest ? (
-                <motion.p
-                  initial={{ y: 6, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  className="text-xs font-bold text-indigo-600 mt-1"
-                >
-                  🎯 New personal best for this word!{prevBest > 0 ? ` (was ${prevBest})` : ''}
-                </motion.p>
-              ) : prevBest > 0 ? (
-                <p className="text-xs text-gray-400 mt-1">Your best: {prevBest} — beat it 💪</p>
-              ) : null}
+
+              {/* HERO: per-mora chips (partial credit) + native-likeness bar */}
+              <div className="mb-4"><MoraChips morae={pitchData?.morae ?? []} matches={matches} spin={scoredCount} /></div>
+              <NativeBar score={accuracy} prevBest={prevBest} spin={scoredCount} />
             </div>
 
+            {/* The one physical cue — what to DO next, not a judgment */}
             {coach && (
-              <p className={`text-center text-sm font-medium mb-4 ${accuracy >= 80 ? 'text-green-700' : 'text-gray-700'}`}>
+              <p className={`text-center text-sm font-semibold mb-4 ${accuracy >= 80 ? 'text-green-700' : 'text-gray-700'}`}>
                 {coach}
               </p>
             )}
