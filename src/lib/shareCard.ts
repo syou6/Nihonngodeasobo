@@ -246,14 +246,16 @@ export async function generateShareCard(input: ShareCardInput): Promise<Blob> {
   });
 }
 
-const SHARE_URL = 'https://nihongo.amorjp.com/?utm_source=share_card';
+// Deep-link the share straight into the no-mic Ear Sprint game — the acquisition
+// loop IS the fun loop (a friend lands in a 60s game, not on a marketing page).
+const SHARE_URL = 'https://nihongo.amorjp.com/app.html?guest=true&view=ear&utm_source=share_card';
 
 export async function shareResult(input: ShareCardInput): Promise<'shared' | 'downloaded'> {
   const blob = await generateShareCard(input);
   const file = new File([blob], `nihongo-pitch-${input.word}.png`, { type: 'image/png' });
   const text =
     `I scored ${input.score}/100 on Japanese pitch accent (${input.word} ${input.reading}) 🎯\n` +
-    `Can you sound more native? ${SHARE_URL}\n\n` +
+    `Can you hear the difference? Try the 60-sec ear test 👂 ${SHARE_URL}\n\n` +
     `#LearnJapanese #JapanesePitchAccent #日本語 #studytok`;
 
   const nav = navigator as Navigator & { canShare?: (d: unknown) => boolean };
