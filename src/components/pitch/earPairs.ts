@@ -51,4 +51,9 @@ export const EAR_PAIRS: MinimalPair[] = [
     a: { word: '酒', en: 'alcohol 🍶', audio: 'sake_alcohol', pattern: 'HL' },
     b: { word: '鮭', en: 'salmon 🐟', audio: 'sake_salmon', pattern: 'LH' },
   },
+  {
+    reading: 'かき',
+    a: { word: '牡蠣', en: 'oyster 🦪', audio: 'kaki_oyster', pattern: 'HL' },
+    b: { word: '柿', en: 'persimmon 🟠', audio: 'kaki_persimmon', pattern: 'LH' },
+  },
 ];

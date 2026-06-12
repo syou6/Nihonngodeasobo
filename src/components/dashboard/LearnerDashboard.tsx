@@ -92,35 +92,35 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
         </div>
       </motion.div>
 
-      {/* Pitch trainer — the primary daily action */}
+      {/* Ear Sprint — the frictionless daily habit (no mic) */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ scale: 1.01 }}
-        onClick={() => onViewChange('pitch')}
+        onClick={() => onViewChange('ear')}
         className="relative overflow-hidden rounded-3xl p-6 cursor-pointer text-white shadow-soft bg-brand-gradient"
       >
         <div className="pointer-events-none absolute -top-10 -right-6 w-40 h-40 bg-white/10 blur-2xl rounded-full" />
         <div className="relative flex items-center justify-between">
           <div>
-            <h2 className="font-display text-2xl font-extrabold mb-1">🎯 Train Your Pitch</h2>
-            <p className="text-sm text-white/80">Record a word, see your pitch vs a native, fix what sounds foreign.</p>
+            <h2 className="font-display text-2xl font-extrabold mb-1">👂 Ear Sprint</h2>
+            <p className="text-sm text-white/80">60-second ear game. 箸 or 橋? Build your combo — no mic.</p>
           </div>
           {(() => {
-            const s = Number(localStorage.getItem('pitchStreak'));
+            const s = Number(localStorage.getItem('pitchDailyStreak'));
             return Number.isFinite(s) && s > 0 ? (
               <div className="flex-shrink-0 ml-4 text-center bg-white/15 rounded-2xl px-4 py-2">
                 <div className="text-2xl font-black">🔥 {s}</div>
-                <div className="text-[10px] uppercase tracking-wider text-white/70">streak</div>
+                <div className="text-[10px] uppercase tracking-wider text-white/70">day streak</div>
               </div>
             ) : (
-              <span className="flex-shrink-0 ml-4 bg-white text-brand-600 font-bold text-sm px-5 py-2.5 rounded-full">Start →</span>
+              <span className="flex-shrink-0 ml-4 bg-white text-brand-600 font-bold text-sm px-5 py-2.5 rounded-full">Play →</span>
             );
           })()}
         </div>
       </motion.div>
 
-      {/* Quick Actions — pitch-focused */}
+      {/* Quick Actions — the two games + the karte */}
       <div className="grid grid-cols-2 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -133,8 +133,8 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
           <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center mb-3">
             <Mic className="w-5 h-5 text-brand-600" />
           </div>
-          <h2 className="font-display font-bold text-ink mb-1">Score a word</h2>
-          <p className="text-sm text-gray-500">Say it, see your pitch vs native</p>
+          <h2 className="font-display font-bold text-ink mb-1">🎤 Pitch Karaoke</h2>
+          <p className="text-sm text-gray-500">Steer your voice through the drop</p>
         </motion.div>
 
         <motion.div
