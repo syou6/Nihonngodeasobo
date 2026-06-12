@@ -265,21 +265,30 @@
                 🎮 Japanese pitch accent — but actually fun
             </div>
 
-            <!-- The fascination: same sounds, different pitch, different word -->
+            <!-- The fascination: tap to HEAR the difference (no mic, the aha on the LP) -->
             <div class="flex items-center justify-center gap-4 sm:gap-8 pt-2">
-                <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/60 border border-gray-100 px-6 py-5 sm:px-9 sm:py-7">
+                <button onclick="playPair('hashi_chopsticks', this)" class="hear-card bg-white rounded-3xl shadow-xl shadow-gray-200/60 border border-gray-100 px-6 py-5 sm:px-9 sm:py-7 hover:scale-105 hover:border-accent/50 transition-all">
                     <div class="text-6xl sm:text-7xl font-black text-ink leading-none">箸</div>
                     <div class="text-accent font-bold mt-1 text-sm sm:text-base">🥢 chopsticks</div>
                     <div class="font-mono text-xs text-gray-400 mt-1">HIGH-low</div>
-                </div>
+                    <div class="text-[11px] font-bold text-primary mt-2">🔊 tap to hear</div>
+                </button>
                 <div class="text-4xl sm:text-5xl font-black text-gray-300">≠</div>
-                <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/60 border border-gray-100 px-6 py-5 sm:px-9 sm:py-7">
+                <button onclick="playPair('hashi_bridge', this)" class="hear-card bg-white rounded-3xl shadow-xl shadow-gray-200/60 border border-gray-100 px-6 py-5 sm:px-9 sm:py-7 hover:scale-105 hover:border-green-400/50 transition-all">
                     <div class="text-6xl sm:text-7xl font-black text-ink leading-none">橋</div>
                     <div class="text-green-600 font-bold mt-1 text-sm sm:text-base">🌉 bridge</div>
                     <div class="font-mono text-xs text-gray-400 mt-1">low-HIGH</div>
-                </div>
+                    <div class="text-[11px] font-bold text-primary mt-2">🔊 tap to hear</div>
+                </button>
             </div>
-            <p class="text-base sm:text-lg text-gray-500">Same sounds <span class="font-semibold text-ink">「はし」</span>. The <span class="text-accent font-bold">pitch</span> changes the meaning.</p>
+            <p class="text-base sm:text-lg text-gray-500">Same sounds <span class="font-semibold text-ink">「はし」</span> — <span class="text-accent font-bold">tap both</span>. The pitch is the only difference.</p>
+            <script>
+                function playPair(name, el) {
+                    try { new Audio('/pair-audio/' + name + '.mp3').play(); } catch (e) {}
+                    if (window.gtag) window.gtag('event', 'lp_hear_pair', { pair: name });
+                    el.animate([{ transform: 'scale(1.06)' }, { transform: 'scale(1)' }], { duration: 260 });
+                }
+            </script>
 
             <h1 class="text-5xl md:text-8xl font-extrabold tracking-tight leading-[0.92] text-gradient-warm pt-2">
                 Can you<br/>hear it?
