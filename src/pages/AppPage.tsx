@@ -27,6 +27,7 @@ const SettingsView = lazy(() => import('../components/settings/SettingsView').th
 const PricingCards = lazy(() => import('../components/subscription/PricingCards').then((m) => ({ default: m.PricingCards })));
 const VersantHome = lazy(() => import('../components/versant/VersantHome').then((m) => ({ default: m.VersantHome })));
 const PitchPractice = lazy(() => import('../components/pitch/PitchPractice').then((m) => ({ default: m.PitchPractice })));
+const EarSprint = lazy(() => import('../components/pitch/EarSprint').then((m) => ({ default: m.EarSprint })));
 const KartePage = lazy(() => import('../components/karte/KartePage').then((m) => ({ default: m.KartePage })));
 const SubscriptionSuccess = lazy(() => import('./SubscriptionSuccess').then((m) => ({ default: m.SubscriptionSuccess })));
 const SubscriptionCancel = lazy(() => import('./SubscriptionCancel').then((m) => ({ default: m.SubscriptionCancel })));
@@ -41,9 +42,10 @@ export const AppPage: React.FC = () => {
   const [currentView, setCurrentView] = useState('home');
   // Guest experience leads with pitch (the shareable aha); diary is secondary.
   // 'karte' is reachable via ?view=karte (the registration carrot after the aha).
-  const [guestTab, setGuestTab] = useState<'pitch' | 'karte'>(
-    () => (new URLSearchParams(window.location.search).get('view') === 'karte' ? 'karte' : 'pitch'),
-  );
+  const [guestTab, setGuestTab] = useState<'ear' | 'pitch' | 'karte'>(() => {
+    const v = new URLSearchParams(window.location.search).get('view');
+    return v === 'karte' ? 'karte' : v === 'ear' ? 'ear' : 'pitch';
+  });
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showAuthFormState, setShowAuthFormState] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
@@ -272,29 +274,39 @@ export const AppPage: React.FC = () => {
                 transition={{ duration: 0.3 }}
               >
                 <div className="max-w-4xl mx-auto">
-                  {/* Guest tabs — pitch-focused: trainer (the aha) + Karte (the carrot) */}
+                  {/* Guest tabs — Ear Sprint (no-mic game) leads, then trainer + Karte */}
                   <div className="flex gap-2 mb-6 bg-white rounded-full p-1 shadow-card w-fit mx-auto">
                     <button
-                      onClick={() => setGuestTab('pitch')}
-                      className={`px-6 py-2.5 rounded-full text-sm font-bold transition-colors ${guestTab === 'pitch' ? 'bg-brand-600 text-white' : 'text-gray-500 hover:text-gray-900'}`}
+                      onClick={() => setGuestTab('ear')}
+                      className={`px-5 py-2.5 rounded-full text-sm font-bold transition-colors ${guestTab === 'ear' ? 'bg-brand-600 text-white' : 'text-gray-500 hover:text-gray-900'}`}
                     >
-                      🎯 Pitch Trainer
+                      👂 Ear Sprint
+                    </button>
+                    <button
+                      onClick={() => setGuestTab('pitch')}
+                      className={`px-5 py-2.5 rounded-full text-sm font-bold transition-colors ${guestTab === 'pitch' ? 'bg-brand-600 text-white' : 'text-gray-500 hover:text-gray-900'}`}
+                    >
+                      🎯 Trainer
                     </button>
                     <button
                       onClick={() => setGuestTab('karte')}
-                      className={`px-6 py-2.5 rounded-full text-sm font-bold transition-colors ${guestTab === 'karte' ? 'bg-brand-600 text-white' : 'text-gray-500 hover:text-gray-900'}`}
+                      className={`px-5 py-2.5 rounded-full text-sm font-bold transition-colors ${guestTab === 'karte' ? 'bg-brand-600 text-white' : 'text-gray-500 hover:text-gray-900'}`}
                     >
-                      📋 My Karte
+                      📋 Karte
                     </button>
                   </div>
 
-                  {guestTab === 'karte' ? (
+                  {guestTab === 'ear' ? (
+                    <Suspense fallback={<ViewFallback />}>
+                      <EarSprint onBack={() => setGuestTab('pitch')} onGoTrainer={() => setGuestTab('pitch')} />
+                    </Suspense>
+                  ) : guestTab === 'karte' ? (
                     <Suspense fallback={<ViewFallback />}>
                       <KartePage onBack={() => setGuestTab('pitch')} onViewChange={() => setGuestTab('pitch')} />
                     </Suspense>
                   ) : (
                     <Suspense fallback={<ViewFallback />}>
-                      <PitchPractice onBack={() => setGuestTab('karte')} onViewKarte={() => setGuestTab('karte')} />
+                      <PitchPractice onBack={() => setGuestTab('ear')} onViewKarte={() => setGuestTab('karte')} />
                     </Suspense>
                   )}
                 </div>
@@ -406,6 +418,18 @@ export const AppPage: React.FC = () => {
               transition={{ duration: 0.3 }}
             >
               <PricingCards onClose={() => setCurrentView('home')} />
+            </motion.div>
+          )}
+
+          {currentView === 'ear' && (
+            <motion.div
+              key="ear"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <EarSprint onBack={() => setCurrentView('home')} onGoTrainer={() => setCurrentView('pitch')} />
             </motion.div>
           )}
 

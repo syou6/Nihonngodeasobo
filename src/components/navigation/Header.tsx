@@ -10,6 +10,7 @@ import {
   Settings,
   Home,
   AudioLines,
+  Ear,
   ClipboardList,
   Crown
 } from 'lucide-react';
@@ -28,6 +29,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
   // nav so the product reads as a single-purpose pitch-accent trainer.
   const navigation = [
     { id: 'home', label: EN.nav.home, icon: Home, show: true },
+    { id: 'ear', label: EN.nav.ear, icon: Ear, show: true },
     { id: 'pitch', label: EN.nav.pitch, icon: AudioLines, show: true },
     { id: 'karte', label: EN.nav.karte, icon: ClipboardList, show: !isGuestMode },
     { id: 'settings', label: EN.nav.settings, icon: Settings, show: !isGuestMode },

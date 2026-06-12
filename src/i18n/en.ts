@@ -13,6 +13,7 @@ export const EN = {
     home: 'Home',           // ホーム
     pitch: 'Pitch',         // ピッチ
     karte: 'Karte',         // カルテ(診断)
+    ear: 'Ear',             // 聞き分けゲー
     record: 'Record',       // 録音
     diary: 'Diary',         // 日記
     practice: 'Practice',   // 練習
