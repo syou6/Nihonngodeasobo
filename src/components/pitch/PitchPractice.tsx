@@ -411,6 +411,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
             morae={pitchData.morae}
             pattern={pitchData.pattern.slice(0, pitchData.morae.length)}
             active={phase === 'recording'}
+            onSnap={() => { if (!isMuted()) { tone(784, 0, 0.12, 0.14, 'triangle'); tone(1175, 0.07, 0.2, 0.14, 'triangle'); } if (navigator.vibrate) navigator.vibrate(22); }}
           />
         )}
 

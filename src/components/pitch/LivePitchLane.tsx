@@ -17,14 +17,17 @@ interface Props {
   // target high/low per mora (1 = high, 0 = low); length = morae.length
   pattern: number[];
   active: boolean;
+  // fired once when the live voice clearly falls through the drop gate
+  onSnap?: () => void;
 }
 
 const W = 640, H = 280;
 const PAD_X = 50, PAD_TOP = 36, PAD_BOT = 50;
 
-export const LivePitchLane: React.FC<Props> = ({ framesRef, morae, pattern, active }) => {
+export const LivePitchLane: React.FC<Props> = ({ framesRef, morae, pattern, active, onSnap }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number | null>(null);
+  const snapRef = useRef(false); // fired this recording?
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -51,6 +54,9 @@ export const LivePitchLane: React.FC<Props> = ({ framesRef, morae, pattern, acti
     const median = (a: number[]) => { const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)] || 0; };
     let lastY = (hiY + loY) / 2;
     let holdFrames = 0;
+    const hasGate = gateX > 0;
+    let peakSemi = -99;   // highest the voice reached
+    let snapFlash = 0;    // timestamp the gate ignited
 
     const draw = () => {
       ctx.clearRect(0, 0, W, H);
@@ -68,16 +74,23 @@ export const LivePitchLane: React.FC<Props> = ({ framesRef, morae, pattern, acti
         ctx.textAlign = 'center';
         ctx.fillText(morae[i] ?? '', x, H - 16);
       });
-      // drop-gate (neon cliff)
-      if (gateX > 0) {
+      // drop-gate (neon cliff) — ignites gold for ~450ms when you fall through it
+      if (hasGate) {
+        const lit = snapFlash && performance.now() - snapFlash < 450;
+        if (lit) {
+          ctx.fillStyle = 'rgba(250,204,21,0.18)';
+          ctx.fillRect(gateX - 30, PAD_TOP, 60, H - PAD_TOP - PAD_BOT);
+        }
         const g = ctx.createLinearGradient(0, PAD_TOP, 0, H - PAD_BOT);
-        g.addColorStop(0, 'rgba(251,146,60,0.9)');
-        g.addColorStop(1, 'rgba(251,113,133,0.5)');
-        ctx.strokeStyle = g; ctx.lineWidth = 4; ctx.setLineDash([8, 7]);
+        g.addColorStop(0, lit ? '#fde047' : 'rgba(251,146,60,0.9)');
+        g.addColorStop(1, lit ? '#facc15' : 'rgba(251,113,133,0.5)');
+        ctx.strokeStyle = g; ctx.lineWidth = lit ? 7 : 4; ctx.setLineDash(lit ? [] : [8, 7]);
+        if (lit) { ctx.shadowColor = '#fde047'; ctx.shadowBlur = 22; }
         ctx.beginPath(); ctx.moveTo(gateX, PAD_TOP); ctx.lineTo(gateX, H - PAD_BOT); ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = '#FB923C'; ctx.font = "800 14px 'Plus Jakarta Sans',sans-serif";
-        ctx.fillText('DROP', gateX, PAD_TOP - 8);
+        ctx.shadowBlur = 0; ctx.setLineDash([]);
+        ctx.fillStyle = lit ? '#ca8a04' : '#FB923C'; ctx.font = "800 14px 'Plus Jakarta Sans',sans-serif";
+        ctx.textAlign = 'center';
+        ctx.fillText(lit ? 'SNAP!' : 'DROP', gateX, PAD_TOP - 8);
       }
 
       // live trace
@@ -95,6 +108,11 @@ export const LivePitchLane: React.FC<Props> = ({ framesRef, morae, pattern, acti
             recent.push(f.pitch); if (recent.length > 60) recent.shift();
             const m = median(recent.slice(-15)) || f.pitch;
             const semi = 12 * Math.log2(f.pitch / m); // ± semitones from running median
+            // SNAP detection: voice reached high, then fell clearly low → fire once.
+            if (semi > peakSemi) peakSemi = semi;
+            if (hasGate && !snapRef.current && peakSemi > 1.2 && semi < -1.8) {
+              snapRef.current = true; snapFlash = performance.now(); onSnap?.();
+            }
             const y = (hiY + loY) / 2 - Math.max(-7, Math.min(7, semi)) / 7 * ((loY - hiY) / 2 + bandH / 2);
             lastY = y; holdFrames = 0;
             const x = xFor(f.t); lastX = x;
@@ -113,9 +131,10 @@ export const LivePitchLane: React.FC<Props> = ({ framesRef, morae, pattern, acti
       rafRef.current = requestAnimationFrame(draw);
     };
 
+    snapRef.current = false; // reset per recording mount
     if (active) rafRef.current = requestAnimationFrame(draw);
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
-  }, [framesRef, morae, pattern, active]);
+  }, [framesRef, morae, pattern, active, onSnap]);
 
   return (
     <div className="rounded-3xl bg-white ring-1 ring-gray-100 shadow-card p-3 overflow-hidden">
