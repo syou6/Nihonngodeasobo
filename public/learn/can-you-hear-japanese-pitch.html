@@ -1,0 +1,76 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Can You Hear Japanese Pitch Accent? Test Your Ear (箸 vs 橋)</title>
+<meta name="description" content="Tap to hear it: 箸 (chopsticks) vs 橋 (bridge), 雨 vs 飴 — same sounds, the pitch changes the word. Test your ear with real native audio, then play the 60-second game."/>
+<link rel="canonical" href="https://nihongo.amorjp.com/learn/can-you-hear-japanese-pitch.html"/>
+<meta property="og:title" content="Can You Hear Japanese Pitch Accent? Test Your Ear"/>
+<meta property="og:description" content="Tap to hear 箸 vs 橋, 雨 vs 飴 — same sounds, different pitch, different word. Then play the 60-second ear game, free."/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://nihongo.amorjp.com/learn/can-you-hear-japanese-pitch.html"/>
+<meta property="og:image" content="https://nihongo.amorjp.com/og-image.png"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  body{font-family:'Inter',sans-serif;background:#F9FAFB}
+  h1,h2,h3{font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:-.02em}
+  .ja{font-family:'Hiragino Sans','Plus Jakarta Sans',sans-serif}
+</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What's the difference between 箸 and 橋?","acceptedAnswer":{"@type":"Answer","text":"They sound the same (はし) but the pitch differs: 箸 (chopsticks) is HIGH-low, 橋 (bridge) is low-HIGH. The pitch changes which word you said."}},{"@type":"Question","name":"Can you train your ear to hear Japanese pitch accent?","acceptedAnswer":{"@type":"Answer","text":"Yes. Most learners can't hear their own pitch at first, but a few minutes of minimal-pair listening (箸 vs 橋, 雨 vs 飴) sharpens your ear fast — you start to hear the drop. A 2-choice ear game is the quickest way."}}]}</script>
+</head><body class="text-gray-800">
+<nav class="border-b border-gray-200 bg-white/90 backdrop-blur sticky top-0 z-10">
+  <div class="max-w-3xl mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="/" class="flex items-center gap-2 font-extrabold tracking-tight text-gray-900"><img src="/logo.png" class="w-8 h-8" alt="NihonGo"/> NihonGo</a>
+    <a href="/app.html?guest=true&view=ear" class="bg-indigo-600 text-white text-sm font-bold px-5 py-2 rounded-full hover:bg-indigo-500">👂 Play the Ear Test</a>
+  </div>
+</nav>
+  <article class="max-w-3xl mx-auto px-6 py-12 leading-relaxed">
+    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight">Can you <em>hear</em> Japanese pitch accent?</h1>
+    <p class="text-gray-500 mt-4 text-lg">In Japanese, two words can have the <strong>exact same sounds</strong> but a different <strong>pitch</strong> — and that changes the word entirely. Tap each card below to hear it with real audio. 🔊</p>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-8" id="pairs"></div>
+
+    <p class="text-gray-600">Heard the difference? That click in your ear is the whole skill. The fastest way to sharpen it is a quick game.</p>
+
+    <div class="my-10 p-8 rounded-3xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white text-center">
+      <h2 class="text-2xl font-extrabold">👂 Ear Sprint — 60 seconds, no mic</h2>
+      <p class="text-white/80 mt-2 mb-5">箸 or 橋? Hear it, tap it, build a combo. Free, no signup.</p>
+      <a href="/app.html?guest=true&view=ear" class="inline-block bg-white text-indigo-600 font-extrabold px-8 py-4 rounded-2xl hover:scale-105 transition-transform">Play the Ear Test — Free →</a>
+    </div>
+
+    <h2 class="text-2xl font-extrabold text-gray-900 mt-10">Why you can't hear it (yet)</h2>
+    <p class="text-gray-600 mt-3">English is a stress language — we make a syllable louder. Japanese is a <em>pitch</em> language — the voice rises and <strong>drops</strong> at a specific mora. Your brain filters out pitch you're not trained to notice, so you literally don't hear your own errors. Minimal-pair listening retrains that filter. Related: <a href="/learn/why-you-sound-foreign-in-japanese.html" class="text-indigo-600 font-semibold">why you sound foreign in Japanese</a>.</p>
+  </article>
+  <footer class="border-t border-gray-200 bg-white py-10 mt-16">
+  <div class="max-w-3xl mx-auto px-6 text-sm text-gray-400 flex flex-wrap gap-6 justify-between">
+    <span>&copy; 2026 AMOR LLC</span>
+    <span class="flex gap-5">
+      <a href="/learn/can-you-hear-japanese-pitch.html" class="hover:text-indigo-600">Hear It</a>
+      <a href="/learn/japanese-pitch-accent-patterns.html" class="hover:text-indigo-600">Patterns</a>
+      <a href="/learn/japanese-pitch-accent.html" class="hover:text-indigo-600">Minimal Pairs</a>
+      <a href="/" class="hover:text-indigo-600">Home</a>
+    </span>
+  </div>
+</footer>
+<script>
+  var PAIRS = [
+    { r:'はし', a:{w:'箸',en:'chopsticks 🥢',au:'hashi_chopsticks',p:'HIGH-low'}, b:{w:'橋',en:'bridge 🌉',au:'hashi_bridge',p:'low-HIGH'} },
+    { r:'あめ', a:{w:'雨',en:'rain 🌧',au:'ame_rain',p:'HIGH-low'}, b:{w:'飴',en:'candy 🍬',au:'ame_candy',p:'low-HIGH'} },
+    { r:'かみ', a:{w:'神',en:'god ⛩️',au:'kami_god',p:'HIGH-low'}, b:{w:'紙',en:'paper 📄',au:'kami_paper',p:'low-HIGH'} },
+    { r:'かき', a:{w:'牡蠣',en:'oyster 🦪',au:'kaki_oyster',p:'HIGH-low'}, b:{w:'柿',en:'persimmon 🟠',au:'kaki_persimmon',p:'low-HIGH'} },
+  ];
+  function card(s){
+    return '<button onclick="hear(\''+s.au+'\',this)" class="ja bg-white rounded-2xl border border-gray-100 shadow-sm p-4 hover:scale-[1.03] hover:border-indigo-200 transition-all text-center">'
+      +'<div class="text-4xl font-extrabold text-gray-900">'+s.w+'</div>'
+      +'<div class="text-sm text-gray-500 mt-1">'+s.en+'</div>'
+      +'<div class="font-mono text-xs text-gray-400 mt-1">'+s.p+'</div>'
+      +'<div class="text-[11px] font-bold text-indigo-600 mt-1.5">🔊 tap to hear</div></button>';
+  }
+  document.getElementById('pairs').innerHTML = PAIRS.map(function(pr){
+    return '<div class="rounded-2xl bg-gray-50 p-3"><div class="text-xs text-gray-400 text-center mb-2">same sound: <b class="ja text-gray-700">'+pr.r+'</b></div><div class="grid grid-cols-2 gap-2">'+card(pr.a)+card(pr.b)+'</div></div>';
+  }).join('');
+  function hear(au,el){ try{ new Audio('/pair-audio/'+au+'.mp3').play(); }catch(e){} el.animate([{transform:'scale(1.06)'},{transform:'scale(1)'}],{duration:240}); }
+</script>
+</body></html>
