@@ -12,6 +12,7 @@ import { logAttempt } from '../../lib/pitchAttempts';
 import { useAuthStore } from '../../stores/authStore';
 import { shareResult } from '../../lib/shareCard';
 import { Share2 } from 'lucide-react';
+import { LivePitchLane, type LiveFrame } from './LivePitchLane';
 
 const PATTERN_EN: Record<string, string> = { 平板: 'Heiban', 頭高: 'Atamadaka', 中高: 'Nakadaka', 尾高: 'Odaka' };
 
@@ -191,7 +192,6 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
     return i >= 0 ? i : 0;
   });
   const [scoredCount, setScoredCount] = useState(0); // scorings this session → Karte pull
-  const [isNewBest, setIsNewBest] = useState(false); // beat your personal best for this word
   const [prevBest, setPrevBest] = useState(0);
   const [confetti, setConfetti] = useState(0); // bump to fire a celebration burst
   const [muted, setMuted] = useState(() => localStorage.getItem('pitchMuted') === '1');
@@ -209,6 +209,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
 
   const trackerRef = useRef<PitchTracker | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const liveRef = useRef<LiveFrame[]>([]); // real-time F0 for the karaoke lane
 
   const { word, reading } = PRACTICE_WORDS[wordIndex];
   const pitchData = usePitchAccent(word, reading);
@@ -247,6 +248,8 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
       streamRef.current = stream;
       const tracker = new PitchTracker();
       trackerRef.current = tracker;
+      liveRef.current = [];
+      tracker.onPitch = (f) => { liveRef.current.push({ t: f.time, pitch: f.pitch }); };
       tracker.start(stream);
       setPhase('recording');
     } catch {
@@ -286,12 +289,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
     // users retrying instead of bouncing.
     const best = readWordBest(word);
     setPrevBest(best);
-    if (result.accuracy > best) {
-      localStorage.setItem(WORD_BEST_PREFIX + word, String(result.accuracy));
-      setIsNewBest(true);
-    } else {
-      setIsNewBest(false);
-    }
+    if (result.accuracy > best) localStorage.setItem(WORD_BEST_PREFIX + word, String(result.accuracy));
     if (result.accuracy >= 90) setConfetti((c) => c + 1); // celebrate the win
     playFeedback(result.accuracy, streak); // the win-moment sound + haptic
     setPhase('result');
@@ -348,6 +346,17 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
         <div className="flex justify-center">
           <PitchWordCard word={word} reading={reading} detectedPattern={matches} pairWith={pairWith} />
         </div>
+
+        {/* Live karaoke lane — while recording, your voice drives a dot that rides
+            the target bands; steer it through the DROP gate. */}
+        {phase === 'recording' && pitchData && (
+          <LivePitchLane
+            framesRef={liveRef}
+            morae={pitchData.morae}
+            pattern={pitchData.pattern.slice(0, pitchData.morae.length)}
+            active={phase === 'recording'}
+          />
+        )}
 
         {/* Result: score + recorded contour vs expected bands */}
         {phase === 'result' && accuracy !== null && (
