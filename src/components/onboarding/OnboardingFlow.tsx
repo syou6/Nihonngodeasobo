@@ -1158,9 +1158,9 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, show
                       Your Pitch Karte plan is ready, {displayName}!
                     </h3>
                     <p className="text-sm text-gray-500 mt-1 leading-relaxed">
-                      Premium unlocks your full <span className="font-semibold text-purple-600">per-pattern diagnosis</span>,
+                      Premium unlocks your <span className="font-semibold text-purple-600">ear-vs-mouth gap</span> (what you can hear vs say),
                       a <span className="font-semibold text-purple-600">drill queue built from your own errors</span>, and
-                      <span className="font-semibold text-green-600"> before/after progress</span> — so you fix what makes you sound foreign, fast.
+                      <span className="font-semibold text-green-600"> every minimal pair + hard mode</span> — so you close the gap fast.
                     </p>
                   </div>
                 </div>

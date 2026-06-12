@@ -176,10 +176,10 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {[
-              { icon: TrendingUp, label: 'Full Pitch Karte — per-pattern diagnosis' },
+              { icon: TrendingUp, label: 'Ear-vs-mouth gap — what you hear vs say' },
               { icon: Zap, label: 'Personal drill queue from your errors' },
-              { icon: Calendar, label: 'Progress history & before/after' },
-              { icon: Mic, label: 'Minimal pairs + every pattern unlocked' },
+              { icon: Calendar, label: 'Full Karte — per-pattern diagnosis + history' },
+              { icon: Mic, label: 'Every minimal pair + hard mode unlocked' },
             ].map(({ icon: Icon, label }) => (
               <div key={label} className="flex items-center gap-2.5 text-sm text-gray-500">
                 <div className="relative flex-shrink-0">
