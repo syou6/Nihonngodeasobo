@@ -218,6 +218,7 @@ export const EarSprint: React.FC<Props> = ({ onBack, onGoTrainer }) => {
             <button
               key={i}
               disabled={show}
+              data-played={isPlayed ? '1' : '0'}
               onClick={() => answer(isPlayed)}
               className={`rounded-2xl ring-2 p-5 text-center transition-all ${cls}`}
             >
