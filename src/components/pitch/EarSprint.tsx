@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Volume2, VolumeX, RotateCcw, Mic } from 'lucide-react';
 import { EAR_PAIRS, type MinimalPair, type PairSide } from './earPairs';
+import { DROP_WORDS, type DropWord } from './dropWords';
 import { playCorrect, playWrong, playClear, isMuted, setMutedFlag } from '../../lib/sfx';
 import { logEarAnswer } from '../../lib/pitchAttempts';
 import { trackEvent } from '../../lib/analytics';
@@ -18,16 +19,24 @@ interface Props {
 const ROUND_MS = 60_000;
 const BEST_KEY = 'earSprintBest';
 
-type Round = { pair: MinimalPair; played: PairSide; other: PairSide; leftIsPlayed: boolean };
+type Round =
+  | { kind: 'pair'; pair: MinimalPair; played: PairSide; other: PairSide; leftIsPlayed: boolean }
+  | { kind: 'drop'; word: DropWord };
 
 function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
 
-function makeRound(): Round {
+function makeRound(prev?: Round): Round {
+  // ~45% "where's the drop?" rounds, ~55% minimal-pair rounds — a much bigger
+  // question pool than pairs alone.
+  const wantDrop = Math.random() < 0.45 && DROP_WORDS.length > 0;
+  if (wantDrop) {
+    let w = pick(DROP_WORDS);
+    if (prev?.kind === 'drop' && DROP_WORDS.length > 1) { while (w.word === prev.word.word) w = pick(DROP_WORDS); }
+    return { kind: 'drop', word: w };
+  }
   const pair = pick(EAR_PAIRS);
   const playA = Math.random() < 0.5;
-  const played = playA ? pair.a : pair.b;
-  const other = playA ? pair.b : pair.a;
-  return { pair, played, other, leftIsPlayed: Math.random() < 0.5 };
+  return { kind: 'pair', pair, played: playA ? pair.a : pair.b, other: playA ? pair.b : pair.a, leftIsPlayed: Math.random() < 0.5 };
 }
 
 function earRank(score: number): string {
@@ -54,21 +63,26 @@ export const EarSprint: React.FC<Props> = ({ onBack, onGoTrainer }) => {
 
   const mult = combo >= 15 ? 4 : combo >= 10 ? 3 : combo >= 5 ? 2 : 1;
 
-  const playClip = useCallback((side: PairSide) => {
+  const playRound = useCallback((r: Round) => {
     if (isMuted()) return;
-    const a = new Audio(`/pair-audio/${side.audio}.mp3`);
+    const src = r.kind === 'pair' ? `/pair-audio/${r.played.audio}.mp3` : `/word-audio/${r.word.word}.mp3`;
+    const a = new Audio(src);
     audioRef.current = a;
     a.play().catch(() => {});
   }, []);
 
+  const replay = useCallback(() => { if (round) playRound(round); }, [round, playRound]);
+
   const nextRound = useCallback(() => {
-    const r = makeRound();
-    setRound(r);
-    setVerdict(null);
-    lockRef.current = false;
-    // small delay so the card is on screen before the clip plays
-    setTimeout(() => playClip(r.played), 250);
-  }, [playClip]);
+    setRound((prev) => {
+      const r = makeRound(prev ?? undefined);
+      setVerdict(null);
+      lockRef.current = false;
+      // small delay so the card is on screen before the clip plays
+      setTimeout(() => playRound(r), 250);
+      return r;
+    });
+  }, [playRound]);
 
   const start = useCallback(() => {
     setScore(0); setCombo(0); setBestCombo(0); setTimeLeft(ROUND_MS);
@@ -101,11 +115,11 @@ export const EarSprint: React.FC<Props> = ({ onBack, onGoTrainer }) => {
     return () => clearInterval(id);
   }, [phase, score, bestCombo]);
 
-  const answer = (chosePlayed: boolean) => {
+  const answer = (correct: boolean) => {
     if (!round || lockRef.current || phase !== 'play') return;
     lockRef.current = true;
-    logEarAnswer(chosePlayed); // feeds the ear-vs-mouth gap in the Karte
-    if (chosePlayed) {
+    logEarAnswer(correct); // feeds the ear-vs-mouth gap in the Karte
+    if (correct) {
       const gained = 10 * mult;
       setScore((s) => s + gained);
       setCombo((c) => { const n = c + 1; setBestCombo((b) => Math.max(b, n)); return n; });
@@ -171,9 +185,8 @@ export const EarSprint: React.FC<Props> = ({ onBack, onGoTrainer }) => {
   }
 
   // ---- play ----
-  const left = round && (round.leftIsPlayed ? round.played : round.other);
-  const right = round && (round.leftIsPlayed ? round.other : round.played);
   const secs = Math.ceil(timeLeft / 1000);
+  const show = verdict !== null;
 
   return (
     <div className="max-w-md mx-auto p-4 sm:p-6">
@@ -196,21 +209,36 @@ export const EarSprint: React.FC<Props> = ({ onBack, onGoTrainer }) => {
         <div className="h-full bg-brand-500 rounded-full transition-[width] duration-100 ease-linear" style={{ width: `${(timeLeft / ROUND_MS) * 100}%` }} />
       </div>
 
-      {/* prompt */}
+      {round?.kind === 'drop'
+        ? <DropQuestion round={round} show={show} verdict={verdict} secs={secs} onReplay={replay} onAnswer={answer} />
+        : round?.kind === 'pair'
+        ? <PairQuestion round={round} show={show} verdict={verdict} secs={secs} onReplay={replay} onAnswer={answer} />
+        : null}
+    </div>
+  );
+};
+
+// ---- minimal-pair question (which word did you hear?) ----
+const PairQuestion: React.FC<{
+  round: Extract<Round, { kind: 'pair' }>;
+  show: boolean; verdict: 'right' | 'wrong' | null; secs: number;
+  onReplay: () => void; onAnswer: (correct: boolean) => void;
+}> = ({ round, show, verdict, secs, onReplay, onAnswer }) => {
+  const left = round.leftIsPlayed ? round.played : round.other;
+  const right = round.leftIsPlayed ? round.other : round.played;
+  return (
+    <>
       <div className="text-center mb-2">
         <p className="text-sm text-gray-400 font-medium">Which did you hear? <span className="text-gray-300">({secs}s)</span></p>
-        <button onClick={() => round && playClip(round.played)} className="mt-2 inline-flex items-center gap-2 text-brand-600 font-bold">
+        <button onClick={onReplay} className="mt-2 inline-flex items-center gap-2 text-brand-600 font-bold">
           <Volume2 className="w-5 h-5" /> play again
         </button>
-        <div className="font-display text-5xl font-black text-ink mt-3">{round?.pair.reading}</div>
+        <div className="font-display text-5xl font-black text-ink mt-3">{round.pair.reading}</div>
       </div>
 
-      {/* choices */}
       <div className="grid grid-cols-2 gap-3 mt-6">
         {[left, right].map((side, i) => {
-          if (!side || !round) return <div key={i} />;
           const isPlayed = side === round.played;
-          const show = verdict !== null;
           const cls = !show ? 'bg-white ring-gray-200 hover:ring-brand-300'
             : isPlayed ? 'bg-green-50 ring-green-400'
             : 'bg-gray-50 ring-gray-200 opacity-60';
@@ -219,7 +247,7 @@ export const EarSprint: React.FC<Props> = ({ onBack, onGoTrainer }) => {
               key={i}
               disabled={show}
               data-played={isPlayed ? '1' : '0'}
-              onClick={() => answer(isPlayed)}
+              onClick={() => onAnswer(isPlayed)}
               className={`rounded-2xl ring-2 p-5 text-center transition-all ${cls}`}
             >
               <div className="font-display text-4xl font-black text-ink">{side.word}</div>
@@ -230,9 +258,8 @@ export const EarSprint: React.FC<Props> = ({ onBack, onGoTrainer }) => {
         })}
       </div>
 
-      {/* verdict toast */}
       <AnimatePresence>
-        {verdict && round && (
+        {verdict && (
           <motion.div
             initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }}
             className={`mt-5 rounded-xl p-3 text-center text-sm font-semibold ${verdict === 'right' ? 'bg-green-50 text-green-700' : 'bg-rose-50 text-rose-700'}`}
@@ -243,6 +270,87 @@ export const EarSprint: React.FC<Props> = ({ onBack, onGoTrainer }) => {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </>
+  );
+};
+
+// High/Low per mora given the nucleus (drop-after index; 0 = heiban/no drop).
+function dropPattern(morae: string[], dropAfter: number): ('H' | 'L')[] {
+  if (dropAfter === 1) return morae.map((_, i) => (i === 0 ? 'H' : 'L'));
+  return morae.map((_, i) => {
+    if (i === 0) return 'L';
+    if (dropAfter === 0) return 'H';
+    return i < dropAfter ? 'H' : 'L';
+  });
+}
+
+// ---- "where's the drop?" question (tap the mora the pitch drops after) ----
+const DropQuestion: React.FC<{
+  round: Extract<Round, { kind: 'drop' }>;
+  show: boolean; verdict: 'right' | 'wrong' | null; secs: number;
+  onReplay: () => void; onAnswer: (correct: boolean) => void;
+}> = ({ round, show, verdict, secs, onReplay, onAnswer }) => {
+  const { word, morae, en, dropAfter, reading } = round.word;
+  const pat = dropPattern(morae, dropAfter);
+  // options: drop-after-each-mora (1..n) + "no drop" (0)
+  const opts: { label: string; value: number }[] = [
+    ...morae.map((m, i) => ({ label: `${m} ↘`, value: i + 1 })),
+    { label: 'stays high →', value: 0 },
+  ];
+  return (
+    <>
+      <div className="text-center mb-2">
+        <p className="text-sm text-gray-400 font-medium">Where does the pitch drop? <span className="text-gray-300">({secs}s)</span></p>
+        <button onClick={onReplay} className="mt-2 inline-flex items-center gap-2 text-brand-600 font-bold">
+          <Volume2 className="w-5 h-5" /> play again
+        </button>
+        <div className="font-display text-5xl font-black text-ink mt-3">{word}</div>
+        <div className="text-sm text-gray-400 mt-1">{reading} · {en}</div>
+      </div>
+
+      {/* reveal the contour once answered */}
+      {show && (
+        <div className="flex justify-center gap-1 mt-4">
+          {morae.map((m, i) => (
+            <span key={i} className={`font-display text-2xl font-black px-2.5 py-1 rounded-lg ${pat[i] === 'H' ? 'bg-green-100 text-green-700 -translate-y-1' : 'bg-gray-100 text-gray-400'} transition-transform`}>{m}</span>
+          ))}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-3 mt-6">
+        {opts.map((o, i) => {
+          const isCorrect = o.value === dropAfter;
+          const cls = !show ? 'bg-white ring-gray-200 hover:ring-brand-300'
+            : isCorrect ? 'bg-green-50 ring-green-400'
+            : 'bg-gray-50 ring-gray-200 opacity-60';
+          return (
+            <button
+              key={i}
+              disabled={show}
+              data-correct={isCorrect ? '1' : '0'}
+              onClick={() => onAnswer(isCorrect)}
+              className={`rounded-2xl ring-2 p-4 text-center font-display text-2xl font-black text-ink transition-all ${cls}`}
+            >
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <AnimatePresence>
+        {verdict && (
+          <motion.div
+            initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }}
+            className={`mt-5 rounded-xl p-3 text-center text-sm font-semibold ${verdict === 'right' ? 'bg-green-50 text-green-700' : 'bg-rose-50 text-rose-700'}`}
+          >
+            {verdict === 'right'
+              ? `Yes — ${word} ${pat.join('')} ✓`
+              : dropAfter === 0
+              ? `It stays high — ${word} is ${pat.join('')} (no drop)`
+              : `It drops after ${morae[dropAfter - 1]} — ${word} is ${pat.join('')}`}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
