@@ -298,7 +298,7 @@ export const AppPage: React.FC = () => {
 
                   {guestTab === 'ear' ? (
                     <Suspense fallback={<ViewFallback />}>
-                      <EarSprint onBack={() => setGuestTab('pitch')} onGoTrainer={() => setGuestTab('pitch')} />
+                      <EarSprint onBack={() => setGuestTab('pitch')} onGoTrainer={() => setGuestTab('pitch')} onSignup={() => setShowAuthFormState(true)} />
                     </Suspense>
                   ) : guestTab === 'karte' ? (
                     <Suspense fallback={<ViewFallback />}>

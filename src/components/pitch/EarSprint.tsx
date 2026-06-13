@@ -17,6 +17,7 @@ import { Share2 } from 'lucide-react';
 interface Props {
   onBack: () => void;
   onGoTrainer?: () => void;
+  onSignup?: () => void; // guest-only: capture them after a good run (save streak/best)
 }
 
 const ROUND_MS = 60_000;
@@ -50,7 +51,7 @@ function earRank(score: number): string {
   return 'Keep training 💪';
 }
 
-export const EarSprint: React.FC<Props> = ({ onBack, onGoTrainer }) => {
+export const EarSprint: React.FC<Props> = ({ onBack, onGoTrainer, onSignup }) => {
   const [phase, setPhase] = useState<'intro' | 'play' | 'over'>('intro');
   const [round, setRound] = useState<Round | null>(null);
   const [score, setScore] = useState(0);
@@ -177,6 +178,14 @@ export const EarSprint: React.FC<Props> = ({ onBack, onGoTrainer }) => {
           <p className="text-gray-500 mb-1">{earRank(score)}</p>
           <p className="text-sm text-gray-400 mb-6">best combo ×{bestCombo} · all-time {best}</p>
         </motion.div>
+        {onSignup && score > 0 && (
+          <button
+            onClick={() => { trackEvent('ear_signup_nudge_click', { score }); onSignup(); }}
+            className="w-full bg-amber-50 ring-1 ring-amber-200 text-amber-900 font-bold py-3 rounded-2xl mb-3 text-sm hover:bg-amber-100 transition-colors"
+          >
+            🔒 Sign up free — save your best ({best}) & daily streak
+          </button>
+        )}
         {score > 0 && (
           <button
             onClick={async () => {
