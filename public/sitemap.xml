@@ -201,6 +201,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://nihongo.amorjp.com/learn/say/earth-chikyuu.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://nihongo.amorjp.com/learn/say/egg-tamago.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -216,7 +221,17 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://nihongo.amorjp.com/learn/say/forest-mori.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://nihongo.amorjp.com/learn/say/fruit-kudamono.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/futon-futon.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -252,6 +267,11 @@
   </url>
   <url>
     <loc>https://nihongo.amorjp.com/learn/say/mandarin-mikan.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/map-chizu.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -382,6 +402,11 @@
   </url>
   <url>
     <loc>https://nihongo.amorjp.com/learn/say/walk-sanpo.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/wall-kabe.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>

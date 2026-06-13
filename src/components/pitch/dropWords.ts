@@ -68,4 +68,9 @@ export const DROP_WORDS: DropWord[] = [
   { word: '野球', reading: 'やきゅう', en: 'baseball ⚾', morae: ['や','きゅ','う'], dropAfter: 0 },
   { word: '切手', reading: 'きって', en: 'stamp 📮', morae: ['き','っ','て'], dropAfter: 0 },
   { word: '散歩', reading: 'さんぽ', en: 'walk 🚶', morae: ['さ','ん','ぽ'], dropAfter: 0 },
+  { word: '地図', reading: 'ちず', en: 'map 🗺️', morae: ['ち','ず'], dropAfter: 1 },
+  { word: '壁', reading: 'かべ', en: 'wall 🧱', morae: ['か','べ'], dropAfter: 0 },
+  { word: '森', reading: 'もり', en: 'forest 🌲', morae: ['も','り'], dropAfter: 0 },
+  { word: '地球', reading: 'ちきゅう', en: 'earth 🌏', morae: ['ち','きゅ','う'], dropAfter: 0 },
+  { word: '布団', reading: 'ふとん', en: 'futon 🛏️', morae: ['ふ','と','ん'], dropAfter: 0 },
 ];
