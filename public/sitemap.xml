@@ -21,22 +21,7 @@
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://nihongo.amorjp.com/learn/common-japanese-mistakes.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://nihongo.amorjp.com/learn/japanese-pitch-accent.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://nihongo.amorjp.com/learn/why-you-sound-foreign-in-japanese.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://nihongo.amorjp.com/learn/japanese-pitch-accent-patterns.html</loc>
+    <loc>https://nihongo.amorjp.com/learn/ame-rain-vs-candy.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -46,17 +31,12 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://nihongo.amorjp.com/learn/common-japanese-mistakes.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://nihongo.amorjp.com/learn/hashi-chopsticks-vs-bridge.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://nihongo.amorjp.com/learn/ame-rain-vs-candy.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://nihongo.amorjp.com/learn/kami-god-vs-paper.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -66,7 +46,17 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nihongo.amorjp.com/learn/sake-alcohol-vs-salmon.html</loc>
+    <loc>https://nihongo.amorjp.com/learn/japanese-pitch-accent-patterns.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/japanese-pitch-accent.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/kaeru-to-go-home-vs-frog.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -76,12 +66,22 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://nihongo.amorjp.com/learn/kame-jar-vs-turtle.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/kami-god-vs-paper.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://nihongo.amorjp.com/learn/kiru-to-cut-vs-to-wear.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nihongo.amorjp.com/learn/kame-jar-vs-turtle.html</loc>
+    <loc>https://nihongo.amorjp.com/learn/sake-alcohol-vs-salmon.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -91,8 +91,243 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nihongo.amorjp.com/learn/kaeru-to-go-home-vs-frog.html</loc>
+    <loc>https://nihongo.amorjp.com/learn/why-you-sound-foreign-in-japanese.html</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/adult-otona.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/bag-kaban.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/bicycle-jitensha.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/book-hon.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/candy-ame.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/car-kuruma.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/cat-neko.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/chopsticks-hashi.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/clock-tokei.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/cloud-kumo.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/coffee-koohii.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/company-kaisha.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/country-kuni.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/desk-tsukue.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/egg-tamago.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/face-kao.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/fish-sakana.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/fruit-kudamono.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/garden-niwa.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/glasses-megane.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/japan-nihon.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/letter-tegami.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/library-toshokan.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/mandarin-mikan.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/mother-haha.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/mouth-kuchi.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/newspaper-shinbun.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/night-yoru.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/nose-hana.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/photo-shashin.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/question-shitsumon.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/rain-ame.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/school-gakkou.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/sea-umi.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/sky-sora.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/star-hoshi.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/station-eki.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/teacher-sensei.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/time-jikan.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/train-densha.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/travel-ryokou.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/vegetable-yasai.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/voice-koe.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/water-mizu.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/wind-kaze.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/window-mado.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nihongo.amorjp.com/learn/say/work-shigoto.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>
