@@ -8,7 +8,7 @@ import { motion, AnimatePresence, type Variants } from 'framer-motion';
 // (big jump + sparkles). When a Rive .riv exists, swap this for <RiveMascot/>;
 // the Mood API stays the same so callers don't change.
 
-export type SheepMood = 'idle' | 'thinking' | 'happy' | 'sad' | 'celebrate';
+export type SheepMood = 'idle' | 'thinking' | 'talking' | 'happy' | 'sad' | 'celebrate';
 
 interface Props {
   mood: SheepMood;
@@ -21,6 +21,7 @@ interface Props {
 const body: Variants = {
   idle: { y: [0, -3, 0], rotate: 0, scaleX: 1, scaleY: 1, transition: { y: { duration: 2.6, repeat: Infinity, ease: 'easeInOut' } } },
   thinking: { y: 0, rotate: -5, scaleX: 1, scaleY: 1, transition: { type: 'spring', stiffness: 200, damping: 18 } },
+  talking: { y: [0, -2, 0], rotate: [0, 1.5, -1.5, 0], scaleX: 1, scaleY: 1, transition: { duration: 0.5, repeat: Infinity, ease: 'easeInOut' } },
   happy: { y: [0, -24, 0], rotate: 0, scaleX: [1, 0.95, 1.05, 1], scaleY: [1, 1.08, 0.94, 1], transition: { duration: 0.55, ease: 'easeOut' } },
   sad: { y: 0, rotate: [0, -3, 3, -2, 0], scaleX: 1, scaleY: 1, transition: { duration: 0.7, ease: 'easeInOut' } },
   celebrate: { y: [0, -34, 2, -16, 0], rotate: 0, scaleX: 1, scaleY: 1, transition: { duration: 1.0, times: [0, 0.3, 0.55, 0.78, 1], ease: 'easeOut' } },
@@ -38,7 +39,7 @@ export const PitchSheep: React.FC<Props> = ({ mood, size = 120, className }) => 
 
   // natural blink only when the eyes are open (idle/thinking)
   useEffect(() => {
-    if (mood !== 'idle' && mood !== 'thinking') return;
+    if (mood !== 'idle' && mood !== 'thinking' && mood !== 'talking') return;
     let t: ReturnType<typeof setTimeout>;
     const loop = () => {
       t = setTimeout(() => {
@@ -179,6 +180,19 @@ const Mouth: React.FC<{ mood: SheepMood }> = ({ mood }) => {
   }
   if (mood === 'sad') {
     return <path d="M64 90 Q70 85 76 90" stroke={INK} strokeWidth="2.5" strokeLinecap="round" fill="none" />;
+  }
+  if (mood === 'talking') {
+    // mouth flaps open/closed to fake a lip-sync while audio plays
+    return (
+      <motion.ellipse
+        cx="70"
+        cy="88"
+        rx="5"
+        fill={INK}
+        animate={{ ry: [1.2, 4.5, 1.2] }}
+        transition={{ duration: 0.26, repeat: Infinity, ease: 'easeInOut' }}
+      />
+    );
   }
   if (mood === 'thinking') {
     return <circle cx="70" cy="88" r="2.5" fill={INK} />;

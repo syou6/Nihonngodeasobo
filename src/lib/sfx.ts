@@ -36,8 +36,15 @@ export function setMutedFlag(m: boolean): void {
   localStorage.setItem('pitchMuted', m ? '1' : '0');
 }
 
-function haptic(ms = 16): void {
-  if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(ms);
+export function haptic(pattern: number | number[] = 16): void {
+  if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(pattern);
+}
+
+/** New-best / milestone flourish: rich arpeggio + a celebratory haptic burst. */
+export function playBigWin(): void {
+  if (isMuted()) return;
+  [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, i * 0.1, 0.3, 0.12, 'triangle'));
+  haptic([0, 40, 50, 90]);
 }
 
 /** Production-score feedback: nailed drop = rising perfect fifth (climbs per combo). */

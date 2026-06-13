@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Volume2, VolumeX, RotateCcw, Mic } from 'lucide-react';
 import { EAR_PAIRS, type MinimalPair, type PairSide } from './earPairs';
 import { DROP_WORDS, type DropWord } from './dropWords';
-import { playCorrect, playWrong, playClear, isMuted, setMutedFlag } from '../../lib/sfx';
+import { playCorrect, playWrong, playClear, playBigWin, isMuted, setMutedFlag } from '../../lib/sfx';
 import { logEarAnswer } from '../../lib/pitchAttempts';
 import { trackEvent } from '../../lib/analytics';
 import { PitchSheep } from '../mascot/PitchSheep';
@@ -102,12 +102,14 @@ export const EarSprint: React.FC<Props> = ({ onBack, onGoTrainer }) => {
         clearInterval(id);
         setTimeLeft(0);
         setPhase('over');
+        const prevBest = Number(localStorage.getItem(BEST_KEY)) || 0;
+        const isNewBest = score > prevBest && score > 0;
         setBest((b) => {
           const nb = Math.max(b, score);
           localStorage.setItem(BEST_KEY, String(nb));
           return nb;
         });
-        playClear();
+        if (isNewBest) playBigWin(); else playClear(); // milestone gets the full flourish
         trackEvent('ear_sprint_end', { score, bestCombo });
       } else {
         setTimeLeft(left);

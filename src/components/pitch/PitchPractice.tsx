@@ -14,6 +14,7 @@ import { shareResult } from '../../lib/shareCard';
 import { Share2 } from 'lucide-react';
 import { LivePitchLane, type LiveFrame } from './LivePitchLane';
 import { meaningFlipFor } from './earPairs';
+import { PitchSheep, type SheepMood } from '../mascot/PitchSheep';
 
 const PATTERN_EN: Record<string, string> = { 平板: 'Heiban', 頭高: 'Atamadaka', 中高: 'Nakadaka', 尾高: 'Odaka' };
 
@@ -214,6 +215,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
   const [cleared, setCleared] = useState(false); // hit the daily set → celebration card
   const [dailyStreak, setDailyStreak] = useState(0);
   const [phase, setPhase] = useState<Phase>('ready');
+  const [talking, setTalking] = useState(false); // sheep lip-syncs while native audio plays
   const [frames, setFrames] = useState<PitchFrame[]>([]);
   const [accuracy, setAccuracy] = useState<number | null>(null);
   const [targetNucleus, setTargetNucleus] = useState(0);
@@ -256,6 +258,16 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
     setMatches(undefined);
     setCoach(null);
     setError(null);
+  };
+
+  // Play the native clip and lip-sync the sheep for the duration.
+  const playNative = () => {
+    const a = new Audio(`/pitch-audio/${encodeURIComponent(word)}.mp3`);
+    setTalking(true);
+    const stop = () => setTalking(false);
+    a.addEventListener('ended', stop);
+    a.addEventListener('error', stop);
+    a.play().catch(stop); // asset missing or autoplay blocked
   };
 
   const startRecording = async () => {
@@ -359,6 +371,11 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
     );
   }
 
+  const sheepMood: SheepMood = talking ? 'talking'
+    : phase === 'recording' ? 'thinking'
+    : phase === 'result' && accuracy !== null ? (accuracy >= 80 ? 'celebrate' : accuracy >= 50 ? 'happy' : 'sad')
+    : 'idle';
+
   return (
     <div className="max-w-2xl mx-auto p-4 sm:p-6">
       {/* Header */}
@@ -370,6 +387,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
+        <PitchSheep mood={sheepMood} size={48} className="shrink-0" />
         <div>
           <h1 className="font-display text-xl font-extrabold text-ink">Pitch Trainer</h1>
           <p className="text-sm text-gray-400 font-medium">
@@ -570,10 +588,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
           {/* Listen FIRST (no mic needed) — the low-friction entry that lets a new
               user "get it" before the mic-permission prompt. */}
           <Button
-            onClick={() => {
-              const a = new Audio(`/pitch-audio/${encodeURIComponent(word)}.mp3`);
-              a.play().catch(() => {/* asset missing or autoplay blocked */});
-            }}
+            onClick={playNative}
             variant="outline"
             size="lg"
             className="w-full sm:w-64"

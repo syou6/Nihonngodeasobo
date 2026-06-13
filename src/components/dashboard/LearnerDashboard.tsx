@@ -14,6 +14,7 @@ import {
   ClipboardList,
 } from 'lucide-react';
 import { useSubscription } from '../../hooks/useSubscription';
+import { PitchSheep } from '../mascot/PitchSheep';
 import { format, formatDistanceToNow } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 
@@ -102,9 +103,12 @@ export const LearnerDashboard: React.FC<LearnerDashboardProps> = ({ onViewChange
       >
         <div className="pointer-events-none absolute -top-10 -right-6 w-40 h-40 bg-white/10 blur-2xl rounded-full" />
         <div className="relative flex items-center justify-between">
-          <div>
-            <h2 className="font-display text-2xl font-extrabold mb-1">👂 Ear Sprint</h2>
-            <p className="text-sm text-white/80">60-second ear game. 箸 or 橋? Build your combo — no mic.</p>
+          <div className="flex items-center gap-3">
+            <PitchSheep mood="idle" size={60} className="shrink-0 drop-shadow" />
+            <div>
+              <h2 className="font-display text-2xl font-extrabold mb-1">Ear Sprint</h2>
+              <p className="text-sm text-white/80">60-second ear game. 箸 or 橋? Build your combo — no mic.</p>
+            </div>
           </div>
           {(() => {
             const s = Number(localStorage.getItem('pitchDailyStreak'));
