@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence, type Variants } from 'framer-motion';
+import { motion, AnimatePresence, useAnimationControls, type Variants } from 'framer-motion';
 
 // PitchSheep — the app mascot. A pure SVG + framer-motion sheep that reacts to
-// game state. Delight budget (design-craft): idle is a subtle bob + blink, a
-// correct answer is a quick spring jump, a miss is GENTLE (we never make the
-// learner feel bad — that's the brand), and a milestone gets the full magic
-// (big jump + sparkles). When a Rive .riv exists, swap this for <RiveMascot/>;
-// the Mood API stays the same so callers don't change.
+// game state, built entirely in code (no Flutter, no Rive .riv dependency). It
+// goes for Rive-grade life through layered micro-animation: breathing, an
+// occasional ear twitch, a wandering gaze (real sclera + pupils, not dots), a
+// shadow that shrinks when it leaves the ground, and squash-and-stretch springs.
+//
+// Delight budget (design-craft): idle stays subtle, a correct answer is a quick
+// spring, a miss is GENTLE (we never make the learner feel bad — the brand), and
+// a milestone gets the full magic (big jump + sparkles). When a Rive file ever
+// exists, swap this for <RiveMascot/> — the SheepMood API stays the same so no
+// caller changes.
 
 export type SheepMood = 'idle' | 'thinking' | 'talking' | 'happy' | 'sad' | 'celebrate';
 
@@ -17,14 +22,24 @@ interface Props {
 }
 
 // Whole-body motion per mood. rotate/scale reset on every entry so moods can't
-// leave the sheep stuck mid-tilt.
+// leave the sheep stuck mid-tilt. Jumps use a soft overshoot for bounce.
 const body: Variants = {
   idle: { y: [0, -3, 0], rotate: 0, scaleX: 1, scaleY: 1, transition: { y: { duration: 2.6, repeat: Infinity, ease: 'easeInOut' } } },
-  thinking: { y: 0, rotate: -5, scaleX: 1, scaleY: 1, transition: { type: 'spring', stiffness: 200, damping: 18 } },
+  thinking: { y: 0, rotate: -5, scaleX: 1, scaleY: 1, transition: { type: 'spring', stiffness: 220, damping: 18 } },
   talking: { y: [0, -2, 0], rotate: [0, 1.5, -1.5, 0], scaleX: 1, scaleY: 1, transition: { duration: 0.5, repeat: Infinity, ease: 'easeInOut' } },
-  happy: { y: [0, -24, 0], rotate: 0, scaleX: [1, 0.95, 1.05, 1], scaleY: [1, 1.08, 0.94, 1], transition: { duration: 0.55, ease: 'easeOut' } },
+  happy: { y: [0, -26, 4, 0], rotate: 0, scaleX: [1, 0.92, 1.08, 1], scaleY: [1, 1.12, 0.9, 1], transition: { duration: 0.62, ease: 'easeOut', times: [0, 0.4, 0.7, 1] } },
   sad: { y: 0, rotate: [0, -3, 3, -2, 0], scaleX: 1, scaleY: 1, transition: { duration: 0.7, ease: 'easeInOut' } },
-  celebrate: { y: [0, -34, 2, -16, 0], rotate: 0, scaleX: 1, scaleY: 1, transition: { duration: 1.0, times: [0, 0.3, 0.55, 0.78, 1], ease: 'easeOut' } },
+  celebrate: { y: [0, -36, 2, -18, 0], rotate: [0, -4, 4, -2, 0], scaleX: [1, 0.9, 1.1, 0.96, 1], scaleY: [1, 1.14, 0.88, 1.04, 1], transition: { duration: 1.05, times: [0, 0.28, 0.55, 0.78, 1], ease: 'easeOut' } },
+};
+
+// The ground shadow shrinks/fades as the sheep leaves the floor (sells height).
+const shadow: Variants = {
+  idle: { scaleX: [1, 0.94, 1], opacity: [0.1, 0.07, 0.1], transition: { duration: 2.6, repeat: Infinity, ease: 'easeInOut' } },
+  thinking: { scaleX: 1, opacity: 0.1, transition: { duration: 0.3 } },
+  talking: { scaleX: 1, opacity: 0.1, transition: { duration: 0.3 } },
+  happy: { scaleX: [1, 0.7, 1], opacity: [0.1, 0.05, 0.1], transition: { duration: 0.62, times: [0, 0.4, 1] } },
+  sad: { scaleX: 1, opacity: 0.1, transition: { duration: 0.3 } },
+  celebrate: { scaleX: [1, 0.62, 0.9, 0.7, 1], opacity: [0.1, 0.04, 0.08, 0.05, 0.1], transition: { duration: 1.05, times: [0, 0.28, 0.55, 0.78, 1] } },
 };
 
 const WOOL = '#FFFFFF';
@@ -34,89 +49,127 @@ const FACE_DK = '#D9C5A6';
 const INK = '#3A3550';
 const CHEEK = '#F7A8C4';
 
+const WOOL_BUMPS: [number, number, number][] = [
+  [44, 64, 18], [96, 64, 18], [54, 46, 17], [86, 46, 17], [70, 40, 18],
+  [40, 80, 15], [100, 80, 15], [58, 92, 16], [82, 92, 16],
+];
+
 export const PitchSheep: React.FC<Props> = ({ mood, size = 120, className }) => {
   const [blink, setBlink] = useState(false);
+  const [gaze, setGaze] = useState({ x: 0, y: 0 });
+  const ears = useAnimationControls();
+  const eyesOpen = mood === 'idle' || mood === 'thinking' || mood === 'talking';
 
-  // natural blink only when the eyes are open (idle/thinking)
+  // Natural blink only when the eyes are open.
   useEffect(() => {
-    if (mood !== 'idle' && mood !== 'thinking' && mood !== 'talking') return;
+    if (!eyesOpen) return;
     let t: ReturnType<typeof setTimeout>;
     const loop = () => {
       t = setTimeout(() => {
         setBlink(true);
-        setTimeout(() => setBlink(false), 130);
+        setTimeout(() => setBlink(false), 120);
         loop();
-      }, 2200 + Math.random() * 2400);
+      }, 2200 + Math.random() * 2600);
     };
     loop();
     return () => clearTimeout(t);
-  }, [mood]);
+  }, [eyesOpen]);
+
+  // Wandering gaze — the pupils drift to a new spot every few seconds while idle,
+  // and lock forward+up while thinking. Tiny offsets; this is what reads as alive.
+  useEffect(() => {
+    if (mood === 'thinking') { setGaze({ x: 0, y: -1.6 }); return; }
+    if (!eyesOpen) { setGaze({ x: 0, y: 0 }); return; }
+    let t: ReturnType<typeof setTimeout>;
+    const loop = () => {
+      t = setTimeout(() => {
+        setGaze({ x: (Math.random() - 0.5) * 3, y: (Math.random() - 0.5) * 2 });
+        loop();
+      }, 1400 + Math.random() * 2200);
+    };
+    loop();
+    return () => clearTimeout(t);
+  }, [eyesOpen, mood]);
+
+  // Occasional ear twitch while calm.
+  useEffect(() => {
+    if (mood !== 'idle' && mood !== 'talking') return;
+    let t: ReturnType<typeof setTimeout>;
+    const loop = () => {
+      t = setTimeout(async () => {
+        await ears.start({ rotate: [0, -6, 0], transition: { duration: 0.32 } });
+        loop();
+      }, 3000 + Math.random() * 4000);
+    };
+    loop();
+    return () => clearTimeout(t);
+  }, [mood, ears]);
 
   const cheeks = mood === 'happy' || mood === 'celebrate';
-  const lookUp = mood === 'thinking';
 
   return (
     <div className={className} style={{ width: size, height: size }}>
-      <motion.svg
-        viewBox="0 0 140 132"
-        width={size}
-        height={size}
-        animate={mood}
-        variants={body}
-        style={{ originX: 0.5, originY: 1, overflow: 'visible' }}
-      >
+      <motion.svg viewBox="0 0 140 132" width={size} height={size} style={{ overflow: 'visible' }}>
         {/* contact shadow (one light source, vertical) */}
-        <ellipse cx="70" cy="122" rx="34" ry="6" fill="#000" opacity="0.08" />
+        <motion.ellipse cx="70" cy="122" rx="34" ry="6" fill="#000" variants={shadow} animate={mood} style={{ originX: '70px', originY: '122px' }} />
 
-        {/* legs */}
-        {[50, 64, 78, 92].map((x) => (
-          <rect key={x} x={x} y="100" width="7" height="16" rx="3.5" fill={FACE_DK} />
-        ))}
+        {/* everything that jumps */}
+        <motion.g variants={body} animate={mood} style={{ originX: '70px', originY: '120px' }}>
+          {/* breathing — a slow, independent in/out the jump rides on top of */}
+          <motion.g
+            animate={{ scale: eyesOpen ? [1, 1.022, 1] : 1 }}
+            transition={{ duration: 3.4, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ originX: '70px', originY: '88px' }}
+          >
+            {/* legs */}
+            {[50, 64, 78, 92].map((x) => (
+              <rect key={x} x={x} y="100" width="7" height="16" rx="3.5" fill={FACE_DK} />
+            ))}
 
-        {/* wool body — cloud of bumps */}
-        <g>
-          {[
-            [44, 64, 18], [96, 64, 18], [54, 46, 17], [86, 46, 17], [70, 40, 18],
-            [40, 80, 15], [100, 80, 15], [58, 92, 16], [82, 92, 16],
-          ].map(([cx, cy, r], i) => (
-            <circle key={i} cx={cx} cy={cy} r={r} fill={WOOL} stroke={WOOL_EDGE} strokeWidth="1.5" />
-          ))}
-          <ellipse cx="70" cy="70" rx="40" ry="34" fill={WOOL} />
-        </g>
-
-        {/* face */}
-        <ellipse cx="70" cy="72" rx="29" ry="27" fill={FACE} />
-        {/* forelock curls */}
-        <circle cx="60" cy="50" r="9" fill={WOOL} stroke={WOOL_EDGE} strokeWidth="1.5" />
-        <circle cx="72" cy="47" r="10" fill={WOOL} stroke={WOOL_EDGE} strokeWidth="1.5" />
-        <circle cx="82" cy="51" r="8" fill={WOOL} stroke={WOOL_EDGE} strokeWidth="1.5" />
-        {/* ears */}
-        <ellipse cx="42" cy="68" rx="11" ry="6.5" fill={FACE_DK} transform={`rotate(${mood === 'sad' ? 28 : 18} 42 68)`} />
-        <ellipse cx="98" cy="68" rx="11" ry="6.5" fill={FACE_DK} transform={`rotate(${mood === 'sad' ? -28 : -18} 98 68)`} />
-
-        {/* cheeks */}
-        <AnimatePresence>
-          {cheeks && (
-            <motion.g initial={{ opacity: 0 }} animate={{ opacity: 0.85 }} exit={{ opacity: 0 }}>
-              <circle cx="54" cy="82" r="6" fill={CHEEK} />
-              <circle cx="86" cy="82" r="6" fill={CHEEK} />
+            {/* ears (twitch) — drawn under the wool */}
+            <motion.g animate={ears} style={{ originX: '70px', originY: '68px' }}>
+              <ellipse cx="42" cy="68" rx="11" ry="6.5" fill={FACE_DK} transform={`rotate(${mood === 'sad' ? 28 : 18} 42 68)`} />
+              <ellipse cx="98" cy="68" rx="11" ry="6.5" fill={FACE_DK} transform={`rotate(${mood === 'sad' ? -28 : -18} 98 68)`} />
             </motion.g>
-          )}
-        </AnimatePresence>
 
-        {/* eyes */}
-        <Eyes mood={mood} blink={blink} lookUp={lookUp} />
+            {/* wool body — cloud of bumps with a soft inner shade for depth */}
+            <g>
+              {WOOL_BUMPS.map(([cx, cy, r], i) => (
+                <circle key={i} cx={cx} cy={cy} r={r} fill={WOOL} stroke={WOOL_EDGE} strokeWidth="1.5" />
+              ))}
+              <ellipse cx="70" cy="70" rx="40" ry="34" fill={WOOL} />
+              <ellipse cx="70" cy="80" rx="34" ry="20" fill="#EEEAF6" opacity="0.5" />
+            </g>
 
-        {/* mouth */}
-        <Mouth mood={mood} />
+            {/* face */}
+            <ellipse cx="70" cy="72" rx="29" ry="27" fill={FACE} />
+            <ellipse cx="70" cy="80" rx="24" ry="16" fill="#000" opacity="0.04" />
+            {/* forelock curls */}
+            <circle cx="60" cy="50" r="9" fill={WOOL} stroke={WOOL_EDGE} strokeWidth="1.5" />
+            <circle cx="72" cy="47" r="10" fill={WOOL} stroke={WOOL_EDGE} strokeWidth="1.5" />
+            <circle cx="82" cy="51" r="8" fill={WOOL} stroke={WOOL_EDGE} strokeWidth="1.5" />
+
+            {/* cheeks */}
+            <AnimatePresence>
+              {cheeks && (
+                <motion.g initial={{ opacity: 0 }} animate={{ opacity: 0.85 }} exit={{ opacity: 0 }}>
+                  <circle cx="54" cy="82" r="6" fill={CHEEK} />
+                  <circle cx="86" cy="82" r="6" fill={CHEEK} />
+                </motion.g>
+              )}
+            </AnimatePresence>
+
+            {/* eyes + mouth */}
+            <Eyes mood={mood} blink={blink} gaze={gaze} />
+            <Mouth mood={mood} />
+          </motion.g>
+        </motion.g>
 
         {/* sparkles for the big moment */}
         <AnimatePresence>
           {mood === 'celebrate' && (
             <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              {[
-                [24, 40], [116, 36], [30, 78], [110, 80], [70, 16],
-              ].map(([x, y], i) => (
+              {[[24, 40], [116, 36], [30, 78], [110, 80], [70, 16]].map(([x, y], i) => (
                 <motion.text
                   key={i}
                   x={x}
@@ -138,7 +191,7 @@ export const PitchSheep: React.FC<Props> = ({ mood, size = 120, className }) => 
   );
 };
 
-const Eyes: React.FC<{ mood: SheepMood; blink: boolean; lookUp: boolean }> = ({ mood, blink, lookUp }) => {
+const Eyes: React.FC<{ mood: SheepMood; blink: boolean; gaze: { x: number; y: number } }> = ({ mood, blink, gaze }) => {
   // happy / celebrate → upward arc "^ ^"
   if (mood === 'happy' || mood === 'celebrate') {
     return (
@@ -157,20 +210,20 @@ const Eyes: React.FC<{ mood: SheepMood; blink: boolean; lookUp: boolean }> = ({ 
       </g>
     );
   }
-  // idle / thinking → round eyes that blink; thinking glances up
-  const dy = lookUp ? -2 : 0;
-  return (
-    <g fill={INK}>
-      <ellipse cx="60" cy={73 + dy} rx="4" ry={blink ? 0.6 : 5} />
-      <ellipse cx="80" cy={73 + dy} rx="4" ry={blink ? 0.6 : 5} />
-      {/* catchlight */}
-      {!blink && (
-        <g fill="#fff">
-          <circle cx="61.5" cy={71 + dy} r="1.3" />
-          <circle cx="81.5" cy={71 + dy} r="1.3" />
-        </g>
-      )}
+  // open eyes: white sclera + a pupil that tracks the gaze + catchlight; blink
+  // collapses the whole eye vertically.
+  const eye = (cx: number) => (
+    <g>
+      <ellipse cx={cx} cy={73} rx="5" ry="6" fill="#fff" stroke="#E3DEEC" strokeWidth="0.8" />
+      <motion.circle cx={cx} cy={73} r="3.4" fill={INK} animate={{ cx: cx + gaze.x, cy: 73 + gaze.y }} transition={{ type: 'spring', stiffness: 200, damping: 16 }} />
+      <motion.circle cx={cx + 1.4} cy={71.2} r="1.2" fill="#fff" animate={{ cx: cx + 1.4 + gaze.x, cy: 71.2 + gaze.y }} transition={{ type: 'spring', stiffness: 200, damping: 16 }} />
     </g>
+  );
+  return (
+    <motion.g animate={{ scaleY: blink ? 0.08 : 1 }} transition={{ duration: 0.08 }} style={{ originY: '73px' }}>
+      {eye(60)}
+      {eye(80)}
+    </motion.g>
   );
 };
 
@@ -184,14 +237,7 @@ const Mouth: React.FC<{ mood: SheepMood }> = ({ mood }) => {
   if (mood === 'talking') {
     // mouth flaps open/closed to fake a lip-sync while audio plays
     return (
-      <motion.ellipse
-        cx="70"
-        cy="88"
-        rx="5"
-        fill={INK}
-        animate={{ ry: [1.2, 4.5, 1.2] }}
-        transition={{ duration: 0.26, repeat: Infinity, ease: 'easeInOut' }}
-      />
+      <motion.ellipse cx="70" cy="88" rx="5" fill={INK} animate={{ ry: [1.2, 4.5, 1.2] }} transition={{ duration: 0.26, repeat: Infinity, ease: 'easeInOut' }} />
     );
   }
   if (mood === 'thinking') {
