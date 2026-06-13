@@ -7,6 +7,8 @@ import { playCorrect, playWrong, playClear, playBigWin, isMuted, setMutedFlag } 
 import { logEarAnswer } from '../../lib/pitchAttempts';
 import { trackEvent } from '../../lib/analytics';
 import { PitchSheep } from '../mascot/PitchSheep';
+import { shareEarResult } from '../../lib/earShareCard';
+import { Share2 } from 'lucide-react';
 
 // Ear Sprint — a 60s, no-mic, 2-choice minimal-pair perception game. Never says
 // your voice is bad (your voice isn't involved); 50% luck floor; combo builds the
@@ -175,6 +177,17 @@ export const EarSprint: React.FC<Props> = ({ onBack, onGoTrainer }) => {
           <p className="text-gray-500 mb-1">{earRank(score)}</p>
           <p className="text-sm text-gray-400 mb-6">best combo ×{bestCombo} · all-time {best}</p>
         </motion.div>
+        {score > 0 && (
+          <button
+            onClick={async () => {
+              trackEvent('ear_share_click', { score });
+              await shareEarResult({ score, rank: earRank(score), bestCombo, best });
+            }}
+            className="w-full bg-white ring-1 ring-brand-200 text-brand-600 font-display font-extrabold py-3.5 rounded-2xl shadow-soft mb-3 hover:bg-brand-50 transition-colors"
+          >
+            <Share2 className="w-5 h-5 inline mr-2" />Share my score
+          </button>
+        )}
         <button onClick={start} className="w-full bg-brand-gradient text-white font-display font-extrabold py-3.5 rounded-2xl shadow-soft mb-3 hover:scale-[1.02] transition-transform">
           <RotateCcw className="w-5 h-5 inline mr-2" />Play again
         </button>

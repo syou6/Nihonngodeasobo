@@ -1,0 +1,170 @@
+// Shareable 1080×1350 card for an Ear Sprint score — the growth loop: a player
+// posts "I scored X on the Japanese ear test, can you hear it?" and a friend
+// lands straight in the 60s game. Pure canvas, no dependency. Mirrors the brand
+// (indigo→violet, the PitchSheep mascot drawn happy).
+
+export interface EarShareInput {
+  score: number;
+  rank: string;       // e.g. "Sharp ear 👂"
+  bestCombo: number;
+  best: number;       // all-time best
+}
+
+const W = 1080;
+const H = 1350;
+const UI_FONT = "'Plus Jakarta Sans','Inter',system-ui,sans-serif";
+
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+// A happy PitchSheep drawn at (cx, cy) scaled by s (matches the SVG mascot).
+function drawSheep(ctx: CanvasRenderingContext2D, cx: number, cy: number, s: number) {
+  const P = (x: number, y: number) => [cx + (x - 70) * s, cy + (y - 70) * s] as const;
+  // legs
+  ctx.fillStyle = '#D9C5A6';
+  for (const lx of [50, 64, 78, 92]) {
+    const [x, y] = P(lx, 100);
+    roundRect(ctx, x, y, 7 * s, 16 * s, 3.5 * s); ctx.fill();
+  }
+  // wool bumps
+  ctx.fillStyle = '#FFFFFF';
+  ctx.strokeStyle = '#E7E2F2';
+  ctx.lineWidth = 1.5 * s;
+  const bumps: [number, number, number][] = [[44, 64, 18], [96, 64, 18], [54, 46, 17], [86, 46, 17], [70, 40, 18], [40, 80, 15], [100, 80, 15], [58, 92, 16], [82, 92, 16]];
+  for (const [bx, by, r] of bumps) { const [x, y] = P(bx, by); ctx.beginPath(); ctx.arc(x, y, r * s, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+  const ellipse = (bx: number, by: number, rx: number, ry: number, fill: string) => { const [x, y] = P(bx, by); ctx.fillStyle = fill; ctx.beginPath(); ctx.ellipse(x, y, rx * s, ry * s, 0, 0, Math.PI * 2); ctx.fill(); };
+  ellipse(70, 70, 40, 34, '#FFFFFF');
+  // face
+  ellipse(70, 72, 29, 27, '#E9DAC4');
+  // forelock
+  for (const [bx, by, r] of [[60, 50, 9], [72, 47, 10], [82, 51, 8]] as [number, number, number][]) { const [x, y] = P(bx, by); ctx.fillStyle = '#FFFFFF'; ctx.beginPath(); ctx.arc(x, y, r * s, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+  // cheeks
+  ellipse(54, 82, 6, 6, '#F7A8C4');
+  ellipse(86, 82, 6, 6, '#F7A8C4');
+  // happy ^^ eyes
+  ctx.strokeStyle = '#3A3550';
+  ctx.lineWidth = 3 * s;
+  ctx.lineCap = 'round';
+  const arc = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number) => { const [a, b] = P(x1, y1); const [c, d] = P(x2, y2); const [e, f] = P(x3, y3); ctx.beginPath(); ctx.moveTo(a, b); ctx.quadraticCurveTo(c, d, e, f); ctx.stroke(); };
+  arc(55, 73, 60, 67, 65, 73);
+  arc(75, 73, 80, 67, 85, 73);
+  // smile (filled)
+  ctx.fillStyle = '#3A3550';
+  const [mx, my] = P(62, 86); const [cx2, cy2] = P(70, 96); const [ex, ey] = P(78, 86);
+  ctx.beginPath(); ctx.moveTo(mx, my); ctx.quadraticCurveTo(cx2, cy2, ex, ey); ctx.closePath(); ctx.fill();
+}
+
+export async function generateEarShareCard(input: EarShareInput): Promise<Blob> {
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d')!;
+
+  // background gradient
+  const g = ctx.createLinearGradient(0, 0, W, H);
+  g.addColorStop(0, '#4f46e5');
+  g.addColorStop(1, '#7c3aed');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+
+  // soft glow
+  const rg = ctx.createRadialGradient(W / 2, 430, 40, W / 2, 430, 520);
+  rg.addColorStop(0, 'rgba(255,255,255,0.16)');
+  rg.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = rg;
+  ctx.fillRect(0, 0, W, H);
+
+  // header
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = `800 46px ${UI_FONT}`;
+  ctx.fillText('🍣 NihonGo', 80, 130);
+  ctx.textAlign = 'right';
+  ctx.font = `700 30px ${UI_FONT}`;
+  ctx.globalAlpha = 0.8;
+  ctx.fillText('JAPANESE EAR TEST', W - 80, 128);
+  ctx.globalAlpha = 1;
+
+  // mascot
+  drawSheep(ctx, W / 2, 400, 3.4);
+
+  // score
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = `800 64px ${UI_FONT}`;
+  ctx.globalAlpha = 0.85;
+  ctx.fillText('I scored', W / 2, 690);
+  ctx.globalAlpha = 1;
+  ctx.font = `900 280px ${UI_FONT}`;
+  ctx.fillText(String(input.score), W / 2, 940);
+  ctx.font = `700 52px ${UI_FONT}`;
+  ctx.globalAlpha = 0.92;
+  ctx.fillText(input.rank, W / 2, 1020);
+  ctx.globalAlpha = 1;
+
+  // combo / best badges
+  ctx.font = `700 38px ${UI_FONT}`;
+  const badge = (text: string, x: number, w: number) => {
+    ctx.fillStyle = 'rgba(255,255,255,0.16)';
+    roundRect(ctx, x, 1070, w, 78, 39); ctx.fill();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(text, x + w / 2, 1120);
+  };
+  const cText = `🔥 best combo ×${input.bestCombo}`;
+  const bText = `🏆 all-time ${input.best}`;
+  ctx.font = `700 36px ${UI_FONT}`;
+  const cw = ctx.measureText(cText).width + 64;
+  const bw = ctx.measureText(bText).width + 64;
+  const gap = 24;
+  const total = cw + bw + gap;
+  badge(cText, (W - total) / 2, cw);
+  badge(bText, (W - total) / 2 + cw + gap, bw);
+
+  // CTA pill
+  ctx.fillStyle = '#FFFFFF';
+  roundRect(ctx, 140, 1210, W - 280, 96, 48); ctx.fill();
+  ctx.fillStyle = '#4f46e5';
+  ctx.font = `800 40px ${UI_FONT}`;
+  ctx.fillText('Can you hear it? 箸 or 橋 👂', W / 2, 1258);
+  ctx.fillStyle = '#6366f1';
+  ctx.font = `600 30px ${UI_FONT}`;
+  ctx.fillText('nihongo.amorjp.com', W / 2, 1296);
+
+  return await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/png');
+  });
+}
+
+const SHARE_URL = 'https://nihongo.amorjp.com/app.html?guest=true&view=ear&utm_source=ear_share';
+
+export async function shareEarResult(input: EarShareInput): Promise<'shared' | 'downloaded'> {
+  const blob = await generateEarShareCard(input);
+  const file = new File([blob], `nihongo-ear-${input.score}.png`, { type: 'image/png' });
+  const text =
+    `I scored ${input.score} on the Japanese ear test 👂 (${input.rank})\n` +
+    `Can you hear 箸 vs 橋? Try the 60-sec game — no mic ${SHARE_URL}\n\n` +
+    `#LearnJapanese #JapanesePitchAccent #日本語 #studytok`;
+
+  const nav = navigator as Navigator & { canShare?: (d: unknown) => boolean };
+  if (nav.share && nav.canShare?.({ files: [file] })) {
+    try {
+      await nav.share({ files: [file], text, title: 'My NihonGo ear-test score' });
+      return 'shared';
+    } catch {
+      // cancelled → fall through to download
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = file.name;
+  a.click();
+  URL.revokeObjectURL(url);
+  return 'downloaded';
+}
