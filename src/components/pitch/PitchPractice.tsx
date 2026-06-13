@@ -14,7 +14,7 @@ import { shareResult } from '../../lib/shareCard';
 import { Share2 } from 'lucide-react';
 import { LivePitchLane, type LiveFrame } from './LivePitchLane';
 import { meaningFlipFor } from './earPairs';
-import { PitchSheep, type SheepMood } from '../mascot/PitchSheep';
+import { PitchBird, type BirdMood } from '../mascot/PitchBird';
 
 const PATTERN_EN: Record<string, string> = { 平板: 'Heiban', 頭高: 'Atamadaka', 中高: 'Nakadaka', 尾高: 'Odaka' };
 
@@ -371,7 +371,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
     );
   }
 
-  const sheepMood: SheepMood = talking ? 'talking'
+  const sheepMood: BirdMood = talking ? 'talking'
     : phase === 'recording' ? 'thinking'
     : phase === 'result' && accuracy !== null ? (accuracy >= 80 ? 'celebrate' : accuracy >= 50 ? 'happy' : 'sad')
     : 'idle';
@@ -387,7 +387,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <PitchSheep mood={sheepMood} size={48} className="shrink-0" />
+        <PitchBird mood={sheepMood} size={48} className="shrink-0" />
         <div>
           <h1 className="font-display text-xl font-extrabold text-ink">Pitch Trainer</h1>
           <p className="text-sm text-gray-400 font-medium">
@@ -587,7 +587,7 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
             (design-craft empty state: 1 benefit line + 1 pointer + 1 CTA). */}
         {phase === 'ready' && wordIndex === 0 && scoredCount === 0 && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-center gap-2">
-            <PitchSheep mood={talking ? 'talking' : 'idle'} size={56} className="shrink-0" />
+            <PitchBird mood={talking ? 'talking' : 'idle'} size={56} className="shrink-0" />
             <div className="relative bg-white ring-1 ring-gray-100 shadow-card rounded-2xl px-4 py-3 text-sm text-gray-600 max-w-xs">
               <span className="absolute -left-1 top-5 w-3 h-3 bg-white rotate-45" />
               Tap <b className="text-brand-600">Listen</b> to hear it 👂 — then record, and I'll score your pitch.

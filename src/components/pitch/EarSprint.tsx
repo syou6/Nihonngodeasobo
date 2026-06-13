@@ -6,7 +6,7 @@ import { DROP_WORDS, type DropWord } from './dropWords';
 import { playCorrect, playWrong, playClear, playBigWin, isMuted, setMutedFlag } from '../../lib/sfx';
 import { logEarAnswer } from '../../lib/pitchAttempts';
 import { trackEvent } from '../../lib/analytics';
-import { PitchSheep } from '../mascot/PitchSheep';
+import { PitchBird } from '../mascot/PitchBird';
 import { shareEarResult } from '../../lib/earShareCard';
 import { Share2 } from 'lucide-react';
 
@@ -150,7 +150,7 @@ export const EarSprint: React.FC<Props> = ({ onBack, onGoTrainer, onSignup }) =>
           <button onClick={onBack} className="text-gray-400 hover:text-gray-600"><ArrowLeft className="w-5 h-5" /></button>
           <h1 className="font-display text-xl font-extrabold text-ink">Ear Sprint</h1>
         </div>
-        <div className="flex justify-center mb-2"><PitchSheep mood="idle" size={132} /></div>
+        <div className="flex justify-center mb-2"><PitchBird mood="idle" size={132} /></div>
         <h2 className="font-display text-2xl font-extrabold text-ink mb-2">Can you hear the pitch?</h2>
         <p className="text-gray-500 mb-1">Same sounds, different pitch, different word.</p>
         <p className="text-gray-500 mb-8">60 seconds. How many can you catch?</p>
@@ -172,7 +172,7 @@ export const EarSprint: React.FC<Props> = ({ onBack, onGoTrainer, onSignup }) =>
     return (
       <div className="max-w-md mx-auto p-4 sm:p-6 text-center">
         <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 14 }}>
-          <div className="flex justify-center mb-1"><PitchSheep mood={score > 0 ? 'celebrate' : 'happy'} size={120} /></div>
+          <div className="flex justify-center mb-1"><PitchBird mood={score > 0 ? 'celebrate' : 'happy'} size={120} /></div>
           <h2 className="font-display text-2xl font-extrabold text-ink mb-1">{isBest ? 'New best!' : 'Time!'}</h2>
           <div className="font-display text-6xl font-black text-brand-600 my-3">{score}</div>
           <p className="text-gray-500 mb-1">{earRank(score)}</p>
@@ -236,7 +236,7 @@ export const EarSprint: React.FC<Props> = ({ onBack, onGoTrainer, onSignup }) =>
 
       {/* mascot reacts to the round */}
       <div className="flex justify-center mb-2">
-        <PitchSheep mood={verdict === 'right' ? 'happy' : verdict === 'wrong' ? 'sad' : 'thinking'} size={84} />
+        <PitchBird mood={verdict === 'right' ? 'happy' : verdict === 'wrong' ? 'sad' : 'thinking'} size={84} />
       </div>
 
       {round?.kind === 'drop'

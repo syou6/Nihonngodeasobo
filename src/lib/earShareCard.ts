@@ -1,7 +1,7 @@
 // Shareable 1080×1350 card for an Ear Sprint score — the growth loop: a player
 // posts "I scored X on the Japanese ear test, can you hear it?" and a friend
 // lands straight in the 60s game. Pure canvas, no dependency. Mirrors the brand
-// (indigo→violet, the PitchSheep mascot drawn happy).
+// (indigo→violet, the PitchBird mascot drawn happy + singing).
 
 export interface EarShareInput {
   score: number;
@@ -24,41 +24,42 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.closePath();
 }
 
-// A happy PitchSheep drawn at (cx, cy) scaled by s (matches the SVG mascot).
-function drawSheep(ctx: CanvasRenderingContext2D, cx: number, cy: number, s: number) {
+// A happy PitchBird (uguisu) drawn at (cx, cy) scaled by s (matches the SVG mascot).
+function drawBird(ctx: CanvasRenderingContext2D, cx: number, cy: number, s: number) {
   const P = (x: number, y: number) => [cx + (x - 70) * s, cy + (y - 70) * s] as const;
-  // legs
-  ctx.fillStyle = '#D9C5A6';
-  for (const lx of [50, 64, 78, 92]) {
-    const [x, y] = P(lx, 100);
-    roundRect(ctx, x, y, 7 * s, 16 * s, 3.5 * s); ctx.fill();
-  }
-  // wool bumps
-  ctx.fillStyle = '#FFFFFF';
-  ctx.strokeStyle = '#E7E2F2';
-  ctx.lineWidth = 1.5 * s;
-  const bumps: [number, number, number][] = [[44, 64, 18], [96, 64, 18], [54, 46, 17], [86, 46, 17], [70, 40, 18], [40, 80, 15], [100, 80, 15], [58, 92, 16], [82, 92, 16]];
-  for (const [bx, by, r] of bumps) { const [x, y] = P(bx, by); ctx.beginPath(); ctx.arc(x, y, r * s, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
-  const ellipse = (bx: number, by: number, rx: number, ry: number, fill: string) => { const [x, y] = P(bx, by); ctx.fillStyle = fill; ctx.beginPath(); ctx.ellipse(x, y, rx * s, ry * s, 0, 0, Math.PI * 2); ctx.fill(); };
-  ellipse(70, 70, 40, 34, '#FFFFFF');
-  // face
-  ellipse(70, 72, 29, 27, '#E9DAC4');
-  // forelock
-  for (const [bx, by, r] of [[60, 50, 9], [72, 47, 10], [82, 51, 8]] as [number, number, number][]) { const [x, y] = P(bx, by); ctx.fillStyle = '#FFFFFF'; ctx.beginPath(); ctx.arc(x, y, r * s, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+  const GREEN = '#94A24E', GREEN_DK = '#7C8A3E', BELLY = '#F0EBD6', BEAK = '#E8A23D', BEAK_DK = '#D08C2C', INK = '#3A3550', CHEEK = '#F2A65A';
+  const ellipse = (bx: number, by: number, rx: number, ry: number, fill: string, rot = 0) => { const [x, y] = P(bx, by); ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.fillStyle = fill; ctx.beginPath(); ctx.ellipse(0, 0, rx * s, ry * s, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); };
+  const tri = (p1: [number, number], p2: [number, number], p3: [number, number], fill: string) => { const [a, b] = P(...p1); const [c, d] = P(...p2); const [e, f] = P(...p3); ctx.fillStyle = fill; ctx.beginPath(); ctx.moveTo(a, b); ctx.lineTo(c, d); ctx.lineTo(e, f); ctx.closePath(); ctx.fill(); };
+  // feet
+  ctx.strokeStyle = BEAK; ctx.lineWidth = 3 * s; ctx.lineCap = 'round';
+  const seg = (x1: number, y1: number, x2: number, y2: number) => { const [a, b] = P(x1, y1); const [c, d] = P(x2, y2); ctx.beginPath(); ctx.moveTo(a, b); ctx.lineTo(c, d); ctx.stroke(); };
+  seg(62, 108, 62, 116); seg(58, 118, 66, 118); seg(78, 108, 78, 116); seg(74, 118, 82, 118);
+  // tail
+  ctx.fillStyle = GREEN_DK; { const [a, b] = P(98, 92), [c, d] = P(128, 108), [e, f] = P(100, 102); ctx.beginPath(); ctx.moveTo(a, b); ctx.quadraticCurveTo(c, d, e, f); ctx.closePath(); ctx.fill(); }
+  // far wing
+  ellipse(103, 76, 12, 18, GREEN_DK, 0.3);
+  // body
+  ellipse(70, 72, 40, 39, GREEN);
+  // belly
+  ellipse(70, 86, 26, 22, BELLY);
+  // crest
+  tri([66, 36], [69, 22], [70, 36], GREEN_DK); tri([72, 35], [79, 23], [76, 36], GREEN_DK);
   // cheeks
-  ellipse(54, 82, 6, 6, '#F7A8C4');
-  ellipse(86, 82, 6, 6, '#F7A8C4');
+  ellipse(50, 80, 5.5, 5.5, CHEEK); ellipse(90, 80, 5.5, 5.5, CHEEK);
   // happy ^^ eyes
-  ctx.strokeStyle = '#3A3550';
-  ctx.lineWidth = 3 * s;
-  ctx.lineCap = 'round';
+  ctx.strokeStyle = INK; ctx.lineWidth = 3 * s; ctx.lineCap = 'round';
   const arc = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number) => { const [a, b] = P(x1, y1); const [c, d] = P(x2, y2); const [e, f] = P(x3, y3); ctx.beginPath(); ctx.moveTo(a, b); ctx.quadraticCurveTo(c, d, e, f); ctx.stroke(); };
-  arc(55, 73, 60, 67, 65, 73);
-  arc(75, 73, 80, 67, 85, 73);
-  // smile (filled)
-  ctx.fillStyle = '#3A3550';
-  const [mx, my] = P(62, 86); const [cx2, cy2] = P(70, 96); const [ex, ey] = P(78, 86);
-  ctx.beginPath(); ctx.moveTo(mx, my); ctx.quadraticCurveTo(cx2, cy2, ex, ey); ctx.closePath(); ctx.fill();
+  arc(53, 70, 58, 64, 63, 70); arc(77, 70, 82, 64, 87, 70);
+  // open beak
+  tri([62, 80], [78, 80], [70, 85], BEAK);
+  tri([63, 84], [77, 84], [70, 89], BEAK_DK);
+  // near wing
+  ellipse(37, 76, 12, 18, GREEN_DK, -0.3);
+  // ♪ note
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = `700 ${Math.round(26 * s)}px ${UI_FONT}`;
+  ctx.textAlign = 'center';
+  { const [a, b] = P(112, 44); ctx.fillText('♪', a, b); }
 }
 
 export async function generateEarShareCard(input: EarShareInput): Promise<Blob> {
@@ -92,7 +93,7 @@ export async function generateEarShareCard(input: EarShareInput): Promise<Blob> 
   ctx.globalAlpha = 1;
 
   // mascot
-  drawSheep(ctx, W / 2, 400, 3.4);
+  drawBird(ctx, W / 2, 400, 3.4);
 
   // score
   ctx.textAlign = 'center';
