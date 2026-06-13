@@ -71,4 +71,9 @@ export const EAR_PAIRS: MinimalPair[] = [
     a: { word: '膿', en: 'pus 🤕', audio: 'umi_pus', pattern: 'HL' },
     b: { word: '海', en: 'sea 🌊', audio: 'umi_sea', pattern: 'LH' },
   },
+  {
+    reading: 'かえる',
+    a: { word: '帰る', en: 'to go home 🏠', audio: 'kaeru_return', pattern: 'HL' },
+    b: { word: '蛙', en: 'frog 🐸', audio: 'kaeru_frog', pattern: 'LH' },
+  },
 ];
