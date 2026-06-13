@@ -56,4 +56,19 @@ export const EAR_PAIRS: MinimalPair[] = [
     a: { word: '牡蠣', en: 'oyster 🦪', audio: 'kaki_oyster', pattern: 'HL' },
     b: { word: '柿', en: 'persimmon 🟠', audio: 'kaki_persimmon', pattern: 'LH' },
   },
+  {
+    reading: 'きる',
+    a: { word: '切る', en: 'to cut ✂️', audio: 'kiru_cut', pattern: 'HL' },
+    b: { word: '着る', en: 'to wear 👕', audio: 'kiru_wear', pattern: 'LH' },
+  },
+  {
+    reading: 'かめ',
+    a: { word: '瓶', en: 'jar 🏺', audio: 'kame_jar', pattern: 'HL' },
+    b: { word: '亀', en: 'turtle 🐢', audio: 'kame_turtle', pattern: 'LH' },
+  },
+  {
+    reading: 'うみ',
+    a: { word: '膿', en: 'pus 🤕', audio: 'umi_pus', pattern: 'HL' },
+    b: { word: '海', en: 'sea 🌊', audio: 'umi_sea', pattern: 'LH' },
+  },
 ];
