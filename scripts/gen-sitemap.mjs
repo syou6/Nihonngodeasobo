@@ -1,6 +1,6 @@
 // Rebuild sitemap.xml from the actual files on disk: static roots + everything
 // under public/learn (flat pair/explainer pages + per-word pages in /say).
-import { readdirSync, writeFileSync, statSync } from 'node:fs';
+import { readdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 const ROOT = '/Users/sho/nihongo-web';
@@ -19,6 +19,7 @@ const urls = [...STATIC];
 // flat /learn/*.html
 for (const f of readdirSync(LEARN)) {
   if (!f.endsWith('.html')) continue;
+  if (f === 'index.html') { urls.push({ loc: '/learn/', freq: 'weekly', pri: '0.9' }); continue; }
   const explainer = ['can-you-hear-japanese-pitch', 'japanese-pitch-accent', 'japanese-pitch-accent-patterns', 'why-you-sound-foreign-in-japanese', 'common-japanese-mistakes'].includes(f.replace('.html', ''));
   urls.push({ loc: `/learn/${f}`, freq: 'monthly', pri: explainer ? '0.9' : '0.8' });
 }
