@@ -583,6 +583,18 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
           </div>
         )}
 
+        {/* First-run guidance — mascot points to the low-friction first step
+            (design-craft empty state: 1 benefit line + 1 pointer + 1 CTA). */}
+        {phase === 'ready' && wordIndex === 0 && scoredCount === 0 && (
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-center gap-2">
+            <PitchSheep mood={talking ? 'talking' : 'idle'} size={56} className="shrink-0" />
+            <div className="relative bg-white ring-1 ring-gray-100 shadow-card rounded-2xl px-4 py-3 text-sm text-gray-600 max-w-xs">
+              <span className="absolute -left-1 top-5 w-3 h-3 bg-white rotate-45" />
+              Tap <b className="text-brand-600">Listen</b> to hear it 👂 — then record, and I'll score your pitch.
+            </div>
+          </motion.div>
+        )}
+
         {/* Controls */}
         <div className="flex flex-col items-center gap-3">
           {/* Listen FIRST (no mic needed) — the low-friction entry that lets a new
@@ -596,12 +608,6 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
             <Volume2 className="w-5 h-5 mr-2" />
             Listen to a native
           </Button>
-
-          {phase === 'ready' && wordIndex === 0 && (
-            <p className="text-xs text-gray-400 text-center">
-              👂 Tap Listen first — then record yourself and we'll score your pitch.
-            </p>
-          )}
 
           {phase === 'ready' && (
             <Button
