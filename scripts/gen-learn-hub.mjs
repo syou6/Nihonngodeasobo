@@ -36,6 +36,7 @@ const PAIRS = [
   ['kaeru-to-go-home-vs-frog', '帰る / 蛙', 'go home vs frog'],
 ];
 const EXPLAINERS = [
+  ['how-to-learn-japanese-pitch-accent', 'How to learn pitch accent', 'The complete step-by-step guide.'],
   ['can-you-hear-japanese-pitch', 'Can you hear Japanese pitch?', 'The aha — tap 箸 vs 橋 and hear it.'],
   ['japanese-pitch-accent-patterns', 'The 4 pitch patterns', 'Heiban, atamadaka, nakadaka, odaka.'],
   ['japanese-pitch-accent', 'Minimal pairs', 'Same sounds, different pitch, different word.'],

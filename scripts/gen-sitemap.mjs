@@ -20,7 +20,7 @@ const urls = [...STATIC];
 for (const f of readdirSync(LEARN)) {
   if (!f.endsWith('.html')) continue;
   if (f === 'index.html') { urls.push({ loc: '/learn/', freq: 'weekly', pri: '0.9' }); continue; }
-  const explainer = ['can-you-hear-japanese-pitch', 'japanese-pitch-accent', 'japanese-pitch-accent-patterns', 'why-you-sound-foreign-in-japanese', 'common-japanese-mistakes'].includes(f.replace('.html', ''));
+  const explainer = ['can-you-hear-japanese-pitch', 'japanese-pitch-accent', 'japanese-pitch-accent-patterns', 'why-you-sound-foreign-in-japanese', 'common-japanese-mistakes', 'how-to-learn-japanese-pitch-accent'].includes(f.replace('.html', ''));
   urls.push({ loc: `/learn/${f}`, freq: 'monthly', pri: explainer ? '0.9' : '0.8' });
 }
 // per-word /learn/say/*.html
