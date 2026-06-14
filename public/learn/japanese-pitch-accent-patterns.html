@@ -1,5 +1,17 @@
 <!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<script>
+  if (location.hostname === 'nihongo.amorjp.com') {
+    var gaScript = document.createElement('script');
+    gaScript.async = true;
+    gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-79GNWZ3865';
+    document.head.appendChild(gaScript);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    window.gtag('js', new Date());
+    window.gtag('config', 'G-79GNWZ3865');
+  }
+</script>
 <title>Japanese Pitch Accent Patterns: Heiban, Atamadaka, Nakadaka, Odaka</title>
 <meta name="description" content="The 4 Japanese pitch accent patterns explained simply: heiban (平板), atamadaka (頭高), nakadaka (中高), odaka (尾高) — what the drop is, where it falls, and examples."/>
 <link rel="canonical" href="https://nihongo.amorjp.com/learn/japanese-pitch-accent-patterns.html"/>

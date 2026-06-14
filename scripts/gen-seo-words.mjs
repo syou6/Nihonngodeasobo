@@ -77,6 +77,18 @@ function page(x, all) {
   };
   return `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<script>
+  if (location.hostname === 'nihongo.amorjp.com') {
+    var gaScript = document.createElement('script');
+    gaScript.async = true;
+    gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-79GNWZ3865';
+    document.head.appendChild(gaScript);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    window.gtag('js', new Date());
+    window.gtag('config', 'G-79GNWZ3865');
+  }
+</script>
 <title>${title}</title>
 <meta name="description" content="${desc}"/>
 <link rel="canonical" href="${url}"/>

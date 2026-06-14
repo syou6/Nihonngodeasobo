@@ -51,6 +51,18 @@ const chip = (href, jp, en) => `<a href="${href}" class="ja text-sm bg-white bor
 
 const html = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<script>
+  if (location.hostname === 'nihongo.amorjp.com') {
+    var gaScript = document.createElement('script');
+    gaScript.async = true;
+    gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-79GNWZ3865';
+    document.head.appendChild(gaScript);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    window.gtag('js', new Date());
+    window.gtag('config', 'G-79GNWZ3865');
+  }
+</script>
 <title>Japanese Pitch Accent — Learn by Ear (${W.length} words, real audio) | NihonGo</title>
 <meta name="description" content="The full Japanese pitch-accent library: hear ${W.length} common words and ${PAIRS.length} minimal pairs with real native audio, see each pitch contour, and train your ear free."/>
 <link rel="canonical" href="${SITE}/learn/"/>
