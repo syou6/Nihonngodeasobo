@@ -314,6 +314,40 @@ function dropPattern(morae: string[], dropAfter: number): ('H' | 'L')[] {
   });
 }
 
+// The mascot's whole reason to be a bird: it RIDES the pitch contour — hops
+// across the moras at their high/low height and visibly drops at the nucleus.
+// Turns the answer reveal from a static chart into a tiny lesson on "the drop".
+const STONE_W = 52;
+const ContourRide: React.FC<{ morae: string[]; contour: ('H' | 'L')[] }> = ({ morae, contour }) => {
+  const n = morae.length;
+  const stoneTop = (c: 'H' | 'L') => (c === 'H' ? 34 : 70);
+  const xs = morae.map((_, i) => i * STONE_W + (STONE_W - 30) / 2);
+  const tops = contour.map((c) => stoneTop(c) - 30);
+  const width = n * STONE_W;
+  const line = contour.map((c, i) => `${i * STONE_W + STONE_W / 2},${stoneTop(c) + 4}`).join(' ');
+  return (
+    <div className="relative mx-auto mt-4" style={{ width, height: 108 }}>
+      <svg className="absolute inset-0" width={width} height={108} aria-hidden>
+        <polyline points={line} fill="none" stroke="#bbf7d0" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="2 7" />
+      </svg>
+      {morae.map((m, i) => (
+        <div key={i}
+          className={`absolute font-display text-2xl font-black rounded-lg flex items-center justify-center ${contour[i] === 'H' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}
+          style={{ left: i * STONE_W + 6, top: stoneTop(contour[i]), width: STONE_W - 12, height: 34 }}>{m}</div>
+      ))}
+      <motion.div
+        className="absolute"
+        style={{ width: 30 }}
+        initial={{ left: xs[0], top: tops[0] }}
+        animate={{ left: xs, top: tops }}
+        transition={{ duration: Math.max(0.7, (n - 1) * 0.38), ease: 'easeInOut', repeat: Infinity, repeatDelay: 0.7, times: n > 1 ? xs.map((_, i) => i / (n - 1)) : [0] }}
+      >
+        <PitchBird mood="idle" size={30} />
+      </motion.div>
+    </div>
+  );
+};
+
 // ---- "where's the drop?" question (tap the mora the pitch drops after) ----
 const DropQuestion: React.FC<{
   round: Extract<Round, { kind: 'drop' }>;
@@ -338,14 +372,8 @@ const DropQuestion: React.FC<{
         <div className="text-sm text-gray-400 mt-1">{reading} · {en}</div>
       </div>
 
-      {/* reveal the contour once answered */}
-      {show && (
-        <div className="flex justify-center gap-1 mt-4">
-          {morae.map((m, i) => (
-            <span key={i} className={`font-display text-2xl font-black px-2.5 py-1 rounded-lg ${pat[i] === 'H' ? 'bg-green-100 text-green-700 -translate-y-1' : 'bg-gray-100 text-gray-400'} transition-transform`}>{m}</span>
-          ))}
-        </div>
-      )}
+      {/* reveal: the bird rides the contour and drops at the nucleus */}
+      {show && <ContourRide morae={morae} contour={pat} />}
 
       <div className="grid grid-cols-2 gap-3 mt-6">
         {opts.map((o, i) => {
