@@ -9,6 +9,7 @@ import path from 'node:path';
 const ROOT = '/Users/sho/nihongo-web';
 const OUT = path.join(ROOT, 'public', 'learn', 'say');
 const SITE = 'https://nihongo.amorjp.com';
+const SENTENCES = JSON.parse(readFileSync(path.join(ROOT, 'scripts', 'word-sentences.json'), 'utf8'));
 
 // --- parse dropWords.ts ---
 const src = readFileSync(path.join(ROOT, 'src/components/pitch/dropWords.ts'), 'utf8');
@@ -134,6 +135,12 @@ function page(x, all) {
     <p class="text-gray-600 mt-2">${x.w} is <strong>${pat.en}</strong> (${pat.jp}) — ${pat.desc}. Each mora is shown high (<span class="mora hi">高</span>) or low (<span class="mora lo">低</span>):</p>
     <p class="mt-4 ja text-2xl text-center">${moraSpans}</p>
     <p class="text-center font-mono text-sm text-gray-400 mt-2">${contour.join('-')}</p>
+${SENTENCES[x.w] ? `
+    <h2 class="text-2xl font-extrabold text-gray-900 mt-10">${cap(enw)} in a sentence</h2>
+    <div class="rounded-xl bg-white border border-gray-100 p-4 mt-3">
+      <p class="ja text-xl text-gray-900">${SENTENCES[x.w][0]}</p>
+      <p class="text-sm text-gray-400 mt-1">${SENTENCES[x.w][1]} — <b class="ja">${x.w}</b> (${x.r})</p>
+    </div>` : ''}
 
     <div class="my-10 p-8 rounded-3xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white text-center">
       <h2 class="text-2xl font-extrabold">🎤 Say it — get scored</h2>
