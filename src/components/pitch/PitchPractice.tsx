@@ -14,7 +14,6 @@ import { shareResult } from '../../lib/shareCard';
 import { Share2 } from 'lucide-react';
 import { LivePitchLane, type LiveFrame } from './LivePitchLane';
 import { meaningFlipFor } from './earPairs';
-import { PitchBird, type BirdMood } from '../mascot/PitchBird';
 
 const PATTERN_EN: Record<string, string> = { 平板: 'Heiban', 頭高: 'Atamadaka', 中高: 'Nakadaka', 尾高: 'Odaka' };
 
@@ -215,7 +214,6 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
   const [cleared, setCleared] = useState(false); // hit the daily set → celebration card
   const [dailyStreak, setDailyStreak] = useState(0);
   const [phase, setPhase] = useState<Phase>('ready');
-  const [talking, setTalking] = useState(false); // sheep lip-syncs while native audio plays
   const [frames, setFrames] = useState<PitchFrame[]>([]);
   const [accuracy, setAccuracy] = useState<number | null>(null);
   const [targetNucleus, setTargetNucleus] = useState(0);
@@ -260,14 +258,10 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
     setError(null);
   };
 
-  // Play the native clip and lip-sync the sheep for the duration.
+  // Play the native clip for the current word.
   const playNative = () => {
     const a = new Audio(`/pitch-audio/${encodeURIComponent(word)}.mp3`);
-    setTalking(true);
-    const stop = () => setTalking(false);
-    a.addEventListener('ended', stop);
-    a.addEventListener('error', stop);
-    a.play().catch(stop); // asset missing or autoplay blocked
+    a.play().catch(() => {}); // asset missing or autoplay blocked
   };
 
   const startRecording = async () => {
@@ -371,10 +365,6 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
     );
   }
 
-  const sheepMood: BirdMood = talking ? 'talking'
-    : phase === 'recording' ? 'thinking'
-    : phase === 'result' && accuracy !== null ? (accuracy >= 80 ? 'celebrate' : accuracy >= 50 ? 'happy' : 'sad')
-    : 'idle';
 
   return (
     <div className="max-w-2xl mx-auto p-4 sm:p-6">
@@ -387,7 +377,6 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <PitchBird mood={sheepMood} size={48} className="shrink-0" />
         <div>
           <h1 className="font-display text-xl font-extrabold text-ink">Pitch Trainer</h1>
           <p className="text-sm text-gray-400 font-medium">
@@ -583,15 +572,10 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
           </div>
         )}
 
-        {/* First-run guidance — mascot points to the low-friction first step
-            (design-craft empty state: 1 benefit line + 1 pointer + 1 CTA). */}
+        {/* First-run guidance — points to the low-friction first step. */}
         {phase === 'ready' && wordIndex === 0 && scoredCount === 0 && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-center gap-2">
-            <PitchBird mood={talking ? 'talking' : 'idle'} size={56} className="shrink-0" />
-            <div className="relative bg-white ring-1 ring-gray-100 shadow-card rounded-2xl px-4 py-3 text-sm text-gray-600 max-w-xs">
-              <span className="absolute -left-1 top-5 w-3 h-3 bg-white rotate-45" />
-              Tap <b className="text-brand-600">Listen</b> to hear it 👂 — then record, and I'll score your pitch.
-            </div>
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl bg-brand-50 ring-1 ring-brand-100 px-4 py-3 text-sm text-gray-600 text-center max-w-sm mx-auto">
+            👂 Tap <b className="text-brand-600">Listen</b> to hear it — then record, and we'll score your pitch.
           </motion.div>
         )}
 
