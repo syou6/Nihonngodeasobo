@@ -59,3 +59,11 @@ marketing/out-long/
 .secrets/
 analytics-data/
 .env
+marketing/out-batch/
+marketing/out-quiz-pair/
+marketing/out-quiz-slides/
+marketing/out-ad/
+marketing/out-ear/
+marketing/out-pro/
+marketing/out-real/
+marketing/out-slang/
