@@ -250,7 +250,7 @@ export async function generateShareCard(input: ShareCardInput): Promise<Blob> {
 // loop IS the fun loop (a friend lands in a 60s game, not on a marketing page).
 const SHARE_URL = 'https://nihongo.amorjp.com/app.html?guest=true&view=ear&utm_source=share_card';
 
-export async function shareResult(input: ShareCardInput): Promise<'shared' | 'downloaded'> {
+export async function shareResult(input: ShareCardInput): Promise<'shared' | 'copied' | 'downloaded'> {
   const blob = await generateShareCard(input);
   const file = new File([blob], `nihongo-pitch-${input.word}.png`, { type: 'image/png' });
   const text =
@@ -264,14 +264,28 @@ export async function shareResult(input: ShareCardInput): Promise<'shared' | 'do
       await nav.share({ files: [file], text, title: 'My NihonGo pitch score' });
       return 'shared';
     } catch {
-      // cancelled → fall through to download
+      // cancelled → fall through to the desktop path
     }
   }
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = file.name;
-  a.click();
-  URL.revokeObjectURL(url);
-  return 'downloaded';
+
+  // Desktop (no file-share): copy the card image to the clipboard and open a
+  // prefilled X post — the LINK travels. A silently downloaded PNG never spread
+  // (3 shares / 90 days before this fix).
+  const intent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+    window.open(intent, '_blank', 'noopener');
+    return 'copied';
+  } catch {
+    // Clipboard images unsupported → still open the post, and save the card
+    // so the user can attach it manually.
+    window.open(intent, '_blank', 'noopener');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = file.name;
+    a.click();
+    URL.revokeObjectURL(url);
+    return 'downloaded';
+  }
 }

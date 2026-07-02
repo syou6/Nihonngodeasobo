@@ -12,6 +12,7 @@ import { logAttempt } from '../../lib/pitchAttempts';
 import { useAuthStore } from '../../stores/authStore';
 import { shareResult } from '../../lib/shareCard';
 import { Share2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { LivePitchLane, type LiveFrame } from './LivePitchLane';
 import { meaningFlipFor } from './earPairs';
 
@@ -353,6 +354,26 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
             🔥 {dailyStreak}-day streak
           </div>
         </motion.div>
+        {/* Share at the emotional peak — the Daily Clear is the moment worth bragging about. */}
+        {pitchData && accuracy !== null && (
+          <button
+            onClick={async () => {
+              trackEvent('share_score_click', { accuracy, context: 'daily_clear' });
+              try {
+                const how = await shareResult({
+                  word, reading, score: accuracy,
+                  pattern: pitchData.patternName ?? '',
+                  patternEn: PATTERN_EN[pitchData.patternName ?? ''] ?? '',
+                  frames, targetNucleus, moraCount: pitchData.morae.length, streak: dailyStreak,
+                });
+                if (how === 'copied') toast.success('Card copied — paste it into the post 📋');
+                if (how === 'downloaded') toast.success('Card saved — attach it to the post 🖼️');
+              } catch { /* user cancelled */ }
+            }}
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-display font-extrabold py-3.5 rounded-2xl shadow-soft mb-3 hover:scale-[1.02] transition-transform">
+            <Share2 className="w-4 h-4" /> Share my {dailyStreak}-day streak 🔥
+          </button>
+        )}
         <button onClick={() => { setCleared(false); setScoredCount(0); resetAttempt(); }}
           className="w-full bg-brand-gradient text-white font-display font-extrabold py-3.5 rounded-2xl shadow-soft mb-3 hover:scale-[1.02] transition-transform">
           Keep going →
@@ -491,12 +512,14 @@ export const PitchPractice: React.FC<PitchPracticeProps> = ({ onBack, onViewKart
                 onClick={async () => {
                   trackEvent('share_score_click', { accuracy });
                   try {
-                    await shareResult({
+                    const how = await shareResult({
                       word, reading, score: accuracy,
                       pattern: pitchData.patternName ?? '',
                       patternEn: PATTERN_EN[pitchData.patternName ?? ''] ?? '',
                       frames, targetNucleus, moraCount: pitchData.morae.length, streak,
                     });
+                    if (how === 'copied') toast.success('Card copied — paste it into the post 📋');
+                    if (how === 'downloaded') toast.success('Card saved — attach it to the post 🖼️');
                   } catch { /* user cancelled */ }
                 }}
                 className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold mb-4 transition-colors ${

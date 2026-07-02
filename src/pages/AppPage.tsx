@@ -177,6 +177,13 @@ export const AppPage: React.FC = () => {
         }),
         initTimeout,
       ]).finally(() => {
+        // Direct /app.html with no session defaults to GUEST (playable) instead
+        // of the signup wall — auth only shows when asked for (?signup / ?login).
+        // Any shared/bookmarked deep link stays a working demo, not a dead end.
+        if (!useAuthStore.getState().user) {
+          setGuestMode(true);
+          setShowOnboarding(true);
+        }
         setIsInitialized(true);
       });
     } else {
