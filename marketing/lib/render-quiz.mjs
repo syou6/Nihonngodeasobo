@@ -4,14 +4,18 @@
 // so batches don't leak a constant "always A" pattern in the comments.
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { mkdir, writeFile, rm, readdir } from 'node:fs/promises';
+import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 
 const run = promisify(execFile);
 const MK = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
-const W = 1080, H = 1920, DUR = 13.0;
+const W = 1080, H = 1920, DUR = 13.0, FPS = 30, SCALE = 2;
 const MUSIC = path.join(MK, 'audio', 'music_130.mp3');
+
+// Audio cue timeline (ms) — the CSS sound-pulse animations and the ffmpeg
+// adelay values are derived from the same constants so they can never drift.
+const T_QUIZ_PLAY = 3300, T_REVEAL_ANS = 9400, T_REVEAL_OTHER = 10700;
 
 const patText = (pat) => (pat[0] ? 'high → low' : 'low → high');
 
@@ -34,6 +38,14 @@ function view(pair, answerSide) {
   const other = pair[answerSide === 'a' ? 'b' : 'a'];
   const letter = answerSide.toUpperCase();
   return { ...pair, ans, other, letter };
+}
+
+// Sound-pulse equalizer shown exactly while an audio clip plays, so viewers
+// know WHEN to listen (and at reveal, WHICH contour is sounding).
+function eqPulse(delayMs, color, barH = 40) {
+  const bars = [0, 1, 2, 3, 4].map((i) =>
+    `<span style="background:${color};animation:eqbar .38s ${-i * 0.09}s ease-in-out infinite alternate"></span>`).join('');
+  return `<div class="eq" style="animation:eqwin 1.1s ${delayMs}ms both;height:${barH}px">${bars}</div>`;
 }
 
 const FONTS = `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -88,6 +100,10 @@ function videoHtml(pair, answerSide) {
 .btn{margin-top:34px;font-size:54px;font-weight:800;color:#4f46e5;background:#fff;padding:30px 70px;border-radius:999px;box-shadow:0 18px 50px rgba(0,0,0,.3);animation:pulse 1.2s infinite}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
 .url{margin-top:24px;font-size:40px;color:rgba(255,255,255,.78);font-weight:700}
+.eq{display:flex;gap:8px;align-items:center;justify-content:center;opacity:0}
+.eq span{width:11px;height:100%;border-radius:6px;transform-origin:center}
+@keyframes eqwin{0%{opacity:0}10%{opacity:1}85%{opacity:1}100%{opacity:0}}
+@keyframes eqbar{from{transform:scaleY(.25)}to{transform:scaleY(1)}}
 </style></head><body>
 <div class="glow g1"></div><div class="glow g2"></div>
 <div class="stage s1">
@@ -99,7 +115,8 @@ function videoHtml(pair, answerSide) {
 <div class="stage s2">
   <div class="q">Listen 👂 which one is this?</div>
   <div class="qsub">the PITCH is the only clue</div>
-  <div class="cards">
+  ${eqPulse(T_QUIZ_PLAY, '#FDBA74', 44)}
+  <div class="cards" style="margin-top:26px">
     <div class="card"><div class="lab">A</div><div class="w jp">${v.a.word}</div><div class="m">${v.a.emoji} ${v.a.en}</div></div>
     <div class="card"><div class="lab">B</div><div class="w jp">${v.b.word}</div><div class="m">${v.b.emoji} ${v.b.en}</div></div>
   </div>
@@ -122,10 +139,12 @@ function videoHtml(pair, answerSide) {
     <div class="pbox${answerSide === 'a' ? ' win' : ''}">
       <div class="pm">A · ${v.a.word} ${v.a.en}</div>
       ${contour(v.morae, v.a.pat, answerSide === 'a' ? '#34D399' : '#FB7185')}
+      ${eqPulse(answerSide === 'a' ? T_REVEAL_ANS : T_REVEAL_OTHER, answerSide === 'a' ? '#34D399' : '#FB7185', 30)}
     </div>
     <div class="pbox${answerSide === 'b' ? ' win' : ''}">
       <div class="pm">B · ${v.b.word} ${v.b.en}</div>
       ${contour(v.morae, v.b.pat, answerSide === 'b' ? '#34D399' : '#FB7185')}
+      ${eqPulse(answerSide === 'b' ? T_REVEAL_ANS : T_REVEAL_OTHER, answerSide === 'b' ? '#34D399' : '#FB7185', 30)}
     </div>
   </div>
   <div class="cta">Got it right? <span class="y">prove it.</span></div>
@@ -135,6 +154,10 @@ function videoHtml(pair, answerSide) {
 </body></html>`;
 }
 
+// Deterministic frame-by-frame capture: pause every CSS animation and seek the
+// whole timeline per frame, screenshotting at 2x. No realtime recording means
+// zero dropped frames, exact audio/animation sync, and much sharper text than
+// the old webm re-encode. ~390 lossless frames → single ffmpeg encode.
 export async function renderQuizVideo(browser, pair, answerSide, outFile) {
   const v = view(pair, answerSide);
   const rec = path.join(MK, `.recquiz-${pair.a.audio}`);
@@ -143,16 +166,25 @@ export async function renderQuizVideo(browser, pair, answerSide, outFile) {
   const sceneFile = path.join(rec, 'f.html');
   await writeFile(sceneFile, videoHtml(pair, answerSide));
 
-  const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1, recordVideo: { dir: rec, size: { width: W, height: H } } });
+  const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: SCALE });
   const page = await ctx.newPage();
   await page.goto('file://' + sceneFile);
-  await page.waitForTimeout(800);
-  await page.waitForTimeout(DUR * 1000);
+  await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(() => document.getAnimations({ subtree: true }).forEach((a) => a.pause()));
+
+  // JPEG q92 intermediates: ~4x faster to write than PNG at 2x scale, and the
+  // difference is invisible after the x264 CRF-16 encode.
+  const totalFrames = Math.round(DUR * FPS);
+  for (let i = 0; i < totalFrames; i++) {
+    await page.evaluate((ms) => {
+      document.getAnimations({ subtree: true }).forEach((a) => { a.currentTime = ms; });
+    }, (i * 1000) / FPS);
+    await page.screenshot({ path: path.join(rec, `f${String(i).padStart(4, '0')}.jpg`), type: 'jpeg', quality: 92 });
+  }
   await ctx.close();
 
-  const webm = path.join(rec, (await readdir(rec)).find((f) => f.endsWith('.webm')));
-  const inputs = ['-i', webm];
-  const filters = [`[0:v]scale=${W}:${H},fps=30[v]`];
+  const inputs = ['-framerate', String(FPS), '-i', path.join(rec, 'f%04d.jpg')];
+  const filters = [`[0:v]scale=${W}:${H}:flags=lanczos,fps=${FPS}[v]`];
   const amix = [];
   let ai = 1;
   if (existsSync(MUSIC)) {
@@ -161,21 +193,21 @@ export async function renderQuizVideo(browser, pair, answerSide, outFile) {
     amix.push('[m]'); ai++;
   }
   if (existsSync(v.ans.audioFile)) {
-    inputs.push('-i', v.ans.audioFile); // quiz play @3.3s, reveal replay @9.4s
+    inputs.push('-i', v.ans.audioFile); // quiz play + reveal replay
     filters.push(`[${ai}:a]asplit=2[qa][ra]`);
-    filters.push(`[qa]adelay=3300|3300,volume=1.8[q]`);
-    filters.push(`[ra]adelay=9400|9400,volume=1.8[r]`);
+    filters.push(`[qa]adelay=${T_QUIZ_PLAY}|${T_QUIZ_PLAY},volume=1.8[q]`);
+    filters.push(`[ra]adelay=${T_REVEAL_ANS}|${T_REVEAL_ANS},volume=1.8[r]`);
     amix.push('[q]', '[r]'); ai++;
   }
   if (existsSync(v.other.audioFile)) {
-    inputs.push('-i', v.other.audioFile); // contrast @10.7s
-    filters.push(`[${ai}:a]adelay=10700|10700,volume=1.8[rb]`);
+    inputs.push('-i', v.other.audioFile); // contrast at reveal
+    filters.push(`[${ai}:a]adelay=${T_REVEAL_OTHER}|${T_REVEAL_OTHER},volume=1.8[rb]`);
     amix.push('[rb]'); ai++;
   }
   filters.push(`${amix.join('')}amix=inputs=${amix.length}:duration=longest:normalize=0[a]`);
 
   await run('ffmpeg', ['-y', ...inputs, '-filter_complex', filters.join(';'),
-    '-map', '[v]', '-map', '[a]', '-c:v', 'libx264', '-crf', '18', '-preset', 'slow', '-pix_fmt', 'yuv420p',
+    '-map', '[v]', '-map', '[a]', '-c:v', 'libx264', '-crf', '16', '-preset', 'slow', '-pix_fmt', 'yuv420p',
     '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', '-t', String(DUR), outFile]);
   await rm(rec, { recursive: true, force: true });
   return outFile;
