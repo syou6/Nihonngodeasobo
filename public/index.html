@@ -27,8 +27,8 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Japanese Pitch Accent Trainer | NihonGo">
-<meta name="twitter:description" content="Record a word, see your pitch vs native, and fix what makes you sound foreign. Honest pitch scoring — free to start.">
+<meta name="twitter:title" content="Can You Hear It? Japanese Pitch Accent Game | NihonGo">
+<meta name="twitter:description" content="Train your Japanese pitch accent. Record a word, see your pitch vs a native speaker, and fix what makes you sound foreign. 箸 or 橋? — your pitch decides.">
 <meta name="twitter:image" content="https://nihongo.amorjp.com/og-image.png">
 <link rel="canonical" href="https://nihongo.amorjp.com/">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -72,28 +72,11 @@
   ]
 }
 </script>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link rel="stylesheet" href="/lp.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=analytics,arrow_forward,cancel,check_circle,close,compare_arrows,devices,graphic_eq,mic,person,psychology,school,verified&display=swap" rel="stylesheet"/>
-<script>
-    tailwind.config = {
-        theme: {
-            extend: {
-                colors: {
-                    "primary": "#4F46E5",
-                    "primary-light": "#6366F1",
-                    "ink": "#141527",
-                    "accent": "#FF7A59",
-                    "accent-soft": "#FFE7DF",
-                },
-                fontFamily: {
-                    "display": ["Plus Jakarta Sans", "Inter", "sans-serif"]
-                },
-            },
-        },
-    }
-</script>
 <style>
     body {
         font-family: 'Inter', sans-serif;
@@ -165,68 +148,16 @@
         -webkit-text-fill-color: transparent;
     }
 
-    /* ── Sticky CTA prominence ── */
-    #nav-start-free {
+    /* ── Sticky CTA prominence: the GUEST (play-free) path stays primary on scroll ── */
+    #nav-try-guest {
         transition: all 0.3s ease;
     }
-    body.scrolled-past-hero #nav-start-free {
+    body.scrolled-past-hero #nav-try-guest {
         background-color: #4F46E5;
         color: #fff;
+        border-radius: 9999px;
         box-shadow: 0 4px 20px rgba(79, 70, 229, 0.4);
         transform: scale(1.05);
-        padding-left: 1.75rem;
-        padding-right: 1.75rem;
-    }
-    body.scrolled-past-hero #nav-try-guest {
-        display: none;
-    }
-
-    /* ── Exit-intent popup ── */
-    #exit-popup {
-        display: none;
-        position: fixed;
-        inset: 0;
-        z-index: 1000;
-        background: rgba(0, 0, 0, 0.55);
-        backdrop-filter: blur(4px);
-        align-items: center;
-        justify-content: center;
-    }
-    #exit-popup.active {
-        display: flex;
-    }
-    #exit-popup-card {
-        background: #fff;
-        border-radius: 1.5rem;
-        padding: 2.5rem;
-        max-width: 420px;
-        width: calc(100% - 2rem);
-        text-align: center;
-        position: relative;
-        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.18);
-        animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-    }
-    @keyframes popIn {
-        from { transform: scale(0.85); opacity: 0; }
-        to   { transform: scale(1);    opacity: 1; }
-    }
-
-    /* ── Scroll-triggered floating banner ── */
-    #pricing-banner {
-        position: fixed;
-        bottom: 1.5rem;
-        left: 50%;
-        transform: translateX(-50%) translateY(120px);
-        z-index: 900;
-        transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
-        opacity: 0;
-        pointer-events: none;
-        white-space: nowrap;
-    }
-    #pricing-banner.visible {
-        transform: translateX(-50%) translateY(0);
-        opacity: 1;
-        pointer-events: auto;
     }
 </style>
 </head>
@@ -242,7 +173,7 @@
 <nav class="fixed top-0 w-full z-50 nav-blur border-b border-gray-200/60">
     <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         <div class="flex items-center gap-3">
-            <img src="/logo.png" alt="NihonGo" class="w-10 h-10 rounded-lg shadow-lg shadow-primary/20">
+            <img src="/logo-lp.svg" alt="NihonGo" width="40" height="40" class="w-10 h-10 rounded-lg shadow-lg shadow-primary/20">
             <span class="text-xl font-black tracking-tight text-gray-900 uppercase italic">NihonGo</span>
         </div>
         <div class="hidden md:flex items-center gap-10">
@@ -251,9 +182,9 @@
             <a class="text-sm font-medium text-gray-500 hover:text-primary transition-colors" href="#pricing">Pricing</a>
         </div>
         <div class="flex items-center gap-4">
-            <a id="nav-try-guest" href="/app.html?guest=true&view=ear" class="hidden sm:block text-sm font-semibold text-gray-700 px-6 py-2 hover:text-primary transition-colors">Try as Guest</a>
-            <a id="nav-start-free" href="/app.html?signup=true" class="bg-primary text-white font-bold px-6 py-2.5 rounded-full hover:bg-primary-light hover:shadow-lg hover:shadow-primary/25 transition-all transform hover:scale-105">
-                Start Free
+            <a id="nav-start-free" href="/app.html?signup=true" class="hidden sm:block text-sm font-semibold text-gray-700 px-6 py-2 hover:text-primary transition-colors">Sign Up</a>
+            <a id="nav-try-guest" href="/app.html?guest=true&view=ear" class="bg-primary text-white font-bold px-6 py-2.5 rounded-full hover:bg-primary-light hover:shadow-lg hover:shadow-primary/25 transition-all transform hover:scale-105">
+                👂 Play Free
             </a>
         </div>
     </div>
@@ -291,6 +222,10 @@
                 🎮 Japanese pitch accent — but actually fun
             </div>
 
+            <h1 class="text-5xl md:text-8xl font-extrabold tracking-tight leading-[0.92] text-gradient-warm pt-2">
+                Can you<br/>hear it?
+            </h1>
+
             <!-- The fascination: tap to HEAR the difference (no mic, the aha on the LP) -->
             <div class="flex items-center justify-center gap-4 sm:gap-8 pt-2">
                 <button onclick="playPair('hashi_chopsticks', this)" class="hear-card bg-white rounded-3xl shadow-xl shadow-gray-200/60 border border-gray-100 px-6 py-5 sm:px-9 sm:py-7 hover:scale-105 hover:border-accent/50 transition-all">
@@ -315,10 +250,6 @@
                     el.animate([{ transform: 'scale(1.06)' }, { transform: 'scale(1)' }], { duration: 260 });
                 }
             </script>
-
-            <h1 class="text-5xl md:text-8xl font-extrabold tracking-tight leading-[0.92] text-gradient-warm pt-2">
-                Can you<br/>hear it?
-            </h1>
 
             <p class="max-w-2xl mx-auto text-lg md:text-xl text-gray-500 font-light leading-relaxed">
                 The 60-second game that trains your ear — then your voice — to stop sounding foreign in Japanese. <span class="text-ink font-semibold">No mic. No signup.</span>
@@ -566,64 +497,6 @@
         </div>
     </section>
 
-    <!-- Section transition: bridge to testimonials -->
-    <div class="py-10 px-6 bg-gray-50 text-center">
-        <p class="text-gray-400 text-base italic max-w-xl mx-auto">But don't just take our word for it &mdash; here's what learners say after fixing their pitch.</p>
-    </div>
-
-    <!-- Testimonials -->
-    <section class="pb-24 pt-4 px-6 bg-gray-50">
-        <div class="max-w-7xl mx-auto">
-            <h3 class="text-3xl font-bold text-gray-900 mb-12 text-center">Why Learners Love It</h3>
-
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
-                    <div class="flex gap-4 items-center mb-6">
-                        <div class="size-14 rounded-full bg-indigo-100 flex items-center justify-center text-primary">
-                            <span class="material-symbols-outlined text-2xl">person</span>
-                        </div>
-                        <div>
-                            <div class="font-bold text-gray-900">Sarah K.</div>
-                            <div class="text-xs text-primary font-mono uppercase">JLPT N3 Learner</div>
-                        </div>
-                    </div>
-                    <p class="text-gray-500 italic font-light">"I've been using textbooks for years but never actually spoke. This app finally got me talking every day. The AI feedback is surprisingly accurate and helpful."</p>
-                </div>
-
-                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
-                    <div class="flex gap-4 items-center mb-6">
-                        <div class="size-14 rounded-full bg-indigo-100 flex items-center justify-center text-primary">
-                            <span class="material-symbols-outlined text-2xl">person</span>
-                        </div>
-                        <div>
-                            <div class="font-bold text-gray-900">Marco R.</div>
-                            <div class="text-xs text-primary font-mono uppercase">JLPT N4 Learner</div>
-                        </div>
-                    </div>
-                    <p class="text-gray-500 italic font-light">"My teacher can see my diary entries and knows exactly what I need to work on. It's like having a study buddy and tutor in one app."</p>
-                </div>
-
-                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
-                    <div class="flex gap-4 items-center mb-6">
-                        <div class="size-14 rounded-full bg-indigo-100 flex items-center justify-center text-primary">
-                            <span class="material-symbols-outlined text-2xl">person</span>
-                        </div>
-                        <div>
-                            <div class="font-bold text-gray-900">Emily T.</div>
-                            <div class="text-xs text-primary font-mono uppercase">JLPT N2 Learner</div>
-                        </div>
-                    </div>
-                    <p class="text-gray-500 italic font-light">"The JLPT practice mode is amazing. I can practice speaking at my level and the scoring helps me see exactly where I need to improve before the exam."</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Section transition: bridge to pricing -->
-    <div class="py-10 px-6 bg-white text-center">
-        <p class="text-gray-400 text-base italic max-w-xl mx-auto">Ready to level up? Here's what it costs &mdash; spoiler: less than a cup of coffee a week.</p>
-    </div>
-
     <!-- Pricing Section -->
     <section id="pricing" class="pt-8 pb-24 px-6 bg-white">
         <div class="max-w-7xl mx-auto text-center mb-16">
@@ -711,7 +584,7 @@
 <footer class="bg-white border-t border-gray-200 py-12 px-6">
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
         <div class="flex items-center gap-3">
-            <img src="/logo.png" alt="NihonGo" class="w-8 h-8 rounded-lg">
+            <img src="/logo-lp.svg" alt="NihonGo" width="32" height="32" class="w-8 h-8 rounded-lg">
             <span class="text-lg font-black tracking-tight text-gray-900 uppercase italic">NihonGo</span>
         </div>
         <div class="flex flex-wrap gap-6 text-gray-400 text-sm">
@@ -731,47 +604,6 @@
         </div>
     </div>
 </footer>
-
-<!-- ── Scroll-triggered pricing banner ── -->
-<div id="pricing-banner">
-    <a href="/app.html?signup=true"
-       class="flex items-center gap-3 bg-primary text-white font-black px-6 py-3 rounded-full shadow-2xl shadow-primary/40 hover:scale-105 transition-transform text-sm">
-        <span class="bg-red-400 text-white text-xs font-black px-2 py-0.5 rounded-full">50% OFF</span>
-        Limited-time launch price &mdash; Sign up now
-        <span class="material-symbols-outlined text-base">arrow_forward</span>
-    </a>
-</div>
-
-<!-- ── Exit-intent popup ── -->
-<div id="exit-popup" role="dialog" aria-modal="true" aria-labelledby="exit-popup-title">
-    <div id="exit-popup-card">
-        <button id="exit-popup-close"
-                aria-label="Close"
-                class="absolute top-4 right-4 text-gray-300 hover:text-gray-500 transition-colors">
-            <span class="material-symbols-outlined text-xl">close</span>
-        </button>
-
-        <div class="text-4xl mb-4">&#127881;</div>
-        <div class="inline-block bg-red-500 text-white text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest mb-4">
-            Wait &mdash; Special Offer
-        </div>
-        <h2 id="exit-popup-title" class="text-2xl font-black text-gray-900 mb-2 leading-tight">
-            You're about to miss<br/><span class="text-primary">50% OFF</span>
-        </h2>
-        <p class="text-gray-500 text-sm mb-6 leading-relaxed">
-            Sign up today and unlock a limited launch discount inside the app.<br/>
-            This offer won't be here when you come back.
-        </p>
-        <a href="/app.html?signup=true"
-           class="block w-full py-4 bg-primary text-white font-black text-base rounded-xl shadow-lg shadow-primary/25 hover:scale-[1.02] transition-all text-center mb-3">
-            Claim My 50% OFF Now
-        </a>
-        <button id="exit-popup-dismiss"
-                class="block w-full py-2 text-gray-400 text-xs hover:text-gray-600 transition-colors">
-            No thanks, I'll pay full price later
-        </button>
-    </div>
-</div>
 
 <!-- ── Vanilla JS: all interactive behaviours ── -->
 <script>
@@ -794,85 +626,7 @@
 
     window.addEventListener('scroll', onScroll, { passive: true });
 
-    // ── 2. Exit-intent popup ────────────────────────────────────────────────
-    var exitPopup = document.getElementById('exit-popup');
-    var exitClose = document.getElementById('exit-popup-close');
-    var exitDismiss = document.getElementById('exit-popup-dismiss');
-    var exitShown = false;
-
-    function showExitPopup() {
-        if (exitShown) return;
-        exitShown = true;
-        exitPopup.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function hideExitPopup() {
-        exitPopup.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
-    // Desktop: mouse leaving viewport through top edge
-    document.addEventListener('mouseleave', function (e) {
-        if (e.clientY <= 5) {
-            showExitPopup();
-        }
-    });
-
-    // Mobile: back-button / popstate heuristic via history trick
-    // Push a state so pressing back fires popstate instead of leaving
-    if (history.pushState) {
-        history.pushState({ exitIntent: true }, '');
-        window.addEventListener('popstate', function (e) {
-            if (!exitShown) {
-                showExitPopup();
-                // Push state again so the popup can be dismissed properly
-                history.pushState({ exitIntent: true }, '');
-            }
-        });
-    }
-
-    if (exitClose) exitClose.addEventListener('click', hideExitPopup);
-    if (exitDismiss) exitDismiss.addEventListener('click', hideExitPopup);
-
-    // Close on backdrop click
-    exitPopup.addEventListener('click', function (e) {
-        if (e.target === exitPopup) hideExitPopup();
-    });
-
-    // Close on Escape key
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') hideExitPopup();
-    });
-
-    // ── 3. Scroll-triggered pricing banner ─────────────────────────────────
-    var pricingSection = document.getElementById('pricing');
-    var pricingBanner = document.getElementById('pricing-banner');
-    var bannerDismissed = false;
-
-    function onScrollBanner() {
-        if (bannerDismissed || !pricingSection || !pricingBanner) return;
-        var rect = pricingSection.getBoundingClientRect();
-        var windowHeight = window.innerHeight;
-        // Show when pricing section is at least 20% in view
-        if (rect.top < windowHeight * 0.8) {
-            pricingBanner.classList.add('visible');
-        } else {
-            pricingBanner.classList.remove('visible');
-        }
-    }
-
-    window.addEventListener('scroll', onScrollBanner, { passive: true });
-
-    // Dismiss banner when clicked (navigates away, but just in case)
-    if (pricingBanner) {
-        pricingBanner.addEventListener('click', function () {
-            bannerDismissed = true;
-            pricingBanner.classList.remove('visible');
-        });
-    }
-
-    // ── 4. Conversion analytics (GA4 events) ────────────────────────────────
+    // ── 2. Conversion analytics (GA4 events) ────────────────────────────────
     // Lets us see the funnel in GA4: land -> scroll -> which CTA -> app.
     function track(name, params) {
         if (typeof window.gtag === 'function') window.gtag('event', name, params || {});
@@ -880,7 +634,7 @@
 
     // CTA clicks: every link into the app, labelled by section + intent.
     function sectionOf(el) {
-        var s = el.closest('section, nav, footer, #exit-popup, #pricing-banner');
+        var s = el.closest('section, nav, footer');
         return (s && (s.id || s.tagName.toLowerCase())) || 'unknown';
     }
     document.querySelectorAll('a[href*="app.html"]').forEach(function (a) {
@@ -904,13 +658,6 @@
         });
     }
     window.addEventListener('scroll', onScrollDepth, { passive: true });
-
-    // Exit-intent popup shown (already wired above — emit once here too).
-    var _origShow = showExitPopup;
-    showExitPopup = function () {
-        if (!exitShown) track('exit_popup_shown', {});
-        _origShow();
-    };
 
 })();
 </script>
