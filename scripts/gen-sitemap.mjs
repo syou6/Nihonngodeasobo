@@ -29,9 +29,11 @@ const STATIC = [
 
 const urls = [...STATIC];
 
-// flat /learn/*.html
+// flat /learn/*.html — the templated *-vs-* pair pages are noindexed (same
+// doorway-page rationale as say/) and therefore excluded here too.
 for (const f of readdirSync(LEARN)) {
   if (!f.endsWith('.html')) continue;
+  if (f.includes('-vs-')) continue;
   if (f === 'index.html') { urls.push({ loc: '/learn/', file: 'learn/index.html', freq: 'weekly', pri: '0.9' }); continue; }
   const explainer = ['can-you-hear-japanese-pitch', 'japanese-pitch-accent', 'japanese-pitch-accent-patterns', 'why-you-sound-foreign-in-japanese', 'common-japanese-mistakes', 'how-to-learn-japanese-pitch-accent'].includes(f.replace('.html', ''));
   urls.push({ loc: `/learn/${f}`, file: `learn/${f}`, freq: 'monthly', pri: explainer ? '0.9' : '0.8' });

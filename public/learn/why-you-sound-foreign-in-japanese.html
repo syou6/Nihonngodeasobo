@@ -22,7 +22,7 @@
 <meta property="og:image" content="https://nihongo.amorjp.com/og-image.png"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"/>
-<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/learn.css"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet"/>
 <style>
@@ -31,6 +31,7 @@
   .ja{font-family:'Plus Jakarta Sans','Hiragino Sans',sans-serif}
 </style>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Why do I sound foreign in Japanese even though my grammar is good?","acceptedAnswer":{"@type":"Answer","text":"Because Japanese is a pitch-accent language. English speakers stress syllables (louder/longer); Japanese instead raises and drops pitch on specific moras. Even with perfect grammar and vowels, wrong pitch makes you instantly sound non-native."}},{"@type":"Question","name":"Is pitch accent the same as pronunciation?","acceptedAnswer":{"@type":"Answer","text":"No. You can pronounce every sound correctly and still have wrong pitch. Pronunciation is which sounds you make; pitch accent is the high/low melody over those sounds — and it carries meaning (箸 vs 橋)."}},{"@type":"Question","name":"Can you fix pitch accent as an adult learner?","acceptedAnswer":{"@type":"Answer","text":"Yes. The bottleneck is feedback: you can't hear your own pitch errors. With a tool that shows your pitch contour against a native one and tells you where your pitch dropped, you can close the loop and fix it."}}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Why You Sound Foreign in Japanese (And How to Fix It)", "description": "Your grammar is fine but you still sound foreign in Japanese. The reason is pitch accent — not pronunciation. Here's why, with examples, and how to fix it for free.", "url": "https://nihongo.amorjp.com/learn/why-you-sound-foreign-in-japanese.html", "author": {"@type": "Person", "name": "Sho Kawamoto", "url": "https://nihongo.amorjp.com"}, "publisher": {"@type": "Organization", "name": "NihonGo", "url": "https://nihongo.amorjp.com"}, "dateModified": "2026-07-02", "citation": ["NHK日本語発音アクセント新辞典", "OJAD (Online Japanese Accent Dictionary)"]}</script>
 </head><body class="text-gray-800">
 <nav class="border-b border-gray-200 bg-white/90 backdrop-blur sticky top-0 z-10">
   <div class="max-w-3xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -40,6 +41,20 @@
 </nav>
   <article class="max-w-3xl mx-auto px-6 py-12 leading-relaxed">
     <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight">Why You Sound Foreign in Japanese (And How to Fix It)</h1>
+<p class="text-sm text-gray-500 mt-3">By <strong>Sho Kawamoto</strong> — creator of NihonGo · Updated 2026-07-02 · Pitch patterns follow the <em>NHK日本語発音アクセント新辞典</em> and OJAD.</p>
+<div class="my-6 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-5">
+  <p class="font-bold text-gray-900 mb-1">👂 Hear the difference right now</p>
+  <p class="text-sm text-gray-600 mb-3">Same sound「はし」— only the pitch differs. Tap both:</p>
+  <div class="flex gap-3">
+    <button onclick="new Audio('/pair-audio/hashi_chopsticks.mp3').play()" class="flex-1 bg-white rounded-xl border border-gray-200 px-4 py-3 text-center hover:border-indigo-300 transition-colors">
+      <span class="text-2xl font-extrabold">箸</span><br><span class="text-xs text-gray-500">🥢 chopsticks · HIGH→low</span><br><span class="text-xs font-bold text-indigo-600">🔊 tap to hear</span>
+    </button>
+    <button onclick="new Audio('/pair-audio/hashi_bridge.mp3').play()" class="flex-1 bg-white rounded-xl border border-gray-200 px-4 py-3 text-center hover:border-indigo-300 transition-colors">
+      <span class="text-2xl font-extrabold">橋</span><br><span class="text-xs text-gray-500">🌉 bridge · low→HIGH</span><br><span class="text-xs font-bold text-indigo-600">🔊 tap to hear</span>
+    </button>
+  </div>
+</div>
+
     <p class="text-gray-500 mt-4 text-lg">You studied for years. Your grammar is solid, your vocabulary is wide — and yet, the moment you open your mouth, people hear that you're not a native speaker. The reason usually isn't your grammar or even your pronunciation. It's <strong>pitch accent</strong>.</p>
 
     <h2 class="text-2xl font-extrabold text-gray-900 mt-10">English stresses. Japanese pitches.</h2>
