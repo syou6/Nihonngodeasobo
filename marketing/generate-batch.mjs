@@ -62,6 +62,7 @@ for (let h = 0; h < hooks.length; h++) {
 await mkdir(OUT, { recursive: true });
 const browser = await chromium.launch({ args: ['--force-color-profile=srgb'] });
 const started = Date.now();
+const failed = [];
 
 for (let i = 0; i < queue.length; i++) {
   const { pair, hook, answerSide } = queue[i];
@@ -76,13 +77,22 @@ for (let i = 0; i < queue.length; i++) {
   await mkdir(dir, { recursive: true });
 
   console.log(`▶ ${nn} ${pair.reading} ${pair.a.word}/${pair.b.word} · hook=${hook.id} · ans=${answerSide.toUpperCase()}`);
-  await renderQuizVideo(browser, pair, answerSide, videoOut, hook);
-  await renderQuizSlides(browser, pair, answerSide, dir, hook);
-  await writeFile(path.join(dir, '投稿文_video.txt'), videoCaption(pair, answerSide, hook.id));
-  await writeFile(path.join(dir, '投稿文_slides.txt'), slidesCaption(pair, answerSide, hook.id));
-  console.log(`✅ ${nn} ${pair.reading}/${hook.id}`);
+  // One flaky render (Playwright screenshot timeout under load) must not kill
+  // the whole calendar — log it and keep going; rerun with --skip-existing to
+  // fill the gaps.
+  try {
+    await renderQuizVideo(browser, pair, answerSide, videoOut, hook);
+    await renderQuizSlides(browser, pair, answerSide, dir, hook);
+    await writeFile(path.join(dir, '投稿文_video.txt'), videoCaption(pair, answerSide, hook.id));
+    await writeFile(path.join(dir, '投稿文_slides.txt'), slidesCaption(pair, answerSide, hook.id));
+    console.log(`✅ ${nn} ${pair.reading}/${hook.id}`);
+  } catch (err) {
+    failed.push(nn);
+    console.error(`✗ ${nn} ${pair.reading}/${hook.id}: ${err.name} — will retry on next --skip-existing run`);
+  }
 }
 
 await browser.close();
-console.log(`\ndone: ${queue.length} posts (${pairs.length} pairs × ${hooks.length} hooks) in ${((Date.now() - started) / 60000).toFixed(1)} min → ${OUT}`);
+console.log(`\ndone: ${queue.length - failed.length}/${queue.length} posts in ${((Date.now() - started) / 60000).toFixed(1)} min → ${OUT}`);
+if (failed.length) console.log(`⚠ ${failed.length} failed (${failed.join(',')}) — rerun: node marketing/generate-batch.mjs --hooks ${hooks.length} --skip-existing`);
 console.log('投稿順: 01から毎日1本、動画とスライド交互。固定コメント+全返信を忘れるな。');

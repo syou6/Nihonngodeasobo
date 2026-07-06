@@ -180,7 +180,7 @@ export async function renderQuizVideo(browser, pair, answerSide, outFile, hook =
     await page.evaluate((ms) => {
       document.getAnimations({ subtree: true }).forEach((a) => { a.currentTime = ms; });
     }, (i * 1000) / FPS);
-    await page.screenshot({ path: path.join(rec, `f${String(i).padStart(4, '0')}.jpg`), type: 'jpeg', quality: 92 });
+    await page.screenshot({ path: path.join(rec, `f${String(i).padStart(4, '0')}.jpg`), type: 'jpeg', quality: 92, timeout: 60000 });
   }
   await ctx.close();
 
