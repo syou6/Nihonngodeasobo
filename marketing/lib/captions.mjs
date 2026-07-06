@@ -13,9 +13,18 @@ function core(pair, answerSide) {
   return { ans, other, letter };
 }
 
-export function videoCaption(pair, answerSide) {
+// Per-hook caption opener so the on-platform text matches the video's angle.
+const HOOK_OPENER = {
+  mistake: 'Can you hear it? 👂 95% of learners get this wrong.',
+  native: 'A native hears this instantly 👂 can you?',
+  pov: "POV: you've been saying this wrong 👂",
+  challenge: 'Can your ear pass this? 👂',
+};
+
+export function videoCaption(pair, answerSide, hookId = 'mistake') {
   const { ans, other, letter } = core(pair, answerSide);
-  return `Can you hear it? 👂 ${pair.reading} = ${pair.a.en} OR ${pair.b.en} — the PITCH decides. A or B? ${pair.a.emoji}${pair.b.emoji}
+  const opener = HOOK_OPENER[hookId] ?? HOOK_OPENER.mistake;
+  return `${opener} ${pair.reading} = ${pair.a.en} OR ${pair.b.en} — the PITCH decides. A or B? ${pair.a.emoji}${pair.b.emoji}
 
 Drop your answer in the comments BEFORE the reveal 👇 no cheating 😤
 
@@ -33,9 +42,10 @@ ${HASHTAGS_VIDEO}
 不正解者→「惜しい! ${ans.word} は ${patJp(ans.pat)}。bio のゲームで3分で掴めるよ👂」`;
 }
 
-export function slidesCaption(pair, answerSide) {
+export function slidesCaption(pair, answerSide, hookId = 'mistake') {
   const { ans, letter } = core(pair, answerSide);
-  return `Same sound「${pair.reading}」, two meanings ${pair.a.emoji}${pair.b.emoji} — the PITCH decides. Which shape is ${ans.en}, A or B? 👇
+  const opener = HOOK_OPENER[hookId] ?? HOOK_OPENER.mistake;
+  return `${opener} Same sound「${pair.reading}」, two meanings ${pair.a.emoji}${pair.b.emoji}. Which shape is ${ans.en}, A or B? 👇
 
 Comment your guess BEFORE you swipe to the answer 😤
 

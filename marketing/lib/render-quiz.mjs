@@ -7,6 +7,7 @@ import { promisify } from 'node:util';
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
+import { HOOKS } from './hooks.mjs';
 
 const run = promisify(execFile);
 const MK = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
@@ -62,7 +63,7 @@ body{background:linear-gradient(160deg,#4338CA 0%,#5B21B6 55%,#3B0764 100%);posi
 
 // ---------------- video ----------------
 
-function videoHtml(pair, answerSide) {
+function videoHtml(pair, answerSide, hook = HOOKS[0]) {
   const v = view(pair, answerSide);
   const ringDash = Math.PI * 2 * 130;
   return `<!doctype html><html><head><meta charset="utf-8">${FONTS}
@@ -107,9 +108,9 @@ function videoHtml(pair, answerSide) {
 </style></head><body>
 <div class="glow g1"></div><div class="glow g2"></div>
 <div class="stage s1">
-  <div class="kicker">95% OF LEARNERS GET THIS WRONG</div>
+  <div class="kicker">${hook.kicker}</div>
   <div class="kana jp">${v.reading}</div>
-  <div class="same">same sound — but it means TWO things 👇</div>
+  <div class="same">${hook.same}</div>
   <div class="twomean"><span>${v.a.emoji} ${v.a.en}</span><span>${v.b.emoji} ${v.b.en}</span></div>
 </div>
 <div class="stage s2">
@@ -147,8 +148,8 @@ function videoHtml(pair, answerSide) {
       ${eqPulse(answerSide === 'b' ? T_REVEAL_ANS : T_REVEAL_OTHER, answerSide === 'b' ? '#34D399' : '#FB7185', 30)}
     </div>
   </div>
-  <div class="cta">Got it right? <span class="y">prove it.</span></div>
-  <div class="btn">What's YOUR ear score? →</div>
+  <div class="cta">${hook.ctaLine}</div>
+  <div class="btn">${hook.btn}</div>
   <div class="url">nihongo.amorjp.com · free</div>
 </div>
 </body></html>`;
@@ -158,13 +159,13 @@ function videoHtml(pair, answerSide) {
 // whole timeline per frame, screenshotting at 2x. No realtime recording means
 // zero dropped frames, exact audio/animation sync, and much sharper text than
 // the old webm re-encode. ~390 lossless frames → single ffmpeg encode.
-export async function renderQuizVideo(browser, pair, answerSide, outFile) {
+export async function renderQuizVideo(browser, pair, answerSide, outFile, hook = HOOKS[0]) {
   const v = view(pair, answerSide);
-  const rec = path.join(MK, `.recquiz-${pair.a.audio}`);
+  const rec = path.join(MK, `.recquiz-${pair.a.audio}-${hook.id}`);
   await rm(rec, { recursive: true, force: true });
   await mkdir(rec, { recursive: true });
   const sceneFile = path.join(rec, 'f.html');
-  await writeFile(sceneFile, videoHtml(pair, answerSide));
+  await writeFile(sceneFile, videoHtml(pair, answerSide, hook));
 
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: SCALE });
   const page = await ctx.newPage();
@@ -215,7 +216,7 @@ export async function renderQuizVideo(browser, pair, answerSide, outFile) {
 
 // ---------------- slides ----------------
 
-function slideDefs(pair, answerSide) {
+function slideDefs(pair, answerSide, hook = HOOKS[0]) {
   const v = view(pair, answerSide);
   return [
     { name: '01_hook', extra: `
@@ -225,9 +226,9 @@ function slideDefs(pair, answerSide) {
       .tm{margin-top:50px;display:flex;gap:34px;font-size:54px;font-weight:800}
       .tm span{background:rgba(255,255,255,.12);padding:22px 38px;border-radius:26px}`,
       body: `<div class="wrap">
-        <div class="kicker">95% OF LEARNERS GET THIS WRONG</div>
+        <div class="kicker">${hook.kicker}</div>
         <div class="kana jp">${v.reading}</div>
-        <div class="same">one sound — TWO meanings 👇</div>
+        <div class="same">${hook.same}</div>
         <div class="tm"><span>${v.a.emoji} ${v.a.en}</span><span>${v.b.emoji} ${v.b.en}</span></div>
       </div><div class="swipe">swipe → can you tell them apart?</div>` },
 
@@ -280,8 +281,8 @@ function slideDefs(pair, answerSide) {
   ];
 }
 
-export async function renderQuizSlides(browser, pair, answerSide, outDir) {
-  const tmp = path.join(MK, `.recslides-${pair.a.audio}`);
+export async function renderQuizSlides(browser, pair, answerSide, outDir, hook = HOOKS[0]) {
+  const tmp = path.join(MK, `.recslides-${pair.a.audio}-${hook.id}`);
   await rm(tmp, { recursive: true, force: true });
   await mkdir(tmp, { recursive: true });
   await mkdir(outDir, { recursive: true });
@@ -296,8 +297,9 @@ ${extra}</style></head><body>
 <div class="glow g1"></div><div class="glow g2"></div>
 <div class="logo">🍣 NihonGo</div><div class="pageno">${no}</div>`;
 
-  const defs = slideDefs(pair, answerSide);
-  const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
+  const defs = slideDefs(pair, answerSide, hook);
+  // 2x scale for crisp carousel PNGs (matches the video's sharpness bump).
+  const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: SCALE });
   const page = await ctx.newPage();
   const outFiles = [];
   for (let i = 0; i < defs.length; i++) {
@@ -306,7 +308,7 @@ ${extra}</style></head><body>
     const f = path.join(tmp, `${s.name}.html`);
     await writeFile(f, html);
     await page.goto('file://' + f);
-    await page.waitForTimeout(700); // webfonts
+    await page.evaluate(() => document.fonts.ready);
     const out = path.join(outDir, `${s.name}.png`);
     await page.screenshot({ path: out });
     outFiles.push(out);
