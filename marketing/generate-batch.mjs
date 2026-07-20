@@ -18,16 +18,26 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { loadPairs } from './lib/pairs.mjs';
 import { renderQuizVideo, renderQuizSlides } from './lib/render-quiz.mjs';
-import { videoCaption, slidesCaption } from './lib/captions.mjs';
+import { videoCaption, slidesCaption, youtubeText, teaseCaption } from './lib/captions.mjs';
 import { HOOKS } from './lib/hooks.mjs';
 
 const MK = path.resolve(path.dirname(new URL(import.meta.url).pathname));
-const OUT = path.join(MK, 'out-batch');
 
 const args = process.argv.slice(2);
 const flag = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] : null);
 const only = flag('--only')?.split(',') ?? null;
 const skipExisting = args.includes('--skip-existing');
+// tiktok (default) = no on-screen URL + tight 10s cut (max reach). youtube =
+// keeps the URL on-screen (YouTube allows off-platform links, rewards them).
+// Each platform renders into its OWN folder so re-running one never clobbers
+// the other mid-posting-calendar.
+const platform = flag('--platform') === 'youtube' ? 'youtube' : 'tiktok';
+// --tease: no reveal in the video — the pinned comment (next day) carries the
+// answer. Fixes the 0-comment problem: asking for a guess then revealing 3s
+// later gave nobody a reason to comment.
+const tease = args.includes('--tease');
+const OUT = path.join(MK,
+  tease ? 'out-batch-tease' : platform === 'youtube' ? 'out-batch-youtube' : 'out-batch');
 const hooksArg = flag('--hooks');
 const hookCount = hooksArg === 'all' ? HOOKS.length : hooksArg ? Math.max(1, Math.min(HOOKS.length, +hooksArg)) : 1;
 const hooks = HOOKS.slice(0, hookCount);
@@ -81,10 +91,18 @@ for (let i = 0; i < queue.length; i++) {
   // the whole calendar — log it and keep going; rerun with --skip-existing to
   // fill the gaps.
   try {
-    await renderQuizVideo(browser, pair, answerSide, videoOut, hook);
-    await renderQuizSlides(browser, pair, answerSide, dir, hook);
-    await writeFile(path.join(dir, '投稿文_video.txt'), videoCaption(pair, answerSide, hook.id));
-    await writeFile(path.join(dir, '投稿文_slides.txt'), slidesCaption(pair, answerSide, hook.id));
+    await renderQuizVideo(browser, pair, answerSide, videoOut, hook, platform, tease);
+    if (tease) {
+      // Tease = video only; answer withheld → caption + next-day pin script.
+      await writeFile(path.join(dir, '投稿文_tease.txt'), teaseCaption(pair, answerSide, hook.id));
+    } else if (platform === 'youtube') {
+      // Shorts = video only; slides are a TikTok photo-mode thing.
+      await writeFile(path.join(dir, 'youtube_タイトル概要.txt'), youtubeText(pair, answerSide, hook.id));
+    } else {
+      await renderQuizSlides(browser, pair, answerSide, dir, hook, platform);
+      await writeFile(path.join(dir, '投稿文_video.txt'), videoCaption(pair, answerSide, hook.id));
+      await writeFile(path.join(dir, '投稿文_slides.txt'), slidesCaption(pair, answerSide, hook.id));
+    }
     console.log(`✅ ${nn} ${pair.reading}/${hook.id}`);
   } catch (err) {
     failed.push(nn);

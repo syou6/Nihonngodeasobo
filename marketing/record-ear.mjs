@@ -34,6 +34,18 @@ try {
     recordVideo: { dir: REC, size: { width: 540, height: 960 } },
   });
   const page = await ctx.newPage();
+  // Playwright records VIDEO ONLY — but the pair audio IS the game. Hook every
+  // <audio>.play() in-page with a wall-clock stamp, then re-mix the real mp3s
+  // at those offsets in ffmpeg so the final cut has the actual game sound.
+  const t0 = Date.now();
+  await page.addInitScript(() => {
+    window.__audioLog = [];
+    const orig = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function (...a) {
+      window.__audioLog.push({ src: this.currentSrc || this.src || '', at: Date.now() });
+      return orig.apply(this, a);
+    };
+  });
   await page.goto(`http://localhost:${PORT}/app.html?guest=true&view=ear`, { waitUntil: 'networkidle', timeout: 30000 });
   await page.addStyleTag({ content: `[class*="from-yellow-400"]{display:none!important} body{background:#F2F1FA!important}` });
   // hide the guest tab switcher for a clean shot
@@ -52,6 +64,7 @@ try {
     } else { await page.waitForTimeout(600); }
   }
   await page.waitForTimeout(800);
+  const audioLog = await page.evaluate(() => window.__audioLog || []);
   await ctx.close();
   await browser.close();
 
@@ -59,6 +72,18 @@ try {
   const outFile = path.join(OUT, 'NihonGo_ear.mp4');
   const music = path.join(MK, 'audio', 'music_526.mp3');
   const hasMusic = existsSync(music);
+
+  // Resolve logged plays to local files + ms offsets from recording start.
+  const plays = audioLog
+    .map((e) => {
+      const m = (e.src || '').match(/\/pair-audio\/([\w-]+\.mp3)/);
+      if (!m) return null;
+      const f = path.join(ROOT, 'public', 'pair-audio', m[1]);
+      const at = Math.max(0, e.at - t0);
+      return existsSync(f) ? { f, at } : null;
+    })
+    .filter(Boolean);
+  console.log(`captured ${plays.length} in-game audio plays`);
 
   const vf = [
     `scale=1080:1920:flags=lanczos`,
@@ -68,9 +93,24 @@ try {
     `drawtext=text='Train your ear free  ·  nihongo.amorjp.com':fontcolor=white:fontsize=38:font='Helvetica':x=(w-text_w)/2:y=h-120:box=1:boxcolor=0x4F46E5@0.95:boxborderw=24`,
   ].join(',');
 
+  // Mix: BGM (quiet) + every real pair-audio clip at its captured offset.
+  const inputs = ['-i', webm];
+  const filters = [`[0:v]${vf}[v]`];
+  const amix = [];
+  let ai = 1;
   if (hasMusic) {
-    await run('ffmpeg', ['-y', '-i', webm, '-i', music,
-      '-filter_complex', `[0:v]${vf}[v];[1:a]volume=0.25,afade=t=in:st=0:d=0.6,afade=t=out:st=11:d=1.2[a]`,
+    inputs.push('-i', music);
+    filters.push(`[${ai}:a]volume=0.18,afade=t=in:st=0:d=0.6,afade=t=out:st=11:d=1.2[m]`);
+    amix.push('[m]'); ai++;
+  }
+  for (const p of plays) {
+    inputs.push('-i', p.f);
+    filters.push(`[${ai}:a]adelay=${p.at}|${p.at},volume=1.7[g${ai}]`);
+    amix.push(`[g${ai}]`); ai++;
+  }
+  if (amix.length) {
+    filters.push(`${amix.join('')}amix=inputs=${amix.length}:duration=longest:normalize=0[a]`);
+    await run('ffmpeg', ['-y', ...inputs, '-filter_complex', filters.join(';'),
       '-map', '[v]', '-map', '[a]', '-t', '12.5',
       '-c:v', 'libx264', '-crf', '18', '-preset', 'slow', '-pix_fmt', 'yuv420p',
       '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', outFile]);

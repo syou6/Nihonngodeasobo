@@ -11,12 +11,14 @@ import { HOOKS } from './hooks.mjs';
 
 const run = promisify(execFile);
 const MK = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
-const W = 1080, H = 1920, DUR = 13.0, FPS = 30, SCALE = 2;
+// Tightened to 10s for TikTok completion-rate (the 3-2-1 countdown was dead
+// air that tanked watch-through → the algo throttled reach to <500 views).
+const W = 1080, H = 1920, DUR = 10.0, FPS = 30, SCALE = 2;
 const MUSIC = path.join(MK, 'audio', 'music_130.mp3');
 
 // Audio cue timeline (ms) — the CSS sound-pulse animations and the ffmpeg
 // adelay values are derived from the same constants so they can never drift.
-const T_QUIZ_PLAY = 3300, T_REVEAL_ANS = 9400, T_REVEAL_OTHER = 10700;
+const T_QUIZ_PLAY = 3000, T_REVEAL_ANS = 7400, T_REVEAL_OTHER = 8400;
 
 const patText = (pat) => (pat[0] ? 'high → low' : 'low → high');
 
@@ -63,14 +65,13 @@ body{background:linear-gradient(160deg,#4338CA 0%,#5B21B6 55%,#3B0764 100%);posi
 
 // ---------------- video ----------------
 
-function videoHtml(pair, answerSide, hook = HOOKS[0]) {
+function videoHtml(pair, answerSide, hook = HOOKS[0], platform = 'tiktok', tease = false) {
   const v = view(pair, answerSide);
-  const ringDash = Math.PI * 2 * 130;
   return `<!doctype html><html><head><meta charset="utf-8">${FONTS}
 <style>${BASE_CSS}
 .stage{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 70px;z-index:2;opacity:0}
-.s1{animation:seg 2.8s 0s both}.s2{animation:seg 4.0s 2.8s both}.s3{animation:seg 2.2s 6.8s both}.s4{animation:seg 4.0s 9.0s both}
-@keyframes seg{0%{opacity:0;transform:translateY(40px) scale(.97)}7%{opacity:1;transform:none}93%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-26px) scale(.98)}}
+.s1{animation:seg 2.6s 0s both}.s2{animation:seg 2.8s 2.6s both}.s3{animation:seg 1.6s 5.4s both}.s4{animation:seg 3.0s 7.0s both}
+@keyframes seg{0%{opacity:0;transform:translateY(40px) scale(.97)}8%{opacity:1;transform:none}92%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-26px) scale(.98)}}
 .kicker{font-size:46px;font-weight:800;letter-spacing:.04em;color:#FDBA74;margin-bottom:30px}
 .kana{font-size:${v.reading.length > 2 ? 220 : 280}px;font-weight:800;line-height:1}
 .same{margin-top:18px;font-size:44px;font-weight:700;color:rgba(255,255,255,.8)}
@@ -83,12 +84,6 @@ function videoHtml(pair, answerSide, hook = HOOKS[0]) {
 .card .lab{font-size:48px;font-weight:800;color:#FDBA74;margin-bottom:14px}
 .card .w{font-size:130px;font-weight:800;line-height:1}
 .card .m{font-size:40px;color:rgba(255,255,255,.7);margin-top:10px}
-.ringwrap{position:relative;width:300px;height:300px}
-.ringnum{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:150px;font-weight:800}
-.ringnum .c3{animation:tick 1s 3.2s both}.ringnum .c2{animation:tick 1s 4.2s both}.ringnum .c1{animation:tick 1s 5.2s both}
-@keyframes tick{0%{opacity:0;transform:scale(.6)}20%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(1.3)}}
-.arc{stroke-dasharray:${ringDash.toFixed(0)};stroke-dashoffset:0;animation:arc 3s 3.2s linear forwards}
-@keyframes arc{to{stroke-dashoffset:${ringDash.toFixed(0)}}}
 .lock{font-size:96px;font-weight:800;line-height:1.1}.lock .hi{color:#FDBA74}
 .locksub{margin-top:34px;font-size:52px;font-weight:800;color:#fff;background:rgba(52,211,153,.22);border:3px solid rgba(52,211,153,.6);padding:24px 50px;border-radius:999px}
 .lockno{margin-top:30px;font-size:44px;font-weight:700;color:rgba(255,255,255,.75)}
@@ -116,17 +111,10 @@ function videoHtml(pair, answerSide, hook = HOOKS[0]) {
 <div class="stage s2">
   <div class="q">Listen 👂 which one is this?</div>
   <div class="qsub">the PITCH is the only clue</div>
-  ${eqPulse(T_QUIZ_PLAY, '#FDBA74', 44)}
-  <div class="cards" style="margin-top:26px">
+  ${eqPulse(T_QUIZ_PLAY, '#FDBA74', 48)}
+  <div class="cards" style="margin-top:30px">
     <div class="card"><div class="lab">A</div><div class="w jp">${v.a.word}</div><div class="m">${v.a.emoji} ${v.a.en}</div></div>
     <div class="card"><div class="lab">B</div><div class="w jp">${v.b.word}</div><div class="m">${v.b.emoji} ${v.b.en}</div></div>
-  </div>
-  <div class="ringwrap">
-    <svg width="300" height="300" viewBox="0 0 300 300" style="transform:rotate(-90deg)">
-      <circle cx="150" cy="150" r="130" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="22"/>
-      <circle class="arc" cx="150" cy="150" r="130" fill="none" stroke="#FDBA74" stroke-width="22" stroke-linecap="round"/>
-    </svg>
-    <div class="ringnum"><span class="c3">3</span><span class="c2" style="position:absolute">2</span><span class="c1" style="position:absolute">1</span></div>
   </div>
 </div>
 <div class="stage s3">
@@ -134,7 +122,18 @@ function videoHtml(pair, answerSide, hook = HOOKS[0]) {
   <div class="locksub">👇 comment your answer NOW</div>
   <div class="lockno">no scrolling till you guess 😤</div>
 </div>
-<div class="stage s4">
+${tease ? `<div class="stage s4">
+  <div class="rev">Sure about your answer? 🤔</div>
+  <div class="locksub" style="margin-top:10px">answer = pinned comment 👇</div>
+  <div class="lockno">it's harder than you think — hear it again:</div>
+  <div class="pair" style="margin-top:34px">
+    <div class="pbox"><div class="pm">🔊 one of these…</div>${eqPulse(T_REVEAL_ANS, '#FDBA74', 34)}</div>
+    <div class="pbox"><div class="pm">🔊 …and the other</div>${eqPulse(T_REVEAL_OTHER, '#FDBA74', 34)}</div>
+  </div>
+  <div class="cta" style="margin-top:28px">${hook.ctaLine}</div>
+  <div class="btn">${hook.btn}</div>
+  <div class="url">${platform === 'youtube' ? 'nihongo.amorjp.com · free' : '👀 free — link in bio'}</div>
+</div>` : `<div class="stage s4">
   <div class="rev">It was <span class="good">${v.letter} · ${v.ans.word}</span> ${v.ans.emoji}</div>
   <div class="pair">
     <div class="pbox${answerSide === 'a' ? ' win' : ''}">
@@ -150,8 +149,8 @@ function videoHtml(pair, answerSide, hook = HOOKS[0]) {
   </div>
   <div class="cta">${hook.ctaLine}</div>
   <div class="btn">${hook.btn}</div>
-  <div class="url">nihongo.amorjp.com · free</div>
-</div>
+  <div class="url">${platform === 'youtube' ? 'nihongo.amorjp.com · free' : '👀 free — link in bio'}</div>
+</div>`}
 </body></html>`;
 }
 
@@ -159,13 +158,13 @@ function videoHtml(pair, answerSide, hook = HOOKS[0]) {
 // whole timeline per frame, screenshotting at 2x. No realtime recording means
 // zero dropped frames, exact audio/animation sync, and much sharper text than
 // the old webm re-encode. ~390 lossless frames → single ffmpeg encode.
-export async function renderQuizVideo(browser, pair, answerSide, outFile, hook = HOOKS[0]) {
+export async function renderQuizVideo(browser, pair, answerSide, outFile, hook = HOOKS[0], platform = 'tiktok', tease = false) {
   const v = view(pair, answerSide);
-  const rec = path.join(MK, `.recquiz-${pair.a.audio}-${hook.id}`);
+  const rec = path.join(MK, `.recquiz-${pair.a.audio}-${hook.id}-${platform}${tease ? '-tease' : ''}`);
   await rm(rec, { recursive: true, force: true });
   await mkdir(rec, { recursive: true });
   const sceneFile = path.join(rec, 'f.html');
-  await writeFile(sceneFile, videoHtml(pair, answerSide, hook));
+  await writeFile(sceneFile, videoHtml(pair, answerSide, hook, platform, tease));
 
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: SCALE });
   const page = await ctx.newPage();
@@ -216,7 +215,7 @@ export async function renderQuizVideo(browser, pair, answerSide, outFile, hook =
 
 // ---------------- slides ----------------
 
-function slideDefs(pair, answerSide, hook = HOOKS[0]) {
+function slideDefs(pair, answerSide, hook = HOOKS[0], platform = 'tiktok') {
   const v = view(pair, answerSide);
   return [
     { name: '01_hook', extra: `
@@ -276,13 +275,13 @@ function slideDefs(pair, answerSide, hook = HOOKS[0]) {
         <div class="ct">Got it right?<br><span class="y">prove your ear.</span></div>
         <div class="sub">real pitch audio · honest score · free</div>
         <div class="btn">Play free → link in bio</div>
-        <div class="url">nihongo.amorjp.com</div>
+        ${platform === 'youtube' ? '<div class="url">nihongo.amorjp.com</div>' : ''}
       </div>` },
   ];
 }
 
-export async function renderQuizSlides(browser, pair, answerSide, outDir, hook = HOOKS[0]) {
-  const tmp = path.join(MK, `.recslides-${pair.a.audio}-${hook.id}`);
+export async function renderQuizSlides(browser, pair, answerSide, outDir, hook = HOOKS[0], platform = 'tiktok') {
+  const tmp = path.join(MK, `.recslides-${pair.a.audio}-${hook.id}-${platform}`);
   await rm(tmp, { recursive: true, force: true });
   await mkdir(tmp, { recursive: true });
   await mkdir(outDir, { recursive: true });
@@ -297,7 +296,7 @@ ${extra}</style></head><body>
 <div class="glow g1"></div><div class="glow g2"></div>
 <div class="logo">🍣 NihonGo</div><div class="pageno">${no}</div>`;
 
-  const defs = slideDefs(pair, answerSide, hook);
+  const defs = slideDefs(pair, answerSide, hook, platform);
   // 2x scale for crisp carousel PNGs (matches the video's sharpness bump).
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: SCALE });
   const page = await ctx.newPage();
