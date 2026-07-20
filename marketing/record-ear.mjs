@@ -74,11 +74,12 @@ try {
   const hasMusic = existsSync(music);
 
   // Resolve logged plays to local files + ms offsets from recording start.
+  // The game serves clips from /pair-audio/ or /word-audio/ (URL-encoded kanji).
   const plays = audioLog
     .map((e) => {
-      const m = (e.src || '').match(/\/pair-audio\/([\w-]+\.mp3)/);
+      const m = (e.src || '').match(/\/((?:pair|word)-audio)\/([^/?#]+\.mp3)/);
       if (!m) return null;
-      const f = path.join(ROOT, 'public', 'pair-audio', m[1]);
+      const f = path.join(ROOT, 'public', m[1], decodeURIComponent(m[2]));
       const at = Math.max(0, e.at - t0);
       return existsSync(f) ? { f, at } : null;
     })
@@ -90,7 +91,8 @@ try {
     `drawbox=x=0:y=0:w=1080:h=210:color=0x1e1b4b@0.82:t=fill`,
     `drawtext=text='Can you hear chopsticks vs bridge?':fontcolor=white:fontsize=48:font='Helvetica':x=(w-text_w)/2:y=58:enable='between(t,0,3)'`,
     `drawtext=text='Same sounds. The PITCH decides.':fontcolor=#FDBA74:fontsize=50:font='Helvetica':x=(w-text_w)/2:y=58:enable='between(t,3,20)'`,
-    `drawtext=text='Train your ear free  ·  nihongo.amorjp.com':fontcolor=white:fontsize=38:font='Helvetica':x=(w-text_w)/2:y=h-120:box=1:boxcolor=0x4F46E5@0.95:boxborderw=24`,
+    // On-screen URL only for YouTube (--platform youtube); TikTok gets throttled for it.
+    `drawtext=text='${process.argv.includes('youtube') ? 'Train your ear free  ·  nihongo.amorjp.com' : 'Train your ear free  ·  link in bio'}':fontcolor=white:fontsize=38:font='Helvetica':x=(w-text_w)/2:y=h-120:box=1:boxcolor=0x4F46E5@0.95:boxborderw=24`,
   ].join(',');
 
   // Mix: BGM (quiet) + every real pair-audio clip at its captured offset.
