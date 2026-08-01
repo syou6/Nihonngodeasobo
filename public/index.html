@@ -18,9 +18,9 @@
   }
 </script>
 <title>Can You Hear It? Japanese Pitch Accent Game | NihonGo</title>
-<meta name="description" content="A 5-second test: 箸 or 橋? Train your ear to hear Japanese pitch accent, then train your voice — scored on-device, dictionary-verified audio. Free, no signup.">
+<meta name="description" content="A 5-second test: 箸 or 橋? Train your ear to hear Japanese pitch accent, then train your voice — scored on-device, dictionary-verified audio. Free web demo in your browser; iOS app with a 7-day trial.">
 <meta property="og:title" content="Can You Hear It? Japanese Pitch Accent Game | NihonGo">
-<meta property="og:description" content="A 5-second test: 箸 or 橋? Train your ear to hear Japanese pitch accent, then train your voice. Free, no signup.">
+<meta property="og:description" content="A 5-second test: 箸 or 橋? Train your ear to hear Japanese pitch accent, then train your voice. Free web demo; iOS app with a 7-day trial.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://nihongo.amorjp.com">
 <meta property="og:image" content="https://nihongo.amorjp.com/og-image.png">
@@ -28,7 +28,7 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Can You Hear It? Japanese Pitch Accent Game | NihonGo">
-<meta name="twitter:description" content="A 5-second test: 箸 or 橋? Train your ear to hear Japanese pitch accent, then train your voice. Free, no signup.">
+<meta name="twitter:description" content="A 5-second test: 箸 or 橋? Train your ear to hear Japanese pitch accent, then train your voice. Free web demo; iOS app with a 7-day trial.">
 <meta name="twitter:image" content="https://nihongo.amorjp.com/og-image.png">
 <link rel="canonical" href="https://nihongo.amorjp.com/">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -48,9 +48,9 @@
       "url": "https://nihongo.amorjp.com",
       "image": "https://nihongo.amorjp.com/og-image.png",
       "offers": [
-        { "@type": "Offer", "price": "0", "priceCurrency": "USD", "name": "Free" },
-        { "@type": "Offer", "price": "8.99", "priceCurrency": "USD", "name": "Premium (monthly)" },
-        { "@type": "Offer", "price": "59", "priceCurrency": "USD", "name": "Premium (annual)" }
+        { "@type": "Offer", "price": "8.99", "priceCurrency": "USD", "name": "Nihongo Pro (monthly)" },
+        { "@type": "Offer", "price": "59.99", "priceCurrency": "USD", "name": "Nihongo Pro (yearly)" },
+        { "@type": "Offer", "price": "129.99", "priceCurrency": "USD", "name": "Nihongo Pro (lifetime)" }
       ]
     },
     {
@@ -62,6 +62,8 @@
     {
       "@type": "FAQPage",
       "mainEntity": [
+        { "@type": "Question", "name": "Is there a free version?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No. Nihongo Pro starts with a 7-day free trial, and the 箸/橋 listening test is free to try in the app onboarding. This site also hosts a free web demo, separate from the iOS app." } },
         { "@type": "Question", "name": "Do I need a microphone?",
           "acceptedAnswer": { "@type": "Answer", "text": "Not for Ear Sprint or Pattern Drill. Only Pitch Karaoke uses the mic." } },
         { "@type": "Question", "name": "Is my voice uploaded?",
@@ -206,8 +208,9 @@
   .verify-num .l{font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--sub)}
   .verify-num .arrow{font-size:26px;font-weight:400;color:var(--dim)}
 
-  .price-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:8px}
-  @media(max-width:700px){.price-grid{grid-template-columns:1fr}}
+  .price-grid3{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:18px;margin-top:8px}
+  @media(max-width:760px){.price-grid3{grid-template-columns:1fr}}
+  .tier .trial{font-size:14px;color:var(--sub);margin-top:10px;line-height:1.5}
   .tier{border-radius:24px;padding:30px;background:var(--card);border:1px solid var(--line)}
   .tier.feat{background:var(--card2);border-color:var(--violet)}
   .tier .name{font-size:12px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:var(--sub)}
@@ -255,7 +258,7 @@
     <a class="txt" href="#how">How it works</a>
     <a class="txt" href="#pricing">Pricing</a>
     <a class="txt" href="#faq">FAQ</a>
-    <a class="pill pill-primary" href="/app.html?guest=true&view=ear">Play free →</a>
+    <a class="pill pill-primary" href="/app.html?guest=true&view=ear">Try the web demo →</a>
   </span>
 </div></nav>
 
@@ -305,8 +308,8 @@
   <p class="note">Same sounds <b class="jp" style="color:var(--text)">「はし」</b> — the pitch is the only difference.</p>
 
   <div class="cta-row">
-    <a class="pill pill-primary" href="/app.html?guest=true&view=ear">Play the 60-second Ear Sprint — free</a>
-    <a class="pill pill-secondary" href="/app.html?guest=true&view=pitch">Train your voice</a>
+    <a class="pill pill-primary" href="/app.html?guest=true&view=ear">Try the free web demo — Ear Sprint</a>
+    <a class="pill pill-secondary" href="/app.html?guest=true&view=pitch">Train your voice — web demo</a>
   </div>
 
   <p class="stakes">You've been understood your whole life through context — listeners quietly repairing your words for you. You've just never known which words needed repairing.</p>
@@ -353,7 +356,7 @@
           <circle cx="6" cy="7" r="5" fill="#7FD4C1"/><circle cx="30" cy="21" r="5" fill="#7FD4C1"/>
         </svg>
         <h3>Ear Sprint</h3>
-        <p>60 seconds of minimal pairs — <span class="jp">箸/橋, 雨/飴</span>. Combo scoring. No mic, no signup.</p>
+        <p>60 seconds of minimal pairs — 36 in the app, like <span class="jp">箸/橋</span> and <span class="jp">雨/飴</span>. Combo scoring. No mic needed.</p>
       </div>
       <div class="mode">
         <svg class="icon" width="44" height="28" viewBox="0 0 44 28" aria-hidden="true">
@@ -392,22 +395,27 @@
 
   <section class="band" id="pricing"><div class="wrap">
     <span class="eyebrow">Pricing</span>
-    <h2 style="margin-bottom:20px">Free to play.<br>Pay for depth.</h2>
-    <div class="price-grid">
-      <div class="tier">
-        <div class="name">Free</div>
-        <div class="amt">$0</div>
-        <ul><li>Ear Sprint, Pitch Karaoke, Pattern Drill</li><li>Core word set</li><li>No signup to try</li></ul>
-        <a class="pill pill-secondary" href="/app.html?guest=true&view=ear">Start free</a>
-      </div>
+    <h2 style="margin-bottom:14px">One subscription.<br>Everything unlocked.</h2>
+    <p style="margin-bottom:24px">Nihongo Pro unlocks all three modes — Ear Sprint, Pattern Drill, Pitch Karaoke — and the full 611-word verified library. Every plan starts with a 7-day free trial.</p>
+    <div class="price-grid3">
       <div class="tier feat">
-        <div class="name">Premium</div>
-        <div class="amt">$8.99<small>/mo</small> <span class="alt">· $59<small style="font-size:13px">/yr</small></span></div>
-        <ul><li>The full verified word library</li><li>Your history: streaks &amp; per-pattern progress</li><li>Drop-location coaching</li></ul>
-        <a class="pill pill-violet" href="/app.html?signup=true">Go Premium →</a>
+        <div class="name">Yearly · best value</div>
+        <div class="amt">$59.99<small>/year</small></div>
+        <p class="trial">7 days free, then $59.99/year.<br>Cancel any time.</p>
+      </div>
+      <div class="tier">
+        <div class="name">Monthly</div>
+        <div class="amt">$8.99<small>/mo</small></div>
+        <p class="trial">7 days free, then $8.99/month.<br>Cancel any time.</p>
+      </div>
+      <div class="tier">
+        <div class="name">Lifetime</div>
+        <div class="amt">$129.99<small> once</small></div>
+        <p class="trial">Pay once. Yours for good.<br>No subscription.</p>
       </div>
     </div>
-    <p style="margin-top:20px;color:var(--sub);font-size:15px">Cancel anytime. Payment by Stripe.</p>
+    <div class="appstore-note" style="margin-top:24px">iOS: Nihongo Pro is in App Store review — the download link will appear here.<br>Try the free web demo while you wait.</div>
+    <div style="margin-top:16px;text-align:center"><a class="pill pill-secondary" href="/app.html?guest=true&view=ear">Try the free web demo</a></div>
   </div></section>
 
   <section class="band alt" id="faq"><div class="wrap">
@@ -416,6 +424,10 @@
       <h2 style="font-size:clamp(30px,5vw,50px);margin-top:12px">Honest answers</h2>
     </div>
     <div class="faq">
+      <details>
+        <summary>Is there a free version?</summary>
+        <p class="a">No. Nihongo Pro starts with a 7-day free trial, and the <span class="jp">箸/橋</span> listening test is free to try — in the app onboarding and right at the top of this page. This site also hosts a free web demo, separate from the iOS app.</p>
+      </details>
       <details>
         <summary>Do I need a microphone?</summary>
         <p class="a">Not for Ear Sprint or Pattern Drill. Only Pitch Karaoke uses the mic.</p>
@@ -441,10 +453,10 @@
 
   <section class="final"><div class="wrap">
     <img src="/pitchi/got-it-rain.webp" width="330" height="330" alt="Pitchi understood — 雨!" loading="lazy" style="width:min(72vw,330px);height:auto;border-radius:24px;display:block;margin:0 auto 20px"/>
-    <span class="chip">no mic · no signup · free</span>
+    <span class="chip">free web demo · runs in your browser</span>
     <h2 style="margin-top:20px">Can you hear it?</h2>
-    <div class="cta-row"><a class="pill pill-primary" href="/app.html?guest=true&view=ear">Play the Ear Test — free</a></div>
-    <div class="appstore-note">📱 iOS app — currently in App Store review.<br>Play free in your browser while you wait.</div>
+    <div class="cta-row"><a class="pill pill-primary" href="/app.html?guest=true&view=ear">Try the free web demo</a></div>
+    <div class="appstore-note">📱 Nihongo Pro (iOS) — currently in App Store review.<br>The download link will appear here when approved.</div>
   </div></section>
 
 </main>
