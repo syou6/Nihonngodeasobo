@@ -130,8 +130,8 @@
   .hero{padding:60px 0 30px;text-align:center}
   .hero h1{font-size:clamp(52px,10vw,94px);margin:18px 0 0}
   .hero .instruction{font-size:clamp(17px,2.3vw,21px);color:var(--sub);margin-top:18px}
-  .pitchi{margin:0 auto 6px;display:block}
-  .pitchi .float{animation:hover 3.4s ease-in-out infinite}
+  .pitchi{margin:0 auto 6px;display:block;height:auto}
+  .float{animation:hover 3.4s ease-in-out infinite}
   @keyframes hover{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 
   .playbtn{display:inline-flex;align-items:center;gap:10px;margin-top:26px;background:var(--teal);color:var(--bg);border:none;border-radius:18px;font-family:var(--sans);font-size:18px;font-weight:700;height:56px;padding:0 32px;cursor:pointer;transition:background .15s}
@@ -168,6 +168,9 @@
   .hero .note{font-size:15px;color:var(--sub);margin-top:16px}
   .cta-row{display:flex;gap:14px;justify-content:center;margin-top:26px;flex-wrap:wrap}
   .stakes{max-width:56ch;margin:36px auto 0;font-size:clamp(16px,2.1vw,19px);color:var(--sub);text-wrap:pretty}
+  .candy{margin:30px auto 0;max-width:380px}
+  .candy img{width:100%;height:auto;border-radius:24px;display:block}
+  .candy figcaption{font-size:13.5px;color:var(--dim);font-weight:600;margin-top:10px;text-align:center}
 
   /* ── sections: alternate bg / bg2, flat cards ── */
   section.band{padding:clamp(48px,7vw,84px) 0}
@@ -260,23 +263,7 @@
   <!-- Pitchi: the listener. Round body, oversized rounded-oval ears rooted on
        top — left near-upright, right tilted ~40° outward. Dot eyes below the
        vertical centre, small smile. Flat, no gradients. -->
-  <svg class="pitchi" width="120" height="118" viewBox="0 0 240 236" role="img" aria-label="Pitchi, the listener">
-    <g class="float">
-      <g transform="rotate(-8 92 74)">
-        <ellipse cx="83" cy="70" rx="34" ry="52" fill="#7FD4C1"/>
-        <ellipse cx="84" cy="76" rx="19" ry="33" fill="#4A9D8A"/>
-      </g>
-      <g transform="rotate(40 165 80)">
-        <ellipse cx="163" cy="74" rx="33" ry="50" fill="#7FD4C1"/>
-        <ellipse cx="162" cy="80" rx="18" ry="31" fill="#4A9D8A"/>
-      </g>
-      <circle cx="122" cy="138" r="66" fill="#7FD4C1"/>
-      <circle cx="98" cy="152" r="9" fill="#0B0E17"/>
-      <circle cx="146" cy="152" r="9" fill="#0B0E17"/>
-      <path d="M112 172 q10 8 20 0" stroke="#0B0E17" stroke-width="5" stroke-linecap="round" fill="none"/>
-    </g>
-    <ellipse cx="122" cy="222" rx="34" ry="6" fill="#4A9D8A" opacity=".45"/>
-  </svg>
+  <img class="pitchi float" src="/pitchi/idle.webp" width="132" height="138" alt="Pitchi, the listener" fetchpriority="high"/>
 
   <span class="eyebrow">Japanese pitch accent · a 5-second test</span>
   <h1>Can you<br>hear it?</h1>
@@ -309,6 +296,7 @@
   </div>
 
   <div class="reveal" id="qreveal" role="status" aria-live="polite">
+    <img id="qreveal-img" src="" alt="" width="96" height="84" style="display:none;margin:0 auto 10px;mix-blend-mode:screen"/>
     <p class="big" id="qreveal-big"></p>
     <p class="sub" id="qreveal-sub"></p>
     <button class="again" type="button" onclick="quizReset()">Try another →</button>
@@ -322,6 +310,11 @@
   </div>
 
   <p class="stakes">You've been understood your whole life through context — listeners quietly repairing your words for you. You've just never known which words needed repairing.</p>
+
+  <figure class="candy">
+    <img src="/pitchi/heard-candy.webp" width="380" height="380" alt="Pitchi hears あめ said with the wrong pitch and sincerely hands over candy" loading="lazy"/>
+    <figcaption>Say <span class="jp">「あめ」</span> with the wrong pitch, and Pitchi sincerely hands you candy — not rain.</figcaption>
+  </figure>
 </div></header>
 
 <main id="how">
@@ -332,8 +325,10 @@
       <h2>You speak.<br>The line is your voice.</h2>
       <p>Say the word and your pitch draws itself against the target, live — high morae up, low morae down. Steer the drop through the gate and the word snaps into meaning.</p>
       <p style="margin-top:12px;font-size:15.5px">Scored on your device with the YIN pitch algorithm. Your voice never leaves your phone.</p>
+      <img src="/pitchi/drop.webp" width="430" height="344" alt="Pitchi sliding down a pitch contour toward the DROP gate" loading="lazy" style="width:min(100%,430px);height:auto;border-radius:20px;margin-top:22px"/>
     </div>
     <div class="panel">
+      <img src="/pitchi/listening.webp" width="360" height="360" alt="Pitchi listening to a microphone" loading="lazy" style="width:min(100%,300px);height:auto;border-radius:16px;display:block;margin:0 auto 16px;mix-blend-mode:screen"/>
       <div class="stage">
         <div class="klane">
           <span class="lbl lbl-hi">HIGH</span><span class="lbl lbl-lo">low</span>
@@ -445,6 +440,7 @@
   </div></section>
 
   <section class="final"><div class="wrap">
+    <img src="/pitchi/got-it-rain.webp" width="330" height="330" alt="Pitchi understood — 雨!" loading="lazy" style="width:min(72vw,330px);height:auto;border-radius:24px;display:block;margin:0 auto 20px"/>
     <span class="chip">no mic · no signup · free</span>
     <h2 style="margin-top:20px">Can you hear it?</h2>
     <div class="cta-row"><a class="pill pill-primary" href="/app.html?guest=true&view=ear">Play the Ear Test — free</a></div>
@@ -512,12 +508,15 @@
     document.getElementById('card-chopsticks').disabled = true;
     document.getElementById('card-bridge').disabled = true;
 
+    var rimg = document.getElementById('qreveal-img');
     if (right) {
+      rimg.src = '/pitchi/gotit.webp'; rimg.style.display = 'block';
       pickCard.classList.add('picked-right');
       reveal.className = 'reveal good show';
       revealBig.textContent = 'You heard it!';
       revealSub.textContent = "Most learners can't — not reliably. See how far your ear goes.";
     } else {
+      rimg.src = '/pitchi/sorry.webp'; rimg.style.display = 'block';
       pickCard.classList.add('picked-wrong');
       ansCard.classList.add('was-answer');
       reveal.className = 'reveal miss show';
