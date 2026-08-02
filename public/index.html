@@ -233,14 +233,7 @@
   .faq .a{font-size:16px;color:var(--sub);padding:0 4px 18px;max-width:62ch}
 
   .final{text-align:center;padding:clamp(48px,7vw,80px) 0 40px}
-  .wl-form{max-width:520px;margin:26px auto 0}
-  .wl-label{display:block;font-size:15.5px;color:var(--sub);margin-bottom:14px}
-  .wl-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-  .wl-row input{flex:1;min-width:220px;height:56px;background:var(--card2);border:1px solid var(--line);border-radius:18px;padding:0 18px;font-family:var(--sans);font-size:16px;color:var(--text)}
-  .wl-row input::placeholder{color:var(--dim)}
-  .wl-row input:focus{outline:2.5px solid var(--teal);outline-offset:2px}
-  .wl-note{font-size:12.5px;font-weight:600;color:var(--dim);margin-top:12px}
-  .wl-done{display:none;font-size:18px;font-weight:700;color:var(--teal);margin-top:26px}
+  .wl-label{display:block;font-size:15.5px;color:var(--sub);max-width:44ch;margin:0 auto}
   .final h2{font-size:clamp(38px,7vw,70px)}
   .appstore-note{max-width:560px;margin:26px auto 0;background:var(--card);border:1px dashed var(--line);border-radius:16px;padding:16px 22px;text-align:center;font-size:14.5px;color:var(--sub)}
 
@@ -473,17 +466,7 @@
     <img src="/pitchi/got-it-rain.webp" width="330" height="330" alt="Pitchi understood — 雨!" loading="lazy" style="width:min(72vw,330px);height:auto;border-radius:24px;display:block;margin:0 auto 20px"/>
     <span class="chip">coming to the App Store · 7-day free trial</span>
     <h2 style="margin-top:20px">Can you hear it?</h2>
-    <div id="wl-live">
-      <form id="wl-form" class="wl-form" autocomplete="email">
-        <label class="wl-label" for="wl-email">Nihongo Pro is in App Store review. Leave your email and we’ll tell you the moment it’s out.</label>
-        <div class="wl-row">
-          <input id="wl-email" name="email" type="email" required placeholder="you@example.com" inputmode="email"/>
-          <button class="pill pill-primary" type="submit">Tell me when it’s out</button>
-        </div>
-        <p class="wl-note" id="wl-note">No spam. One email when it ships.</p>
-      </form>
-      <p class="wl-done" id="wl-done" role="status">You’re on the list. Pitchi will be waiting.</p>
-    </div>
+    <p class="wl-label" style="margin-top:18px">Nihongo Pro is in App Store review.</p>
   </div></section>
 
 </main>
@@ -560,36 +543,10 @@
   };
 
 
-  // ── Waitlist ────────────────────────────────────────────────────────────
   // APP_STORE_URL: set this to the real App Store link once the app is
-  // approved — the waitlist form swaps to a download button automatically.
+  // approved — swap the #waitlist section's placeholder text for a
+  // download button (see the "coming to the App Store" chip + note).
   var APP_STORE_URL = null;
-  var wlForm = document.getElementById('wl-form');
-  var wlDone = document.getElementById('wl-done');
-  if (APP_STORE_URL && wlForm) {
-    wlForm.outerHTML = '<div class="cta-row"><a class="pill pill-primary" href="' + APP_STORE_URL + '">Download on the App Store</a></div>';
-  } else if (wlForm) {
-    wlForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var email = document.getElementById('wl-email').value;
-      var btn = wlForm.querySelector('button');
-      btn.disabled = true; btn.textContent = 'Adding…';
-      fetch('/api/waitlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email })
-      }).then(function (r) { return r.json(); }).then(function (d) {
-        if (d.ok) {
-          wlForm.style.display = 'none';
-          wlDone.style.display = 'block';
-          track('waitlist_submit', {});
-        } else { throw new Error(d.error || 'failed'); }
-      }).catch(function () {
-        btn.disabled = false; btn.textContent = 'Tell me when it\u2019s out';
-        document.getElementById('wl-note').textContent = 'That didn\u2019t save — mail us instead: amor.main@icloud.com';
-      });
-    });
-  }
 
   // ── CTA + scroll analytics (unchanged) ──────────────────────────────────
   function sectionOf(el) {
