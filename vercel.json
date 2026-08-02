@@ -6,18 +6,28 @@
     {
       "source": "/api/(.*)",
       "destination": "/api/$1"
-    },
+    }
+  ],
+  "redirects": [
     {
       "source": "/app",
-      "destination": "/app.html"
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/app.html",
+      "destination": "/",
+      "permanent": false
     },
     {
       "source": "/app/(.*)",
-      "destination": "/app.html"
+      "destination": "/",
+      "permanent": false
     },
     {
       "source": "/subscription/(.*)",
-      "destination": "/app.html"
+      "destination": "/",
+      "permanent": false
     }
   ]
 }

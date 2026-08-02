@@ -18,9 +18,9 @@
   }
 </script>
 <title>Can You Hear It? Japanese Pitch Accent Game | NihonGo</title>
-<meta name="description" content="A 5-second test: 箸 or 橋? Train your ear to hear Japanese pitch accent, then train your voice — scored on-device, dictionary-verified audio. Free web demo in your browser; iOS app with a 7-day trial.">
+<meta name="description" content="A 5-second test: 箸 or 橋? Train your ear to hear Japanese pitch accent, then train your voice — scored on-device, dictionary-verified audio. Coming to the App Store — every plan starts with a 7-day free trial.">
 <meta property="og:title" content="Can You Hear It? Japanese Pitch Accent Game | NihonGo">
-<meta property="og:description" content="A 5-second test: 箸 or 橋? Train your ear to hear Japanese pitch accent, then train your voice. Free web demo; iOS app with a 7-day trial.">
+<meta property="og:description" content="A 5-second test: 箸 or 橋? Train your ear to hear Japanese pitch accent, then train your voice. Coming to the App Store — 7-day free trial.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://nihongo.amorjp.com">
 <meta property="og:image" content="https://nihongo.amorjp.com/og-image.png">
@@ -28,7 +28,7 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Can You Hear It? Japanese Pitch Accent Game | NihonGo">
-<meta name="twitter:description" content="A 5-second test: 箸 or 橋? Train your ear to hear Japanese pitch accent, then train your voice. Free web demo; iOS app with a 7-day trial.">
+<meta name="twitter:description" content="A 5-second test: 箸 or 橋? Train your ear to hear Japanese pitch accent, then train your voice. Coming to the App Store — 7-day free trial.">
 <meta name="twitter:image" content="https://nihongo.amorjp.com/og-image.png">
 <link rel="canonical" href="https://nihongo.amorjp.com/">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -63,7 +63,7 @@
       "@type": "FAQPage",
       "mainEntity": [
         { "@type": "Question", "name": "Is there a free version?",
-          "acceptedAnswer": { "@type": "Answer", "text": "No. Nihongo Pro starts with a 7-day free trial, and the 箸/橋 listening test is free to try in the app onboarding. This site also hosts a free web demo, separate from the iOS app." } },
+          "acceptedAnswer": { "@type": "Answer", "text": "No. Nihongo Pro starts with a 7-day free trial, and the 箸/橋 listening test at the top of this page is free to try." } },
         { "@type": "Question", "name": "Do I need a microphone?",
           "acceptedAnswer": { "@type": "Answer", "text": "Not for Ear Sprint or Pattern Drill. Only Pitch Karaoke uses the mic." } },
         { "@type": "Question", "name": "Is my voice uploaded?",
@@ -233,6 +233,14 @@
   .faq .a{font-size:16px;color:var(--sub);padding:0 4px 18px;max-width:62ch}
 
   .final{text-align:center;padding:clamp(48px,7vw,80px) 0 40px}
+  .wl-form{max-width:520px;margin:26px auto 0}
+  .wl-label{display:block;font-size:15.5px;color:var(--sub);margin-bottom:14px}
+  .wl-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .wl-row input{flex:1;min-width:220px;height:56px;background:var(--card2);border:1px solid var(--line);border-radius:18px;padding:0 18px;font-family:var(--sans);font-size:16px;color:var(--text)}
+  .wl-row input::placeholder{color:var(--dim)}
+  .wl-row input:focus{outline:2.5px solid var(--teal);outline-offset:2px}
+  .wl-note{font-size:12.5px;font-weight:600;color:var(--dim);margin-top:12px}
+  .wl-done{display:none;font-size:18px;font-weight:700;color:var(--teal);margin-top:26px}
   .final h2{font-size:clamp(38px,7vw,70px)}
   .appstore-note{max-width:560px;margin:26px auto 0;background:var(--card);border:1px dashed var(--line);border-radius:16px;padding:16px 22px;text-align:center;font-size:14.5px;color:var(--sub)}
 
@@ -258,7 +266,7 @@
     <a class="txt" href="#how">How it works</a>
     <a class="txt" href="#pricing">Pricing</a>
     <a class="txt" href="#faq">FAQ</a>
-    <a class="pill pill-primary" href="/app.html?guest=true&view=ear">Try the web demo →</a>
+    <a class="pill pill-primary" href="#waitlist">Tell me when it’s out</a>
   </span>
 </div></nav>
 
@@ -302,14 +310,12 @@
     <img id="qreveal-img" src="" alt="" width="96" height="84" style="display:none;margin:0 auto 10px;mix-blend-mode:screen"/>
     <p class="big" id="qreveal-big"></p>
     <p class="sub" id="qreveal-sub"></p>
-    <button class="again" type="button" onclick="quizReset()">Try another →</button>
   </div>
 
   <p class="note">Same sounds <b class="jp" style="color:var(--text)">「はし」</b> — the pitch is the only difference.</p>
 
   <div class="cta-row">
-    <a class="pill pill-primary" href="/app.html?guest=true&view=ear">Try the free web demo — Ear Sprint</a>
-    <a class="pill pill-secondary" href="/app.html?guest=true&view=pitch">Train your voice — web demo</a>
+    <a class="pill pill-primary" href="#waitlist">Tell me when it’s out</a>
   </div>
 
   <p class="stakes">You've been understood your whole life through context — listeners quietly repairing your words for you. You've just never known which words needed repairing.</p>
@@ -393,10 +399,22 @@
     </div>
   </div></div></section>
 
+  <section class="band"><div class="wrap"><div class="grid2">
+    <div>
+      <span class="eyebrow">Privacy</span>
+      <h2>Your voice stays<br>on your phone.</h2>
+      <p>Scoring runs on-device with the YIN pitch algorithm. There is no account, no login, and no server — nothing to upload your voice to. It works on a plane.</p>
+    </div>
+    <div class="panel" style="text-align:center">
+      <p style="max-width:none;font-size:16px;color:var(--sub)">no account &nbsp;·&nbsp; no server &nbsp;·&nbsp; no upload</p>
+      <p style="max-width:none;margin-top:10px;font-size:15px;color:var(--dim);font-weight:600">SCORED ON-DEVICE</p>
+    </div>
+  </div></div></section>
+
   <section class="band" id="pricing"><div class="wrap">
     <span class="eyebrow">Pricing</span>
     <h2 style="margin-bottom:14px">One subscription.<br>Everything unlocked.</h2>
-    <p style="margin-bottom:24px">Nihongo Pro unlocks all three modes — Ear Sprint, Pattern Drill, Pitch Karaoke — and the full 611-word verified library. Every plan starts with a 7-day free trial.</p>
+    <p style="margin-bottom:24px">Nihongo Pro unlocks all three modes — Ear Sprint, Pattern Drill, Pitch Karaoke — and the full 611-word verified library. Every plan starts with a 7-day free trial: when it ends, the plan you picked begins. Cancel before day 7 and you pay nothing.</p>
     <div class="price-grid3">
       <div class="tier feat">
         <div class="name">Yearly · best value</div>
@@ -414,8 +432,8 @@
         <p class="trial">Pay once. Yours for good.<br>No subscription.</p>
       </div>
     </div>
-    <div class="appstore-note" style="margin-top:24px">iOS: Nihongo Pro is in App Store review — the download link will appear here.<br>Try the free web demo while you wait.</div>
-    <div style="margin-top:16px;text-align:center"><a class="pill pill-secondary" href="/app.html?guest=true&view=ear">Try the free web demo</a></div>
+    <div class="appstore-note" style="margin-top:24px">Nihongo Pro is in App Store review — the download link will appear here.</div>
+    <div style="margin-top:16px;text-align:center"><a class="pill pill-secondary" href="#waitlist">Tell me when it’s out</a></div>
   </div></section>
 
   <section class="band alt" id="faq"><div class="wrap">
@@ -426,7 +444,7 @@
     <div class="faq">
       <details>
         <summary>Is there a free version?</summary>
-        <p class="a">No. Nihongo Pro starts with a 7-day free trial, and the <span class="jp">箸/橋</span> listening test is free to try — in the app onboarding and right at the top of this page. This site also hosts a free web demo, separate from the iOS app.</p>
+        <p class="a">No. Nihongo Pro starts with a 7-day free trial, and the <span class="jp">箸/橋</span> listening test at the top of this page is free to try.</p>
       </details>
       <details>
         <summary>Do I need a microphone?</summary>
@@ -451,12 +469,21 @@
     </div>
   </div></section>
 
-  <section class="final"><div class="wrap">
+  <section class="final" id="waitlist"><div class="wrap">
     <img src="/pitchi/got-it-rain.webp" width="330" height="330" alt="Pitchi understood — 雨!" loading="lazy" style="width:min(72vw,330px);height:auto;border-radius:24px;display:block;margin:0 auto 20px"/>
-    <span class="chip">free web demo · runs in your browser</span>
+    <span class="chip">coming to the App Store · 7-day free trial</span>
     <h2 style="margin-top:20px">Can you hear it?</h2>
-    <div class="cta-row"><a class="pill pill-primary" href="/app.html?guest=true&view=ear">Try the free web demo</a></div>
-    <div class="appstore-note">📱 Nihongo Pro (iOS) — currently in App Store review.<br>The download link will appear here when approved.</div>
+    <div id="wl-live">
+      <form id="wl-form" class="wl-form" autocomplete="email">
+        <label class="wl-label" for="wl-email">Nihongo Pro is in App Store review. Leave your email and we’ll tell you the moment it’s out.</label>
+        <div class="wl-row">
+          <input id="wl-email" name="email" type="email" required placeholder="you@example.com" inputmode="email"/>
+          <button class="pill pill-primary" type="submit">Tell me when it’s out</button>
+        </div>
+        <p class="wl-note" id="wl-note">No spam. One email when it ships.</p>
+      </form>
+      <p class="wl-done" id="wl-done" role="status">You’re on the list. Pitchi will be waiting.</p>
+    </div>
   </div></section>
 
 </main>
@@ -467,15 +494,9 @@
     <span class="eyebrow" style="margin-left:auto;color:var(--dim)">Master Japanese pitch accent</span>
   </div>
   <div class="links">
-    <a href="/learn/">Learn (words &amp; pairs)</a>
-    <a href="/learn/how-to-learn-japanese-pitch-accent.html">How to Learn Pitch Accent</a>
-    <a href="/learn/why-you-sound-foreign-in-japanese.html">Why You Sound Foreign</a>
-    <a href="/learn/japanese-pitch-accent-patterns.html">Pitch Patterns</a>
-    <a href="/learn/can-you-hear-japanese-pitch.html">Can You Hear It?</a>
-    <a href="/learn/common-japanese-mistakes.html">Common Mistakes</a>
-    <a href="/legal.html">Legal Notice</a>
     <a href="/terms.html">Terms</a>
     <a href="/privacy.html">Privacy</a>
+    <a href="/legal.html">Legal Notice</a>
     <a href="mailto:amor.main@icloud.com">Contact</a>
   </div>
   <div class="legal">© 2026 AMOR LLC. All rights reserved.</div>
@@ -538,18 +559,37 @@
     track('lp_quiz_answer', { correct: right ? 1 : 0, word: answer });
   };
 
-  window.quizReset = function () {
-    answer = Math.random() < 0.5 ? 'chopsticks' : 'bridge';
-    played = false; answered = false;
-    ['card-chopsticks', 'card-bridge'].forEach(function (id) {
-      var c = document.getElementById(id);
-      c.disabled = false;
-      c.className = 'hcard';
+
+  // ── Waitlist ────────────────────────────────────────────────────────────
+  // APP_STORE_URL: set this to the real App Store link once the app is
+  // approved — the waitlist form swaps to a download button automatically.
+  var APP_STORE_URL = null;
+  var wlForm = document.getElementById('wl-form');
+  var wlDone = document.getElementById('wl-done');
+  if (APP_STORE_URL && wlForm) {
+    wlForm.outerHTML = '<div class="cta-row"><a class="pill pill-primary" href="' + APP_STORE_URL + '">Download on the App Store</a></div>';
+  } else if (wlForm) {
+    wlForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var email = document.getElementById('wl-email').value;
+      var btn = wlForm.querySelector('button');
+      btn.disabled = true; btn.textContent = 'Adding…';
+      fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      }).then(function (r) { return r.json(); }).then(function (d) {
+        if (d.ok) {
+          wlForm.style.display = 'none';
+          wlDone.style.display = 'block';
+          track('waitlist_submit', {});
+        } else { throw new Error(d.error || 'failed'); }
+      }).catch(function () {
+        btn.disabled = false; btn.textContent = 'Tell me when it\u2019s out';
+        document.getElementById('wl-note').textContent = 'That didn\u2019t save — mail us instead: amor.main@icloud.com';
+      });
     });
-    reveal.className = 'reveal';
-    document.getElementById('qplay-label').textContent = 'Play the word';
-    track('lp_quiz_retry', {});
-  };
+  }
 
   // ── CTA + scroll analytics (unchanged) ──────────────────────────────────
   function sectionOf(el) {
