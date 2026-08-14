@@ -22,6 +22,56 @@
       "source": "/subscription/(.*)",
       "destination": "/",
       "permanent": false
+    },
+    {
+      "source": "/r/reddit",
+      "destination": "https://apps.apple.com/app/nihongo-pitch-accent-trainer/id6796564239?ct=reddit&mt=8",
+      "permanent": false
+    },
+    {
+      "source": "/r/reddit_profile",
+      "destination": "https://apps.apple.com/app/nihongo-pitch-accent-trainer/id6796564239?ct=reddit_profile&mt=8",
+      "permanent": false
+    },
+    {
+      "source": "/r/x",
+      "destination": "https://apps.apple.com/app/nihongo-pitch-accent-trainer/id6796564239?ct=x&mt=8",
+      "permanent": false
+    },
+    {
+      "source": "/r/x_jp",
+      "destination": "https://apps.apple.com/app/nihongo-pitch-accent-trainer/id6796564239?ct=x_jp&mt=8",
+      "permanent": false
+    },
+    {
+      "source": "/r/hn",
+      "destination": "https://apps.apple.com/app/nihongo-pitch-accent-trainer/id6796564239?ct=hn&mt=8",
+      "permanent": false
+    },
+    {
+      "source": "/r/discord",
+      "destination": "https://apps.apple.com/app/nihongo-pitch-accent-trainer/id6796564239?ct=discord&mt=8",
+      "permanent": false
+    },
+    {
+      "source": "/r/wanikani",
+      "destination": "https://apps.apple.com/app/nihongo-pitch-accent-trainer/id6796564239?ct=wanikani&mt=8",
+      "permanent": false
+    },
+    {
+      "source": "/r/influencer",
+      "destination": "https://apps.apple.com/app/nihongo-pitch-accent-trainer/id6796564239?ct=influencer&mt=8",
+      "permanent": false
+    },
+    {
+      "source": "/r/bio",
+      "destination": "https://apps.apple.com/app/nihongo-pitch-accent-trainer/id6796564239?ct=bio&mt=8",
+      "permanent": false
+    },
+    {
+      "source": "/r/lp",
+      "destination": "https://apps.apple.com/app/nihongo-pitch-accent-trainer/id6796564239?ct=lp&mt=8",
+      "permanent": false
     }
   ]
 }
