@@ -67,3 +67,7 @@ marketing/out-ear/
 marketing/out-pro/
 marketing/out-real/
 marketing/out-slang/
+
+# marketing generated video batches (regenerable from the scripts)
+marketing/out-batch-tease/
+marketing/out-batch-youtube/

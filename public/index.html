@@ -18,7 +18,7 @@
   }
 </script>
 <title>Can You Hear It? Japanese Pitch Accent Game | NihonGo</title>
-<meta name="description" content="A 5-second test: 箸 or 橋? Train your ear to hear Japanese pitch accent, then train your voice — scored on-device, dictionary-verified audio. Coming to the App Store — every plan starts with a 7-day free trial.">
+<meta name="description" content="A 5-second test: 箸 or 橋? Train your ear to hear Japanese pitch accent, then train your voice — scored on-device, dictionary-verified audio. On the App Store — every plan starts with a 7-day free trial.">
 <meta property="og:title" content="Can You Hear It? Japanese Pitch Accent Game | NihonGo">
 <meta property="og:description" content="A 5-second test: 箸 or 橋? Train your ear to hear Japanese pitch accent, then train your voice. Now on the App Store — 7-day free trial.">
 <meta property="og:type" content="website">
@@ -259,7 +259,7 @@
     <a class="txt" href="#how">How it works</a>
     <a class="txt" href="#pricing">Pricing</a>
     <a class="txt" href="#faq">FAQ</a>
-    <a class="pill pill-primary" href="#waitlist">Tell me when it’s out</a>
+    <a class="pill pill-primary" href="/r/lp">Get the app</a>
   </span>
 </div></nav>
 
@@ -308,8 +308,9 @@
   <p class="note">Same sounds <b class="jp" style="color:var(--text)">「はし」</b> — the pitch is the only difference.</p>
 
   <div class="cta-row">
-    <a class="pill pill-primary" href="#waitlist">Tell me when it’s out</a>
+    <a class="pill pill-primary" href="/r/lp">Download on the App Store</a>
   </div>
+  <p class="wl-label" style="margin-top:14px">Free for 7 days, then $59.99/year. Cancel any time.</p>
 
   <p class="stakes">You've been understood your whole life through context — listeners quietly repairing your words for you. You've just never known which words needed repairing.</p>
 
@@ -425,8 +426,8 @@
         <p class="trial">Pay once. Yours for good.<br>No subscription.</p>
       </div>
     </div>
-    <div class="appstore-note" style="margin-top:24px">Nihongo Pro is in App Store review — the download link will appear here.</div>
-    <div style="margin-top:16px;text-align:center"><a class="pill pill-secondary" href="#waitlist">Tell me when it’s out</a></div>
+    <div style="margin-top:24px;text-align:center"><a class="pill pill-primary" href="/r/lp">Download on the App Store</a></div>
+    <p class="wl-label" style="margin-top:14px;text-align:center">Subscriptions are billed through the App Store.</p>
   </div></section>
 
   <section class="band alt" id="faq"><div class="wrap">
@@ -462,11 +463,12 @@
     </div>
   </div></section>
 
-  <section class="final" id="waitlist"><div class="wrap">
+  <section class="final" id="get"><div class="wrap">
     <img src="/pitchi/got-it-rain.webp" width="330" height="330" alt="Pitchi understood — 雨!" loading="lazy" style="width:min(72vw,330px);height:auto;border-radius:24px;display:block;margin:0 auto 20px"/>
-    <span class="chip">coming to the App Store · 7-day free trial</span>
+    <span class="chip">on the App Store · 7-day free trial</span>
     <h2 style="margin-top:20px">Can you hear it?</h2>
-    <p class="wl-label" style="margin-top:18px">Nihongo Pro is in App Store review.</p>
+    <div class="cta-row" style="margin-top:22px"><a class="pill pill-primary" href="/r/lp">Download on the App Store</a></div>
+    <p class="wl-label" style="margin-top:14px">iPhone · free for 7 days, then $59.99/year. Cancel any time.</p>
   </div></section>
 
 </main>
@@ -543,20 +545,17 @@
   };
 
 
-  // APP_STORE_URL: set this to the real App Store link once the app is
-  // approved — swap the #waitlist section's placeholder text for a
-  // download button (see the "coming to the App Store" chip + note).
-  var APP_STORE_URL = '/r/lp';
-
-  // ── CTA + scroll analytics (unchanged) ──────────────────────────────────
+  // ── CTA + scroll analytics ──────────────────────────────────
   function sectionOf(el) {
     var s = el.closest('section, nav, header, footer');
     return (s && (s.id || s.className.split(' ')[0] || s.tagName.toLowerCase())) || 'unknown';
   }
-  document.querySelectorAll('a[href*="app.html"]').forEach(function (a) {
+  // Install CTAs all route through /r/:tag, which 307s to the App Store
+  // listing carrying the campaign token — so GA sees the click and App
+  // Store Connect sees the source.
+  document.querySelectorAll('a[href^="/r/"]').forEach(function (a) {
     a.addEventListener('click', function () {
-      var href = a.getAttribute('href') || '';
-      track('cta_click', { location: sectionOf(a), intent: href.indexOf('guest') > -1 ? 'guest' : 'signup', link_url: href });
+      track('cta_click', { location: sectionOf(a), intent: 'install', link_url: a.getAttribute('href') || '' });
     });
   });
   var marks = [25, 50, 75, 100], fired = {};

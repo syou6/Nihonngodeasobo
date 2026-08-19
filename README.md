@@ -1,55 +1,45 @@
-# 日本語であそぼ (AI Voice Journal)
+# NihonGo — LP & マーケティング
 
-AI を活用した日本語学習アプリ。音声で日記を録音し、NVIDIA NIM (LLM) がフィードバックを提供します。
+日本語の高低アクセント訓練アプリ **NihonGo: Pitch Accent Trainer** のランディングページとマーケティング資材。
 
-## 技術スタック
+- App Store: https://apps.apple.com/jp/app/nihongo-pitch-accent-trainer/id6796564239
+- 本番サイト: https://nihongo.amorjp.com/
 
-- **フロントエンド:** React 18 + TypeScript + Vite + Tailwind CSS
-- **状態管理:** Zustand
-- **バックエンド:** Supabase (認証・DB・Edge Functions)
-- **AI:** NVIDIA NIM / qwen2.5-72b-instruct (テキストフィードバック)
-- **音声/ピッチ解析:** クライアント側 (pitchy + hatsuon)
-- **決済:** Stripe
-- **通知:** Firebase Cloud Messaging
-- **テスト:** Vitest + Playwright
+**作業前に `CLAUDE.md` を読むこと**(現状・デザイントークン・書いてよい事実の制約)。経緯と次の一手は `docs/CONTEXT.md`。
 
-## 主な機能
+## 構成
 
-- 音声日記の録音と AI フィードバック
-- Versant 練習 (Part E / Part F)
-- 保護者・先生向けダッシュボード
-- 高齢者向け UI モード
-- ゲストモード (未登録でも試用可能)
-- サブスクリプション (Stripe)
-- PWA 対応・プッシュ通知
+| パス | 中身 |
+|---|---|
+| `public/index.html` | 本番LP。単一ファイル・素のHTML/CSS/JS。**ここが主戦場** |
+| `public/learn/` | SEO記事 84ページ(静的HTML) |
+| `public/pitchi/` | マスコット Pitchi のイラスト(webp) |
+| `marketing/` | TikTok/YouTube向け動画の自動生成(Node + Playwright + ffmpeg) |
+| `vercel.json` | 旧Webアプリへのリダイレクト + `/r/:tag` インストール計測 |
+| `src/`, `app.html` | 旧Webアプリ。本番からは到達不能(削除はしていない) |
 
-## セットアップ
+## 開発
 
 ```bash
 npm install
-cp .env.example .env  # 環境変数を設定
-npm run dev
+npm run build     # ビルド確認。dist/index.html が出れば成功
 ```
 
-### 環境変数
+LPは静的HTMLなので、`public/index.html` を直接編集 → `npm run build` → push。
+Vercelがmainブランチのpushで自動デプロイ。**pushしたら本番URLをcurlで叩いて反映を確認する。**
 
-| 変数名 | 説明 |
-|--------|------|
-| `VITE_SUPABASE_URL` | Supabase プロジェクト URL |
-| `VITE_SUPABASE_ANON_KEY` | Supabase Anon Key |
-NVIDIA NIM の API キーは Supabase Edge Function 側で管理:
+## マーケ動画の生成
+
 ```bash
-supabase secrets set NVIDIA_API_KEY=your_key
-# モデル変更は任意（既定: qwen/qwen2.5-72b-instruct）
-supabase secrets set NVIDIA_MODEL=qwen/qwen2.5-72b-instruct
+node marketing/generate-batch.mjs                      # TikTok版(画面にURLを出さない)
+node marketing/generate-batch.mjs --platform youtube    # YouTube版(URL + SEOタイトル/概要欄付き)
+node marketing/generate-batch.mjs --tease               # 答えを明かさない版(コメント誘発)
+node marketing/record-ear.mjs                           # 実アプリのゲームプレイ録画
 ```
 
-## スクリプト
+生成物は `marketing/out-batch*/` に出る(約423MB、gitignore済み。スクリプトから再生成可能)。
 
-| コマンド | 説明 |
-|----------|------|
-| `npm run dev` | 開発サーバー起動 |
-| `npm run build` | プロダクションビルド |
-| `npm run test` | ユニットテスト実行 |
-| `npm run test:e2e` | E2E テスト実行 |
-| `npm run test:all` | 全テスト実行 |
+## 注意
+
+ルート直下の `STRIPE_*.md` `FIREBASE_*.md` `SUPABASE_SETUP.md` `PLAN.md` 等は
+**旧「AI音声日記アプリ」時代の遺物**で、現行プロダクトとは無関係。
